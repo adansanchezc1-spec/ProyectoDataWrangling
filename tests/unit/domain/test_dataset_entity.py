@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 
 from domain.entities.dataset import Dataset
 from domain.exceptions import DatasetInvalidoException
@@ -11,7 +11,7 @@ def test_validar_estructura_success():
         source_path="/tmp/fake.csv",
         format="csv",
         status="new",
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
         schema={
             "ubicacion": "str",
             "tamano_m2": "float",
@@ -32,7 +32,7 @@ def test_validar_estructura_missing_raises():
         source_path="/tmp/fake2.csv",
         format="csv",
         status="new",
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
         schema={"ubicacion": "str", "precio": "float"},
         rows_preview=[],
     )
@@ -47,7 +47,7 @@ def test_normalizar_ubicacion_and_es_bogota():
         source_path="/tmp/fake3.csv",
         format="csv",
         status="new",
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
         rows_preview=[{"ubicacion": " Bogotá,  Cundinamarca "}, {"ubicacion": "Medellín"}],
     )
 
