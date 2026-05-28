@@ -1,40 +1,29 @@
-# State Diagrams (Mermaid)
 
-## Dataset lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> RAW
-    RAW --> VALIDATED
-    VALIDATED --> STORED
-    STORED --> CLEANING
-    CLEANING --> PROFILED
-    PROFILED --> TRANSFORMED
-    TRANSFORMED --> UNIFIED
-    UNIFIED --> READY
-    READY --> [*]
-    anyState: ERROR
-    RAW --> ERROR
-    VALIDATED --> ERROR
-    CLEANING --> ERROR
-```
-
-## Solicitud lifecycle
+### Diagrama de Estados
 
 ```mermaid
 stateDiagram-v2
-    [*] --> RECIBIDA
-    RECIBIDA --> VALIDANDO_UBICACION
-    VALIDANDO_UBICACION --> VALIDANDO_COHERENCIA
-    VALIDANDO_COHERENCIA --> PARAMETRIZADA
-    PARAMETRIZADA --> PREDICCION_GENERADA
-    PREDICCION_GENERADA --> VALIDANDO_SIGNIFICANCIA
-    VALIDANDO_SIGNIFICANCIA --> VALIDANDO_MARGEN
-    VALIDANDO_MARGEN --> APROBADA
-    APROBADA --> [*]
-
-    VALIDANDO_UBICACION --> RECHAZADA_UBICACION
-    VALIDANDO_COHERENCIA --> RECHAZADA_COHERENCIA
-    VALIDANDO_SIGNIFICANCIA --> RECHAZADA_SIGNIFICANCIA
-    VALIDANDO_MARGEN --> RECHAZADA_MARGEN
+    [*] --> RAW: Usuario carga dataset
+    
+    RAW --> EXTRACTING: RF-002 Inicia extracción
+    EXTRACTING --> EXTRACTING: Extracción incompleta (loop)
+    EXTRACTING --> VALIDATING: Extracción completa
+    
+    VALIDATING --> TRANSFORMING: RF-003 Formato válido
+    VALIDATING --> REJECTED_FORMAT: RF-003 Formato inválido
+    
+    TRANSFORMING --> CLEANING: RF-004 Estructura transformada
+    CLEANING --> PROFILING: RF-005/RF-006 Limpieza OK
+    CLEANING --> REJECTED_TRANSFORM: Transformación fallida
+    
+    PROFILING --> QUALITY_GATE: RF-007/RF-008 Validación custodio
+    QUALITY_GATE --> MDM_LOADED: RF-009 Calidad aceptable
+    QUALITY_GATE --> REJECTED_QUALITY: RF-009 Calidad rechazada
+    
+    MDM_LOADED --> NOTIFIED: RF-010 Notificación éxito
+    REJECTED_FORMAT --> NOTIFIED: RF-010 Notificación rechazo
+    REJECTED_TRANSFORM --> NOTIFIED: RF-010 Notificación error
+    REJECTED_QUALITY --> NOTIFIED: RF-010 Notificación rechazo
+    
+    NOTIFIED --> [*]: Proceso finalizado
 ```

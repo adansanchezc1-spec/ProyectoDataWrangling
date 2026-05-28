@@ -1,130 +1,120 @@
-# UML Class Diagram (Mermaid)
-
 ```mermaid
 classDiagram
-    %% Interfaces
     class IDataRepository {
         <<interface>>
-        +save(dataset)
-        +get_by_id(id)
-        +list_all()
-        +update(dataset)
-        +delete(id)
+        +guardar(entidad)~Entidad
+        +obtener_por_id(id)~Entidad|None
+        +listar_todos()~list
+        +eliminar(id)~bool
+        +actualizar(entidad)~Entidad
     }
 
     class IEmailService {
         <<interface>>
-        +send(subject, body, to)
+        +enviar(destinatario, asunto, cuerpo)~bool
     }
 
     class IDataCleaner {
         <<interface>>
-        +clean(dataset)
+        +limpiar(dataset)~Dataset
     }
 
-    class IFeatureAnalyzer {
-        <<interface>>
-        +analyze(dataset)
-    }
-
-    %% Domain Entities
     class Dataset {
         -id: str
-        -source_path: str
-        -format: Formato
+        -ubicacion: str
+        -tamano_m2: float
+        -habitaciones: int
+        -banos: int
+        -estrato: int
+        -precio: float
         -status: DatasetStatus
-        -created_at: datetime
-        -schema: dict
-        +validar_estructura(): bool
-        +normalizar_ubicacion(): void
-        +es_bogota(): bool
-        +to_dict(): dict
+        +validar_estructura()~bool
+        +normalizar_ubicacion()~void
+        +es_bogota()~bool
+        +esta_completo()~bool
     }
 
-    class Solicitud {
+    class CleaningReport {
         -id: str
         -dataset_id: str
-        -parameters: dict
-        -requested_by: str
-        -status: str
-        +validate_parameters(): void
+        -registros_procesados: int
+        -registros_eliminados: int
+        -nulos_removidos: int
+        -duplicados_removidos: int
+        +generar_resumen()~str
     }
 
-    class Prediccion {
+    class RejectionLog {
         -id: str
-        -solicitud_id: str
-        -estimated_price: float
-        -p_value: float
-        -margin: float
-        -confidence_interval: tuple
-        +es_significativa(): bool
-        +margen_aceptable(): bool
-    }
-
-    %% Infrastructure implementations
-    class PandasRepository {
-        +save(dataset)
-        +get_by_id(id)
-        +list_all()
-        +update(dataset)
-        +delete(id)
-    }
-
-    class JsonRepository {
-        +save(dataset)
+        -dataset_id: str
+        -motivo: str
+        -gateway_bpmn: str
+        -fecha: datetime
     }
 
     class EmailService {
-        +send(subject, body, to)
+        -smtp_host: str
+        -smtp_port: int
+        +enviar(destinatario, asunto, cuerpo)~bool
     }
 
     class EmailDecorator {
-        <<abstract>>
-        -wrapped: IEmailService
-        +send(subject, body, to)
+        #wrapped: IEmailService
+        +enviar(destinatario, asunto, cuerpo)~bool
     }
 
     class ValidacionEmailDecorator {
-        +send(subject, body, to)
+        +enviar(destinatario, asunto, cuerpo)~bool
     }
 
     class NotificacionInsercionDecorator {
-        +send(subject, body, to)
+        -plantilla: str
+        +enviar(destinatario, asunto, cuerpo)~bool
+    }
+
+    class JsonRepository {
+        -file_path: str
+        +guardar(entidad)~Entidad
+        +obtener_por_id(id)~Entidad|None
     }
 
     class NullCleaner {
-        +clean(dataset)
+        +limpiar(dataset)~Dataset
+    }
+
+    class FormatCleaner {
+        +limpiar(dataset)~Dataset
     }
 
     class DuplicateCleaner {
-        +clean(dataset)
+        +limpiar(dataset)~Dataset
     }
 
     class PipelineFacade {
-        -repository: IDataRepository
-        -cleaners: list
-        -prediction_service
-        +run_pipeline(dataset_path): Prediccion
+        -ingestion_service: IngestionService
+        -cleaning_service: CleaningService
+        -mdm_service: MDMService
+        +ejecutar_pipeline(dataset)~CleaningReport
     }
 
     class DatasetController {
-        -facade: PipelineFacade
-        +upload_dataset(path): ResponseDTO
+        -dataset_service: IngestionService
+        +cargar_dataset(ruta)~ResponseDTO
     }
 
-    %% Relationships
-    IDataRepository <|.. PandasRepository
-    IDataRepository <|.. JsonRepository
-    IEmailService <|.. EmailService
-    EmailService <|.. EmailDecorator
-    EmailDecorator <|.. ValidacionEmailDecorator
-    EmailDecorator <|.. NotificacionInsercionDecorator
-    IDataCleaner <|.. NullCleaner
-    IDataCleaner <|.. DuplicateCleaner
-    PipelineFacade --> IDataRepository : uses
-    PipelineFacade --> IDataCleaner : coordinates
-    DatasetController --> PipelineFacade : uses
-    PipelineFacade --> Prediccion : produces
-    Dataset --> DatasetController : composed
-
+    IDataRepository <|.. JsonRepository : implements
+    IEmailService <|.. EmailService : implements
+    IEmailService <|.. EmailDecorator : implements
+    EmailDecorator <|-- ValidacionEmailDecorator : extends
+    EmailDecorator <|-- NotificacionInsercionDecorator : extends
+    EmailDecorator o-- IEmailService : wraps
+    DatasetController --> IngestionService : uses
+    PipelineFacade --> IngestionService : uses
+    PipelineFacade --> CleaningService : uses
+    PipelineFacade --> MDMService : uses
+    CleaningReport --> Dataset : reports on
+    RejectionLog --> Dataset : logs
+    IDataCleaner <|.. NullCleaner : implements
+    IDataCleaner <|.. FormatCleaner : implements
+    IDataCleaner <|.. DuplicateCleaner : implements
 ```
