@@ -1,120 +1,142 @@
+# UML Class Diagram - Sistema Data Wrangling
+
 ```mermaid
 classDiagram
-    class IDataRepository {
-        <<interface>>
-        +guardar(entidad)~Entidad
-        +obtener_por_id(id)~Entidad|None
-        +listar_todos()~list
-        +eliminar(id)~bool
-        +actualizar(entidad)~Entidad
+    class VistaCargaDataset {
+        -selected_files: list
+        +on_process_requested(files)
     }
 
-    class IEmailService {
-        <<interface>>
-        +enviar(destinatario, asunto, cuerpo)~bool
+    class VistaEstadoPipeline {
+        +add_info_line(line)
+        +update_stage_status(stage, status, details)
     }
 
-    class IDataCleaner {
-        <<interface>>
-        +limpiar(dataset)~Dataset
+    class VistaResultado {
+        +show_result(result)
     }
 
-    class Dataset {
-        -id: str
-        -ubicacion: str
-        -tamano_m2: float
-        -habitaciones: int
-        -banos: int
-        -estrato: int
-        -precio: float
-        -status: DatasetStatus
-        +validar_estructura()~bool
-        +normalizar_ubicacion()~void
-        +es_bogota()~bool
-        +esta_completo()~bool
-    }
-
-    class CleaningReport {
-        -id: str
-        -dataset_id: str
-        -registros_procesados: int
-        -registros_eliminados: int
-        -nulos_removidos: int
-        -duplicados_removidos: int
-        +generar_resumen()~str
-    }
-
-    class RejectionLog {
-        -id: str
-        -dataset_id: str
-        -motivo: str
-        -gateway_bpmn: str
-        -fecha: datetime
-    }
-
-    class EmailService {
-        -smtp_host: str
-        -smtp_port: int
-        +enviar(destinatario, asunto, cuerpo)~bool
-    }
-
-    class EmailDecorator {
-        #wrapped: IEmailService
-        +enviar(destinatario, asunto, cuerpo)~bool
-    }
-
-    class ValidacionEmailDecorator {
-        +enviar(destinatario, asunto, cuerpo)~bool
-    }
-
-    class NotificacionInsercionDecorator {
-        -plantilla: str
-        +enviar(destinatario, asunto, cuerpo)~bool
-    }
-
-    class JsonRepository {
-        -file_path: str
-        +guardar(entidad)~Entidad
-        +obtener_por_id(id)~Entidad|None
-    }
-
-    class NullCleaner {
-        +limpiar(dataset)~Dataset
-    }
-
-    class FormatCleaner {
-        +limpiar(dataset)~Dataset
-    }
-
-    class DuplicateCleaner {
-        +limpiar(dataset)~Dataset
+    class DatasetController {
+        -pipeline_facade: PipelineFacade
+        +upload_and_process_dataset(file_path_or_paths)
+        +subscribe(event, callback)
     }
 
     class PipelineFacade {
         -ingestion_service: IngestionService
         -cleaning_service: CleaningService
         -mdm_service: MDMService
-        +ejecutar_pipeline(dataset)~CleaningReport
+        -folder_storage: FolderStorage
+        +run_pipeline(file_path) dict
     }
 
-    class DatasetController {
-        -dataset_service: IngestionService
-        +cargar_dataset(ruta)~ResponseDTO
+    class IngestionService {
+        +load(file_path) Dataset
     }
 
-    IDataRepository <|.. JsonRepository : implements
-    IEmailService <|.. EmailService : implements
-    IEmailService <|.. EmailDecorator : implements
-    EmailDecorator <|-- ValidacionEmailDecorator : extends
-    EmailDecorator <|-- NotificacionInsercionDecorator : extends
-    EmailDecorator o-- IEmailService : wraps
-    DatasetController --> IngestionService : uses
-    PipelineFacade --> IngestionService : uses
-    PipelineFacade --> CleaningService : uses
-    PipelineFacade --> MDMService : uses
-    CleaningReport --> Dataset : reports on
-    RejectionLog --> Dataset : logs
-    IDataCleaner <|.. NullCleaner : implements
-    IDataCleaner <|.. FormatCleaner : implements
-    IDataCleaner <|.. DuplicateCleaner : implements
+    class CleaningService {
+        -cleaners: list
+        +register_cleaner(cleaner)
+        +run(dataset) tuple
+    }
+
+    class MDMService {
+        -repository: IDataRepository
+        -folder_storage: FolderStorage
+        +load_to_mdm(dataset) dict
+    }
+
+    class FolderStorage {
+        -raw_dir: Path
+        -cleaned_dir: Path
+        -mdm_dir: Path
+        -rejected_dir: Path
+        +persist_raw(dataset) Path
+        +persist_cleaned(dataset) Path
+        +append_to_master(dataset) Path
+        +persist_rejection(rejection_log) Path
+    }
+
+    class Dataset {
+        +id: str
+        +source_path: str
+        +format: str
+        +status: str
+        +schema: dict
+        +records: list
+        +rows_preview: list
+        +total_rows: int
+        +validar_estructura() bool
+        +normalizar_ubicacion()
+        +es_bogota() bool
+        +to_dict() dict
+    }
+
+    class CleaningReport {
+        +dataset_id: str
+        +registros_procesados: int
+        +nulos_removidos: int
+        +duplicados_removidos: int
+        +add_step(name, affected_rows, details)
+        +to_dict() dict
+    }
+
+    class RejectionLog {
+        +dataset_id: str
+        +motivo: str
+        +gateway_bpmn: int
+        +regla_negocio: str
+        +to_dict() dict
+    }
+
+    class DatasetValidator {
+        +validar_columnas_minimas(schema, columnas) bool
+        +validar_ubicacion(valor) str
+        +validar_estrato(valor) int
+    }
+
+    class QualityValidator {
+        +validar_consistencia_semantica(row) bool
+        +validar_integridad(rows, min_cobertura) bool
+    }
+
+    class IDataCleaner {
+        <<interface>>
+        +clean(rows) list
+    }
+
+    class NullCleaner
+    class FormatCleaner
+    class DuplicateCleaner
+
+    class IDataRepository {
+        <<interface>>
+        +save(entity)
+        +get_by_id(entity_id)
+        +list_all()
+    }
+
+    class JsonRepository
+
+    VistaCargaDataset --> DatasetController
+    VistaEstadoPipeline <-- DatasetController
+    VistaResultado <-- DatasetController
+    DatasetController --> PipelineFacade
+    PipelineFacade --> IngestionService
+    PipelineFacade --> CleaningService
+    PipelineFacade --> MDMService
+    PipelineFacade --> FolderStorage
+    IngestionService --> Dataset
+    CleaningService --> Dataset
+    CleaningService --> CleaningReport
+    CleaningService o-- IDataCleaner
+    IDataCleaner <|.. NullCleaner
+    IDataCleaner <|.. FormatCleaner
+    IDataCleaner <|.. DuplicateCleaner
+    PipelineFacade --> RejectionLog
+    PipelineFacade --> DatasetValidator
+    PipelineFacade --> QualityValidator
+    MDMService --> FolderStorage
+    MDMService --> IDataRepository
+    IDataRepository <|.. JsonRepository
 ```

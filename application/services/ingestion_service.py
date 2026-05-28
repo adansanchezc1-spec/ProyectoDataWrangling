@@ -115,6 +115,7 @@ class IngestionService:
             created_at=__import__("datetime").datetime.utcnow(),
             schema=schema,
             rows_preview=rows[:min(100, len(rows))],  # Primeras 100 filas
+            records=rows,
             total_rows=len(rows),
         )
 
@@ -136,15 +137,25 @@ class IngestionService:
             rows = []
             schema = {}
 
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, "r", encoding="utf-8-sig") as f:
                 reader = csv.DictReader(f)
                 if reader.fieldnames is None:
                     raise ValueError("CSV is empty")
 
-                schema = {col: "string" for col in reader.fieldnames}
+                field_map = {
+                    col: self._normalize_column_name(col)
+                    for col in reader.fieldnames
+                }
+                schema = {field_map[col]: "string" for col in reader.fieldnames}
 
                 for row in reader:
-                    rows.append(row)
+                    rows.append(
+                        {
+                            field_map[col]: value
+                            for col, value in row.items()
+                            if col is not None
+                        }
+                    )
 
             if not rows:
                 raise ValueError("CSV has no data rows")
@@ -179,6 +190,7 @@ class IngestionService:
 
         try:
             df = pd.read_excel(path)
+            df.columns = [self._normalize_column_name(col) for col in df.columns]
             rows = df.to_dict(orient="records")
             schema = {col: "string" for col in df.columns}
 
@@ -219,7 +231,14 @@ class IngestionService:
             if len(data) == 0:
                 raise ValueError("JSON array is empty")
 
-            rows = data
+            rows = [
+                {
+                    self._normalize_column_name(key): value
+                    for key, value in row.items()
+                }
+                for row in data
+                if isinstance(row, dict)
+            ]
 
             # Infiere schema del primer objeto
             schema = {}
@@ -240,3 +259,8 @@ class IngestionService:
                 context={"file": path.name, "error": str(e)},
                 gateway_bpmn=1,
             )
+
+    @staticmethod
+    def _normalize_column_name(column: Any) -> str:
+        """Normalizes incoming source headers for schema validation."""
+        return str(column).strip().lstrip("\ufeff")

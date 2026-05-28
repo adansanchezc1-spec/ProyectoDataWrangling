@@ -26,11 +26,23 @@ def main():
     # Wire: when user requests processing, call controller
     load_view.on_process_requested = controller.upload_and_process_dataset
 
+    def ui(callback):
+        return lambda data: root.after(0, lambda: callback(data or {}))
+
     # Subscribe controller events to update views
-    controller.subscribe("pipeline_started", lambda d: status_view.add_info_line(f"Started: {d.get('file_path','') }"))
-    controller.subscribe("pipeline_progress", lambda d: status_view.add_info_line(d.get("message","")))
-    controller.subscribe("pipeline_completed", lambda res: result_view.show_result(res))
-    controller.subscribe("pipeline_error", lambda err: status_view.add_info_line(f"ERROR: {err}"))
+    controller.subscribe(
+        "pipeline_started",
+        ui(lambda d: status_view.add_info_line(f"Started: {d.get('file_paths', [])}")),
+    )
+    controller.subscribe(
+        "pipeline_progress",
+        ui(lambda d: status_view.add_info_line(d.get("message", ""))),
+    )
+    controller.subscribe("pipeline_completed", ui(result_view.show_result))
+    controller.subscribe(
+        "pipeline_error",
+        ui(lambda err: status_view.add_info_line(f"ERROR: {err}")),
+    )
 
     root.mainloop()
 

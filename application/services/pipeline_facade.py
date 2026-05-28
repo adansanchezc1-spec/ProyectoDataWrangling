@@ -35,6 +35,7 @@ from infrastructure.cleaning.null_cleaner import NullCleaner
 from infrastructure.cleaning.format_cleaner import FormatCleaner
 from infrastructure.cleaning.duplicate_cleaner import DuplicateCleaner
 from infrastructure.notifications.notification_service import NotificationService
+from infrastructure.repositories.folder_storage import FolderStorage
 
 
 class PipelineFacade:
@@ -56,6 +57,7 @@ class PipelineFacade:
         self,
         repository: IDataRepository,
         email_service: Optional[IEmailService] = None,
+        folder_storage: Optional[FolderStorage] = None,
     ) -> None:
         """Inicializa el pipeline.
 
@@ -65,11 +67,12 @@ class PipelineFacade:
         """
         self.repository = repository
         self.email_service = email_service
+        self.folder_storage = folder_storage or FolderStorage()
 
         # Inicializa servicios
         self.ingestion_service = IngestionService()
         self.cleaning_service = self._configure_cleaning_service()
-        self.mdm_service = MDMService(repository)
+        self.mdm_service = MDMService(repository, self.folder_storage)
         self.notification_service = NotificationService()
 
     def run_pipeline(self, file_path: str) -> Dict[str, Any]:
@@ -105,6 +108,7 @@ class PipelineFacade:
         try:
             # ========== STAGE 1: INGESTION ==========
             dataset = self._stage_ingestion(file_path)
+            raw_path = self.folder_storage.persist_raw(dataset)
 
             # ========== GATEWAY 1: ¿Extracción completa? ==========
             if not self._gateway_1_extraction_complete(dataset):
@@ -139,6 +143,7 @@ class PipelineFacade:
 
             # ========== STAGE 3: TRANSFORMATION/CLEANING ==========
             dataset, cleaning_report = self._stage_cleaning(dataset)
+            cleaned_path = self.folder_storage.persist_cleaned(dataset)
 
             # ========== GATEWAY 3: ¿Transformación completa? ==========
             if not self._gateway_3_transformation_complete(dataset, cleaning_report):
@@ -186,8 +191,26 @@ class PipelineFacade:
                 "cleaning_report": cleaning_report.to_dict() if cleaning_report else None,
                 "mdm_summary": mdm_result,
                 "pipeline_status": dataset.status,
+                "storage_paths": {
+                    "raw": str(raw_path),
+                    "cleaned": str(cleaned_path),
+                    "mdm": mdm_result.get("master_dataset_path"),
+                },
             }
 
+        except DominioException as e:
+            gateway = e.gateway_bpmn or 0
+            return self._handle_rejection(
+                dataset,
+                RejectionLog(
+                    id=str(uuid4())[:8],
+                    dataset_id=dataset.id if dataset else "unknown",
+                    motivo=str(e),
+                    gateway_bpmn=gateway,
+                    regla_negocio=e.reason or "N/A",
+                    detalles=e.context,
+                ),
+            )
         except Exception as e:
             return {
                 "status": "error",
@@ -252,7 +275,6 @@ class PipelineFacade:
         """
         dataset.status = DatasetStatus.TRANSFORMING.value
         dataset, cleaning_report = self.cleaning_service.run(dataset)
-        dataset.status = DatasetStatus.CLEANING.value
         self.notification_service.notify_all(
             "stage_cleaning_completed",
             {
@@ -408,7 +430,8 @@ Resumen de limpieza:
         """
         try:
             # Valida integridad y coherencia
-            QualityValidator.validar_integridad(dataset.rows_preview, min_cobertura=0.8)
+            rows = dataset.records if dataset.records else dataset.rows_preview
+            QualityValidator.validar_integridad(rows, min_cobertura=0.8)
             return True
         except DominioException as e:
             raise CalidadInsuficienteException(
@@ -434,6 +457,7 @@ Resumen de limpieza:
         """
         if dataset:
             dataset.status = DatasetStatus.REJECTED.value
+        rejection_path = self.folder_storage.persist_rejection(rejection_log)
 
         self.notification_service.notify_all(
             "gateway_rejected",
@@ -449,6 +473,7 @@ Resumen de limpieza:
             "dataset_id": dataset.id if dataset else None,
             "rejection_log": rejection_log.to_dict(),
             "gateway_bpmn": rejection_log.gateway_bpmn,
+            "rejection_path": str(rejection_path),
         }
 
     def _configure_cleaning_service(self) -> CleaningService:
@@ -468,7 +493,7 @@ Resumen de limpieza:
         service.register_cleaner(FormatCleaner(rules=format_rules))
 
         service.register_cleaner(
-            DuplicateCleaner(key_fields=["ubicacion", "tamano_m2"])
+            DuplicateCleaner(key_fields=["ubicacion", "tamano_m2", "habitaciones"])
         )
 
         return service

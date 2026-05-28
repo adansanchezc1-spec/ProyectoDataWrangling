@@ -62,40 +62,70 @@ class DatasetController:
             except Exception as e:
                 print(f"Error in observer callback: {e}")
 
-    def upload_and_process_dataset(self, file_path: str) -> None:
+    def upload_and_process_dataset(self, file_path: str | list[str]) -> None:
         """Carga y procesa un dataset (caso de uso principal).
 
         Ejecuta el pipeline en un thread separado para no bloquear la UI.
 
         Args:
-            file_path: Ruta al archivo a procesar
+            file_path: Ruta o rutas al archivo a procesar
         """
+        file_paths = [file_path] if isinstance(file_path, str) else list(file_path)
+
         # Notifica inicio
-        self._notify_observers("pipeline_started", {"file_path": file_path})
+        self._notify_observers("pipeline_started", {"file_paths": file_paths})
 
         # Ejecuta en thread separado
         thread = Thread(
             target=self._process_dataset_background,
-            args=(file_path,),
+            args=(file_paths,),
             daemon=False,
         )
         thread.start()
 
-    def _process_dataset_background(self, file_path: str) -> None:
+    def _process_dataset_background(self, file_paths: list[str]) -> None:
         """Procesa el dataset en background (thread).
 
         Args:
-            file_path: Ruta al archivo
+            file_paths: Rutas a los archivos
         """
         try:
-            # Notifica progreso
-            self._notify_observers("pipeline_progress", {"message": "Iniciando pipeline..."})
+            results: list[Dict[str, Any]] = []
 
-            # Ejecuta pipeline
-            result = self.pipeline_facade.run_pipeline(file_path)
+            for index, file_path in enumerate(file_paths, start=1):
+                self._notify_observers(
+                    "pipeline_progress",
+                    {
+                        "message": (
+                            f"Iniciando pipeline {index}/{len(file_paths)}: "
+                            f"{file_path}"
+                        )
+                    },
+                )
+                result = self.pipeline_facade.run_pipeline(file_path)
+                results.append(result)
 
             # Notifica resultado
-            self._notify_observers("pipeline_completed", result)
+            if len(results) == 1:
+                self._notify_observers("pipeline_completed", results[0])
+            else:
+                self._notify_observers(
+                    "pipeline_completed",
+                    {
+                        "status": "batch_completed",
+                        "total": len(results),
+                        "success_count": sum(
+                            1 for item in results if item.get("status") == "success"
+                        ),
+                        "rejected_count": sum(
+                            1 for item in results if item.get("status") == "rejected"
+                        ),
+                        "error_count": sum(
+                            1 for item in results if item.get("status") == "error"
+                        ),
+                        "results": results,
+                    },
+                )
 
         except DominioException as e:
             self._notify_observers(

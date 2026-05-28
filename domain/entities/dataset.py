@@ -8,7 +8,7 @@ Responsabilidades:
 """
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import unicodedata
 import re
 
@@ -43,6 +43,7 @@ class Dataset:
     created_at: datetime
     schema: Dict[str, Any] = field(default_factory=dict)
     rows_preview: List[Dict[str, Any]] = field(default_factory=list)
+    records: List[Dict[str, Any]] = field(default_factory=list)
     total_rows: int = 0
 
     # Columnas requeridas por RB-004
@@ -67,6 +68,8 @@ class Dataset:
         cols = set()
         if self.schema:
             cols = set(self.schema.keys())
+        elif self.records:
+            cols = set(self.records[0].keys())
         elif self.rows_preview:
             cols = set(self.rows_preview[0].keys())
 
@@ -88,13 +91,15 @@ class Dataset:
         - Remover puntuación
         - Colapsar espacios en blanco
         """
-        for row in self.rows_preview:
+        rows = self.records if self.records else self.rows_preview
+        for row in rows:
             if "ubicacion" in row and isinstance(row["ubicacion"], str):
                 val = row["ubicacion"].strip().lower()
                 val = _remove_accents(val)
                 val = re.sub(r"[\.,]", "", val)
                 val = re.sub(r"\s+", " ", val)
                 row["ubicacion"] = val
+        self.rows_preview = rows[: min(100, len(rows))]
 
     def es_bogota(self) -> bool:
         """Verifica si el dataset es de Bogotá (RB-001).
@@ -102,15 +107,19 @@ class Dataset:
         Returns:
             True si la primera fila tiene ubicación de Bogotá normalizada.
         """
-        if not self.rows_preview:
+        rows = self.records if self.records else self.rows_preview
+        if not rows:
             return False
-        first = self.rows_preview[0].get("ubicacion")
-        if not isinstance(first, str):
-            return False
-        norm = _remove_accents(first.strip().lower())
-        norm = re.sub(r"[\.,]", "", norm)
-        norm = re.sub(r"\s+", " ", norm)
-        return norm.startswith("bogota")
+        for row in rows:
+            value = row.get("ubicacion")
+            if not isinstance(value, str):
+                return False
+            norm = _remove_accents(value.strip().lower())
+            norm = re.sub(r"[\.,]", "", norm)
+            norm = re.sub(r"\s+", " ", norm)
+            if not norm.startswith("bogota"):
+                return False
+        return True
 
     def esta_completo(self) -> bool:
         """Determina si el dataset está completo (todas las filas con datos).
@@ -118,10 +127,11 @@ class Dataset:
         Returns:
             True si no hay filas nulas y hay preview.
         """
-        if not self.rows_preview or self.total_rows == 0:
+        rows = self.records if self.records else self.rows_preview
+        if not rows or self.total_rows == 0:
             return False
         # Verificar que al menos una fila esté completa
-        for row in self.rows_preview:
+        for row in rows:
             missing = [col for col in self.REQUIRED_COLUMNS if col not in row or row[col] is None]
             if not missing:
                 return True
@@ -141,6 +151,7 @@ class Dataset:
             ),
             "schema": self.schema,
             "rows_preview": self.rows_preview,
+            "records": self.records,
             "total_rows": self.total_rows,
         }
 

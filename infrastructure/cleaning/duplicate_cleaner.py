@@ -21,10 +21,10 @@ class DuplicateCleaner(IDataCleaner):
         """Inicializa el limpiador.
 
         Args:
-            key_fields: Campos que forman la clave. Por defecto: ("ubicacion", "tamano_m2")
+            key_fields: Campos que forman la clave.
         """
         if key_fields is None:
-            key_fields = ["ubicacion", "tamano_m2"]
+            key_fields = ["ubicacion", "tamano_m2", "habitaciones"]
         self.key_fields = tuple(key_fields)
 
     def _extract_key(self, row: Dict[str, Any]) -> Tuple[Any, ...]:

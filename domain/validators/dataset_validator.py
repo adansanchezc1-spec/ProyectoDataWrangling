@@ -201,6 +201,8 @@ class QualityValidator:
                     context={"field": "precio", "value": precio},
                 )
 
+            DatasetValidator.validar_estrato(row.get("estrato"))
+
             return True
 
         except (ValueError, TypeError) as e:

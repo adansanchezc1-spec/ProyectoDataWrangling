@@ -64,14 +64,15 @@ class CleaningService:
             dataset.normalizar_ubicacion()
 
             # Crea reporte
+            records = dataset.records if dataset.records else dataset.rows_preview
             report = CleaningReport(
                 id=str(uuid4())[:8],
                 dataset_id=dataset.id,
-                registros_procesados=len(dataset.rows_preview),
+                registros_procesados=len(records),
             )
 
             # Ejecuta cada cleaner
-            rows = dataset.rows_preview
+            rows = records
             for i, cleaner in enumerate(self.cleaners):
                 rows_antes = len(rows)
                 rows = cleaner.clean(rows)
@@ -101,9 +102,10 @@ class CleaningService:
                 )
 
             # Actualiza dataset
-            dataset.rows_preview = rows
+            dataset.records = rows
+            dataset.rows_preview = rows[: min(100, len(rows))]
             dataset.total_rows = len(rows)
-            dataset.status = DatasetStatus.CLEANING.value
+            dataset.status = DatasetStatus.CLEANED.value
 
             return dataset, report
 

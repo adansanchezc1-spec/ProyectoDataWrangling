@@ -153,6 +153,8 @@ class VistaResultado:
             self._show_success_result(result)
         elif result.get("status") == "rejected":
             self._show_rejection_result(result)
+        elif result.get("status") == "batch_completed":
+            self._show_batch_result(result)
         else:
             self._show_error_result(result)
 
@@ -183,6 +185,7 @@ class VistaResultado:
             "Total de Registros": result.get("total_records"),
             "Registros Limpios": result.get("records_cleaned"),
             "Estado Final": result.get("pipeline_status"),
+            "MDM": result.get("storage_paths", {}).get("mdm"),
             "Procesado": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
 
@@ -260,6 +263,40 @@ class VistaResultado:
         self.txt_report.config(state=tk.NORMAL)
         self.txt_report.delete(1.0, tk.END)
         self.txt_report.insert(tk.END, "El dataset fue rechazado y no cargado en el MDM.")
+        rejection_path = result.get("rejection_path")
+        if rejection_path:
+            self.txt_report.insert(tk.END, f"\nDetalle persistido en: {rejection_path}")
+        self.txt_report.config(state=tk.DISABLED)
+
+    def _show_batch_result(self, result: Dict[str, Any]) -> None:
+        """Muestra resumen de procesamiento multiple."""
+        self.title_label.config(text="Procesamiento Multiple Finalizado")
+        self.lbl_status.config(text="FINALIZADO", foreground="blue")
+        self.lbl_info.config(
+            text=(
+                f"Exitosos: {result.get('success_count', 0)} | "
+                f"Rechazados: {result.get('rejected_count', 0)} | "
+                f"Errores: {result.get('error_count', 0)}"
+            )
+        )
+
+        for item in self.tree_stats.get_children():
+            self.tree_stats.delete(item)
+        for item in self.tree_gateways.get_children():
+            self.tree_gateways.delete(item)
+
+        for index, item in enumerate(result.get("results", []), start=1):
+            label = f"Dataset {index} - {item.get('dataset_id', 'N/A')}"
+            detail = item.get("status")
+            if item.get("status") == "success":
+                detail = item.get("storage_paths", {}).get("mdm", "success")
+            elif item.get("status") == "rejected":
+                detail = item.get("rejection_log", {}).get("motivo", "rejected")
+            self.tree_stats.insert("", "end", text=label, values=[str(detail)])
+
+        self.txt_report.config(state=tk.NORMAL)
+        self.txt_report.delete(1.0, tk.END)
+        self.txt_report.insert(tk.END, "Resumen por dataset disponible en la tabla superior.")
         self.txt_report.config(state=tk.DISABLED)
 
     def _show_error_result(self, result: Dict[str, Any]) -> None:
