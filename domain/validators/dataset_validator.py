@@ -20,6 +20,15 @@ def _remove_accents(text: str) -> str:
     return "".join([c for c in nkfd if not unicodedata.combining(c)])
 
 
+def _float(value: Any, default: float = 0.0) -> float:
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
 class DatasetValidator:
     """Validador de reglas de negocio para datasets inmobiliarios."""
 
@@ -173,6 +182,12 @@ class QualityValidator:
                     reason="RB-005",
                     context={"field": "tamano_m2", "value": tamano},
                 )
+            if tamano > 50000:
+                raise CoherenciaDatosException(
+                    f"tamano_m2 exceeds max (50000), got: {tamano}",
+                    reason="RB-005",
+                    context={"field": "tamano_m2", "value": tamano},
+                )
 
             # Validar habitaciones
             habitaciones = int(row.get("habitaciones", 0))
@@ -200,8 +215,78 @@ class QualityValidator:
                     reason="RB-005",
                     context={"field": "precio", "value": precio},
                 )
+            if precio > 50_000_000_000:
+                raise CoherenciaDatosException(
+                    f"precio exceeds max (50B), got: {precio}",
+                    reason="RB-005",
+                    context={"field": "precio", "value": precio},
+                )
 
             DatasetValidator.validar_estrato(row.get("estrato"))
+
+            # Validar campos opcionales (solo si están presentes)
+            if "parqueadero" in row and row["parqueadero"] is not None:
+                parq = float(row["parqueadero"])
+                if parq < 0 or parq > 20:
+                    raise CoherenciaDatosException(
+                        f"parqueadero out of range [0,20], got: {parq}",
+                        reason="RB-005",
+                        context={"field": "parqueadero", "value": parq},
+                    )
+
+            if "parques" in row and row["parques"] is not None:
+                parques = float(row["parques"])
+                if parques < 0 or parques > 200:
+                    raise CoherenciaDatosException(
+                        f"parques out of range [0,200], got: {parques}",
+                        reason="RB-005",
+                        context={"field": "parques", "value": parques},
+                    )
+
+            if "vias" in row and row["vias"] is not None:
+                vias = float(row["vias"])
+                if vias < 0 or vias > 100:
+                    raise CoherenciaDatosException(
+                        f"vias out of range [0,100], got: {vias}",
+                        reason="RB-005",
+                        context={"field": "vias", "value": vias},
+                    )
+
+            if "remocion_masa" in row and row["remocion_masa"] is not None:
+                remocion = float(row["remocion_masa"])
+                if remocion < 0:
+                    raise CoherenciaDatosException(
+                        f"remocion_masa cannot be negative, got: {remocion}",
+                        reason="RB-005",
+                        context={"field": "remocion_masa", "value": remocion},
+                    )
+
+            if "grandes_superficies" in row and row["grandes_superficies"] is not None:
+                sup = float(row["grandes_superficies"])
+                if sup < 0 or sup > 500:
+                    raise CoherenciaDatosException(
+                        f"grandes_superficies out of range [0,500], got: {sup}",
+                        reason="RB-005",
+                        context={"field": "grandes_superficies", "value": sup},
+                    )
+
+            if "colegios" in row and row["colegios"] is not None:
+                col = float(row["colegios"])
+                if col < 0 or col > 500:
+                    raise CoherenciaDatosException(
+                        f"colegios out of range [0,500], got: {col}",
+                        reason="RB-005",
+                        context={"field": "colegios", "value": col},
+                    )
+
+            if "hospitales" in row and row["hospitales"] is not None:
+                hosp = float(row["hospitales"])
+                if hosp < 0 or hosp > 100:
+                    raise CoherenciaDatosException(
+                        f"hospitales out of range [0,100], got: {hosp}",
+                        reason="RB-005",
+                        context={"field": "hospitales", "value": hosp},
+                    )
 
             return True
 
