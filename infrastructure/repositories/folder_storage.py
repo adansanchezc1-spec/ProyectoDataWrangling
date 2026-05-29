@@ -64,10 +64,11 @@ class FolderStorage:
         new_records = []
 
         for row in records:
-            key = self._record_key(row)
+            normalized_row = {k.lower(): v for k, v in row.items()}
+            key = self._record_key(normalized_row)
             if key in existing_keys:
                 continue
-            new_records.append(dict(row))
+            new_records.append(normalized_row)
             existing_keys.add(key)
 
         if not new_records:
