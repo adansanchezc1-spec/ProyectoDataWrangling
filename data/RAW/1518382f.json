@@ -1,9 +1,9 @@
 {
-  "id": "aecdba4d",
+  "id": "1518382f",
   "source_path": "C:\\Users\\ADAN\\Downloads\\bogota_vivienda_nueva.csv",
   "format": "CSV",
   "status": "EXTRACTING",
-  "created_at": "2026-05-29T16:12:48.422787",
+  "created_at": "2026-05-29T22:54:33.880346",
   "schema": {
     "ubicacion": "string",
     "precio": "string",
@@ -1050,6 +1050,5 @@
   ],
   "total_rows": 32,
   "user_email": "adansanchezc1@gmail.com",
-  "year": 2024,
   "metadata": {}
 }

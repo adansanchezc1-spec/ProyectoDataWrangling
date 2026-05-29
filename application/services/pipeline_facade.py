@@ -118,6 +118,7 @@ class PipelineFacade:
             if user_email:
                 dataset.user_email = user_email
             raw_path = self.folder_storage.persist_raw(dataset)
+            total_raw_records = dataset.total_rows
 
             # ========== GATEWAY 1: ¿Extracción completa? ==========
             if not self._gateway_1_extraction_complete(dataset):
@@ -191,12 +192,14 @@ class PipelineFacade:
             # ========== STAGE 6: NOTIFICATION ==========
             email_result = self._stage_notification(dataset, cleaning_report)
 
+            cleaned_records = cleaning_report.generar_resumen()["registros_finales"] if cleaning_report else dataset.total_rows
+
             # Resultado final
             return {
                 "status": "success",
                 "dataset_id": dataset.id,
-                "total_records": dataset.total_rows,
-                "records_cleaned": dataset.total_rows,
+                "total_records": total_raw_records,
+                "records_cleaned": cleaned_records,
                 "cleaning_report": cleaning_report.to_dict() if cleaning_report else None,
                 "mdm_summary": mdm_result,
                 "email_result": email_result,
@@ -470,6 +473,9 @@ class PipelineFacade:
     ) -> Dict[str, Any]:
         """Maneja rechazo en gateway.
 
+        Persiste el rechazo, notifica por observadores
+        y envía correo electrónico si hay email configurado.
+
         Args:
             dataset: Dataset rechazado
             rejection_log: Log de rechazo
@@ -490,12 +496,31 @@ class PipelineFacade:
             },
         )
 
+        email_result = {"sent": False, "to": "", "error": ""}
+        if self.email_service and dataset and dataset.user_email:
+            try:
+                subject = f"Dataset {dataset.id} rechazado en Gateway {rejection_log.gateway_bpmn}"
+                body = (
+                    f"El dataset ha sido rechazado durante el procesamiento:\n"
+                    f"- ID: {dataset.id}\n"
+                    f"- Archivo: {dataset.source_path}\n"
+                    f"- Gateway: {rejection_log.gateway_bpmn}\n"
+                    f"- Motivo: {rejection_log.motivo}\n"
+                    f"- Regla de negocio: {rejection_log.regla_negocio}\n"
+                    f"- Detalle persistido en: {rejection_path}\n"
+                )
+                self.email_service.send(subject, body, dataset.user_email)
+                email_result = {"sent": True, "to": dataset.user_email, "error": ""}
+            except Exception as e:
+                email_result = {"sent": False, "to": dataset.user_email, "error": str(e)}
+
         return {
             "status": "rejected",
             "dataset_id": dataset.id if dataset else None,
             "rejection_log": rejection_log.to_dict(),
             "gateway_bpmn": rejection_log.gateway_bpmn,
             "rejection_path": str(rejection_path),
+            "email_result": email_result,
         }
 
     def _configure_cleaning_service(self) -> CleaningService:

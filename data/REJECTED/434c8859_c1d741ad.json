@@ -1,0 +1,10 @@
+{
+  "id": "c1d741ad",
+  "dataset_id": "434c8859",
+  "motivo": "Data integrity check failed. Coverage: 3.1% < 80.0%",
+  "gateway_bpmn": 4,
+  "regla_negocio": "RF-007/RF-008",
+  "fecha": "2026-05-29T22:05:09.974688",
+  "detalles": {},
+  "row_index": null
+}

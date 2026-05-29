@@ -1,6 +1,7 @@
 import csv
 
 from application.services.pipeline_facade import PipelineFacade
+from infrastructure.notifications.email_service import FileLoggerEmailService
 from infrastructure.repositories.folder_storage import FolderStorage
 from infrastructure.repositories.json_repository import JsonRepository
 
@@ -56,6 +57,7 @@ def test_pipeline_persists_raw_cleaned_and_mdm(tmp_path):
     result = _facade(tmp_path).run_pipeline(str(source))
 
     assert result["status"] == "success"
+    assert result["total_records"] == 2
     assert result["records_cleaned"] == 1
     assert (tmp_path / "data" / "RAW").exists()
     assert (tmp_path / "data" / "CLEANED").exists()
@@ -196,3 +198,27 @@ def test_batch_mixed_success_rejection(tmp_path):
     assert r1["status"] == "success"
     assert r2["status"] == "rejected"
     assert r2["gateway_bpmn"] == 2
+
+
+def test_rejection_sends_email_notification(tmp_path):
+    source = tmp_path / "invalid_email.csv"
+    _write_csv(
+        source,
+        [{"ubicacion": "Medellin", "tamano_m2": "50", "habitaciones": "2", "banos": "1", "estrato": "3", "precio": "200000000"}],
+    )
+    email_dir = tmp_path / "email_logs"
+    facade = PipelineFacade(
+        JsonRepository(str(tmp_path / "repositories")),
+        email_service=FileLoggerEmailService(str(email_dir)),
+        folder_storage=FolderStorage(str(tmp_path / "data")),
+    )
+    result = facade.run_pipeline(str(source), user_email="user@example.com")
+    assert result["status"] == "rejected"
+    assert result["email_result"]["sent"] is True
+    assert result["email_result"]["to"] == "user@example.com"
+    email_files = list(email_dir.iterdir())
+    assert len(email_files) == 1
+    content = email_files[0].read_text(encoding="utf-8")
+    assert "rechazado" in content.lower()
+    assert "Gateway 2" in content
+    assert "Medellin" in content or "RB-001" in content or "Bogot" in content
