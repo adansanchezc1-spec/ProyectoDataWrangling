@@ -1,0 +1,19 @@
+To: adansanchezc1@gmail.com
+Subject: [Data Wrangling - MDM Insertion] Dataset 5b8418ca procesado exitosamente
+Date: 2026-05-28T15-40-56
+============================================================
+El dataset ha sido procesado:
+- ID: 5b8418ca
+- Records: 32
+- Status: NOTIFIED
+- Archivo: C:\Users\ADAN\Downloads\bogota_vivienda_nueva.csv
+- Año: 2024
+
+Resumen de limpieza:
+{'dataset_id': '5b8418ca', 'registros_procesados': 32, 'registros_eliminados': 0, 'registros_finales': 32, 'nulos_removidos': 0, 'duplicados_removidos': 0, 'porcentaje_eliminacion': 0.0, 'pasos_ejecutados': 3, 'created_at': '2026-05-28T20:40:56.558240'}
+
+
+---
+Sistema de Data Wrangling - Bogotá Real Estate
+Inserción procesada: 2026-05-28T20:40:56.585471
+Mensaje automático - No responder

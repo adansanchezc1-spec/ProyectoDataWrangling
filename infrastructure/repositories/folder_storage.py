@@ -3,6 +3,7 @@
 This module materializes the BPMN data storages as filesystem folders:
 RAW, CLEANED, PROCESSED/MDM, and REJECTED.
 """
+import csv
 import json
 from pathlib import Path
 from typing import Any, Dict, List
@@ -14,7 +15,8 @@ from domain.exceptions import RepositorioException
 class FolderStorage:
     """Persists pipeline artifacts in folders that mirror BPMN states."""
 
-    MASTER_FILE = "master_dataset.json"
+    MASTER_FILE = "master_dataset.csv"
+    METADATA_FILE = "master_metadata.json"
 
     def __init__(self, base_dir: str = "data") -> None:
         self.base_dir = Path(base_dir)
@@ -52,44 +54,80 @@ class FolderStorage:
         )
 
     def append_to_master(self, dataset: Dataset) -> Path:
-        """Appends accepted records to the single MDM master table."""
-        master_path = self.mdm_dir / self.MASTER_FILE
-        master = self._read_master(master_path)
+        """Appends accepted records to the single MDM master table as CSV."""
         records = dataset.records if dataset.records else dataset.rows_preview
-        existing_keys = {self._record_key(row) for row in master["records"]}
+        csv_path = self.mdm_dir / self.MASTER_FILE
+        meta_path = self.mdm_dir / self.METADATA_FILE
+
+        metadata = self._read_metadata(meta_path)
+        existing_keys = self._read_existing_keys(csv_path)
+        new_records = []
 
         for row in records:
             key = self._record_key(row)
             if key in existing_keys:
                 continue
-            master["records"].append(dict(row))
+            new_records.append(dict(row))
             existing_keys.add(key)
 
-        master["total_records"] = len(master["records"])
-        master["dataset_ids"] = sorted(set(master["dataset_ids"] + [dataset.id]))
-        return self._write_json(master_path, master)
+        if not new_records:
+            return csv_path
 
-    def _read_master(self, master_path: Path) -> Dict[str, Any]:
-        if not master_path.exists():
-            return {
-                "table": "master_dataset",
-                "dataset_ids": [],
-                "total_records": 0,
-                "records": [],
-            }
+        fieldnames = self._get_fieldnames(new_records)
+        file_exists = csv_path.exists()
+
         try:
-            with master_path.open("r", encoding="utf-8") as file:
-                data = json.load(file)
-        except (OSError, json.JSONDecodeError) as exc:
+            csv_path.parent.mkdir(parents=True, exist_ok=True)
+            with csv_path.open("a", newline="", encoding="utf-8-sig") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=";")
+                if not file_exists:
+                    writer.writeheader()
+                writer.writerows(new_records)
+        except OSError as exc:
             raise RepositorioException(
-                "Failed to read MDM master dataset",
-                context={"path": str(master_path), "error": str(exc)},
+                "Failed to append to MDM master CSV",
+                context={"path": str(csv_path), "error": str(exc)},
             )
-        data.setdefault("table", "master_dataset")
-        data.setdefault("dataset_ids", [])
-        data.setdefault("records", [])
-        data["total_records"] = len(data["records"])
-        return data
+
+        metadata["dataset_ids"] = sorted(set(metadata["dataset_ids"] + [dataset.id]))
+        metadata["total_records"] = metadata["total_records"] + len(new_records)
+        self._write_json(meta_path, metadata)
+
+        return csv_path
+
+    def _read_metadata(self, meta_path: Path) -> Dict[str, Any]:
+        if not meta_path.exists():
+            return {"table": "master_dataset", "dataset_ids": [], "total_records": 0}
+        try:
+            with meta_path.open("r", encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, json.JSONDecodeError):
+            return {"table": "master_dataset", "dataset_ids": [], "total_records": 0}
+
+    def _read_existing_keys(self, csv_path: Path) -> set:
+        keys: set = set()
+        if not csv_path.exists():
+            return keys
+        try:
+            with csv_path.open("r", encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f, delimiter=";")
+                for row in reader:
+                    keys.add(self._record_key(row))
+        except (OSError, csv.Error):
+            pass
+        return keys
+
+    @staticmethod
+    def _get_fieldnames(records: List[Dict[str, Any]]) -> List[str]:
+        standard = [
+            "ubicacion", "tamano_m2", "habitaciones", "banos", "estrato", "precio",
+            "parqueadero", "long_com_corr", "parques", "vias",
+            "remocion_masa", "grandes_superficies", "colegios", "hospitales",
+            "precio_unitario", "puntaje_entorno", "densidad_comercial",
+            "bano_por_hab", "parqueadero_ratio",
+        ]
+        present = {k for r in records for k in r.keys()}
+        return [c for c in standard if c in present] + sorted(set().union(*(r.keys() for r in records)) - set(standard))
 
     def _write_json(self, path: Path, payload: Dict[str, Any]) -> Path:
         try:
@@ -108,7 +146,7 @@ class FolderStorage:
     @staticmethod
     def _record_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         return (
-            row.get("ubicacion"),
-            row.get("tamano_m2"),
-            row.get("habitaciones"),
+            str(row.get("ubicacion", "")),
+            str(row.get("tamano_m2", "")),
+            str(row.get("habitaciones", "")),
         )

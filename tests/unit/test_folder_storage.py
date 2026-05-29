@@ -74,5 +74,11 @@ def test_folder_storage_keeps_single_master_table_without_duplicates(tmp_path):
     master_path = storage.append_to_master(dataset)
 
     content = master_path.read_text(encoding="utf-8")
-    assert '"table": "master_dataset"' in content
-    assert '"total_records": 1' in content
+    assert "ubicacion;tamano_m2;habitaciones;banos;estrato;precio" in content
+    assert content.count("bogota centro") == 1
+
+    meta_path = tmp_path / "PROCESSED" / "MDM" / "master_metadata.json"
+    assert meta_path.exists()
+    import json
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta["total_records"] == 1

@@ -63,8 +63,16 @@ class FormatCleaner(IDataCleaner):
         """
         return {
             "tamano_m2": float,
-            "habitaciones": int,
-            "banos": int,
-            "estrato": int,
+            "habitaciones": lambda x: int(round(float(x))),
+            "banos": lambda x: int(round(float(x))),
+            "estrato": lambda x: int(round(float(x))),
             "precio": float,
+            "parqueadero": lambda x: int(round(float(x))),
+            "long_com_corr": float,
+            "parques": float,
+            "vias": float,
+            "remocion_masa": float,
+            "grandes_superficies": lambda x: int(round(float(x))),
+            "colegios": lambda x: int(round(float(x))),
+            "hospitales": lambda x: int(round(float(x))),
         }

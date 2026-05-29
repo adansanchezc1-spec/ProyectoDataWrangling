@@ -11,11 +11,11 @@ class VistaCargaDataset:
     def __init__(self, master: tk.Tk) -> None:
         self.master = master
         self.master.title("Data Wrangling - Carga de Dataset")
-        self.master.geometry("640x420")
+        self.master.geometry("640x640")
 
         self.selected_file: Optional[str] = None
         self.selected_files: list[str] = []
-        self.on_process_requested: Optional[Callable[[list[str]], None]] = None
+        self.on_process_requested: Optional[Callable[[list[str], str, int, str, str, float], None]] = None
 
         self._create_widgets()
 
@@ -58,12 +58,52 @@ class VistaCargaDataset:
         )
         self.lbl_file.pack(side=tk.LEFT, padx=10, fill=tk.X, expand=True)
 
+        config_frame = ttk.LabelFrame(main_frame, text="Configuracion", padding="10")
+        config_frame.pack(fill=tk.X, pady=5)
+
+        row_idx = 0
+        ttk.Label(config_frame, text="Año del dataset:").grid(row=row_idx, column=0, padx=5, pady=3, sticky=tk.W)
+        self.entry_year = ttk.Entry(config_frame, width=8)
+        self.entry_year.insert(0, "2024")
+        self.entry_year.grid(row=row_idx, column=1, padx=5, pady=3, sticky=tk.W)
+
+        row_idx += 1
+        ttk.Label(config_frame, text="Email destino:").grid(row=row_idx, column=0, padx=5, pady=3, sticky=tk.W)
+        self.entry_email = ttk.Entry(config_frame, width=40)
+        self.entry_email.grid(row=row_idx, column=1, padx=5, pady=3, sticky=tk.W)
+        ttk.Label(config_frame, text="Recibira el resumen", foreground="gray", font=("", 8)).grid(row=row_idx, column=2, padx=5, pady=3, sticky=tk.W)
+
+        row_idx += 1
+        ttk.Label(config_frame, text="SMTP usuario (Gmail):").grid(row=row_idx, column=0, padx=5, pady=3, sticky=tk.W)
+        self.entry_smtp_user = ttk.Entry(config_frame, width=40)
+        self.entry_smtp_user.insert(0, "danysancubi@gmail.com")
+        self.entry_smtp_user.grid(row=row_idx, column=1, padx=5, pady=3, sticky=tk.W)
+
+        row_idx += 1
+        ttk.Label(config_frame, text="SMTP contraseña (App Password):").grid(row=row_idx, column=0, padx=5, pady=3, sticky=tk.W)
+        self.entry_smtp_pass = ttk.Entry(config_frame, width=40, show="*")
+        self.entry_smtp_pass.insert(0, "wrld jgev vahn juxu")
+        self.entry_smtp_pass.grid(row=row_idx, column=1, padx=5, pady=3, sticky=tk.W)
+        self.btn_smtp_help = ttk.Button(
+            config_frame, text="?",
+            width=2,
+            command=self._show_smtp_help,
+        )
+        self.btn_smtp_help.grid(row=row_idx, column=2, padx=2, pady=3, sticky=tk.W)
+
+        row_idx += 1
+        ttk.Label(config_frame, text="Factor precio:").grid(row=row_idx, column=0, padx=5, pady=3, sticky=tk.W)
+        self.entry_price_factor = ttk.Entry(config_frame, width=12)
+        self.entry_price_factor.insert(0, "1.0")
+        self.entry_price_factor.grid(row=row_idx, column=1, padx=5, pady=3, sticky=tk.W)
+        ttk.Label(config_frame, text="Multiplicador del precio (ej: 1000000)", foreground="gray", font=("", 8)).grid(row=row_idx, column=2, padx=5, pady=3, sticky=tk.W)
+
         info_frame = ttk.LabelFrame(main_frame, text="Informacion del Archivo", padding="10")
-        info_frame.pack(fill=tk.X, pady=20)
+        info_frame.pack(fill=tk.X, pady=10)
 
         self.txt_info = tk.Text(
             info_frame,
-            height=6,
+            height=5,
             width=60,
             state=tk.DISABLED,
             bg="#f0f0f0",
@@ -71,7 +111,7 @@ class VistaCargaDataset:
         self.txt_info.pack(fill=tk.BOTH, expand=True)
 
         button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=20)
+        button_frame.pack(fill=tk.X, pady=10)
 
         self.btn_process = ttk.Button(
             button_frame,
@@ -153,11 +193,28 @@ Tipos: {types}
             messagebox.showerror("Error", "Debes seleccionar un archivo primero")
             return
 
+        email = self.entry_email.get().strip()
+
+        try:
+            year = int(self.entry_year.get().strip())
+        except ValueError:
+            messagebox.showerror("Error", "El año debe ser un numero valido (ej: 2024)")
+            return
+
+        smtp_user = self.entry_smtp_user.get().strip()
+        smtp_pass = self.entry_smtp_pass.get().strip()
+
+        try:
+            price_factor = float(self.entry_price_factor.get().strip())
+        except ValueError:
+            messagebox.showerror("Error", "El factor precio debe ser un numero valido (ej: 1.0)")
+            return
+
         if self.on_process_requested:
             self.lbl_status.config(text="Procesando...", foreground="orange")
             self.progress.start()
             self.btn_process.config(state=tk.DISABLED)
-            self.on_process_requested(self.selected_files)
+            self.on_process_requested(self.selected_files, email, year, smtp_user, smtp_pass, price_factor)
 
     def _on_clear_clicked(self) -> None:
         self.selected_file = None
@@ -170,6 +227,27 @@ Tipos: {types}
         self.lbl_status.config(text="Listo", foreground="blue")
         self.progress.stop()
         self.progress_var.set(0)
+        self.entry_email.delete(0, tk.END)
+        self.entry_year.delete(0, tk.END)
+        self.entry_year.insert(0, "2024")
+        self.entry_smtp_user.delete(0, tk.END)
+        self.entry_smtp_user.insert(0, "danysancubi@gmail.com")
+        self.entry_smtp_pass.delete(0, tk.END)
+        self.entry_smtp_pass.insert(0, "wrld jgev vahn juxu")
+        self.entry_price_factor.delete(0, tk.END)
+        self.entry_price_factor.insert(0, "1.0")
+
+    def _show_smtp_help(self) -> None:
+        messagebox.showinfo(
+            "App Password - Gmail",
+            "Para usar Gmail SMTP necesitas un App Password:\n\n"
+            "1. Activa 2FA en tu cuenta Google\n"
+            "2. Ve a: https://myaccount.google.com/apppasswords\n"
+            "3. Selecciona 'Correo' y 'Windows' como dispositivo\n"
+            "4. Copia el password de 16 caracteres generado\n"
+            "5. Usalo en el campo 'SMTP contrasena'\n\n"
+            "No uses tu contrasena normal de Gmail.",
+        )
 
     def show_error(self, title: str, message: str) -> None:
         self.lbl_status.config(text="Error en procesamiento", foreground="red")

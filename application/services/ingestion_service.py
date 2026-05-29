@@ -36,6 +36,8 @@ class IngestionService:
     - Factory Method para crear loaders por formato
     - Validación de columnas requeridas
     - Manejo de errores específicos por formato
+    - Mapeo de nombres de columna fuente a nombres del sistema
+    - Detección automática de delimitador CSV (; , tab)
     """
 
     REQUIRED_COLUMNS = [
@@ -46,6 +48,27 @@ class IngestionService:
         "estrato",
         "precio",
     ]
+
+    SOURCE_COLUMN_MAP = {
+        "subzona": "ubicacion",
+        "zona": "ubicacion",
+        "barrio": "ubicacion",
+        "localidad": "ubicacion",
+        "precios": "precio",
+        "precio_millon": "precio",
+        "area": "tamano_m2",
+        "metros": "tamano_m2",
+        "tamano": "tamano_m2",
+        "alcobas": "habitaciones",
+        "cuartos": "habitaciones",
+        "habitacion": "habitaciones",
+        "habitaciones": "habitaciones",
+        "ba\u00f1os": "banos",
+        "banos": "banos",
+        "estrato": "estrato",
+    }
+
+    UBICACION_SOURCE_COLUMNS = {"subzona", "zona", "barrio", "localidad"}
 
     def __init__(self) -> None:
         """Inicializa el servicio sin dependencias externas (inyectadas en load)."""
@@ -102,6 +125,13 @@ class IngestionService:
                 gateway_bpmn=2,
             )
 
+        # Normaliza separadores decimales (coma europea → punto)
+        rows = self._normalizar_decimales(rows)
+
+        # Reconstruye schema tras transformaciones
+        if rows:
+            schema = {col: "string" for col in rows[0].keys()}
+
         # Valida columnas
         DatasetValidator.validar_columnas_minimas(schema, self.REQUIRED_COLUMNS)
 
@@ -121,8 +151,30 @@ class IngestionService:
 
         return dataset
 
+    def _detect_delimiter(self, path: Path) -> str:
+        """Detecta el delimitador de un CSV examinando la primera línea.
+
+        Returns:
+            str: Delimitador detectado (; , o tab)
+        """
+        with open(path, "r", encoding="utf-8-sig") as f:
+            first_line = f.readline()
+
+        semicolons = first_line.count(";")
+        commas = first_line.count(",")
+        tabs = first_line.count("\t")
+
+        if semicolons > commas and semicolons > tabs:
+            return ";"
+        elif tabs > commas and tabs > semicolons:
+            return "\t"
+        return ","
+
     def _load_csv(self, path: Path) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
-        """Carga un archivo CSV.
+        """Carga un archivo CSV con detección automática de delimitador.
+
+        Aplica mapeo de columnas fuente a nombres del sistema y
+        transforma valores de ubicación y separadores decimales.
 
         Args:
             path: Ruta al CSV
@@ -136,26 +188,34 @@ class IngestionService:
         try:
             rows = []
             schema = {}
+            delimiter = self._detect_delimiter(path)
+            ubicacion_sources: Dict[str, bool] = {}
 
             with open(path, "r", encoding="utf-8-sig") as f:
-                reader = csv.DictReader(f)
+                reader = csv.DictReader(f, delimiter=delimiter)
                 if reader.fieldnames is None:
                     raise ValueError("CSV is empty")
 
-                field_map = {
-                    col: self._normalize_column_name(col)
-                    for col in reader.fieldnames
-                }
+                field_map = {}
+                for col in reader.fieldnames:
+                    normalized = self._normalize_column_name(col)
+                    field_map[col] = normalized
+                    col_lower = col.strip().lower()
+                    if col_lower in self.UBICACION_SOURCE_COLUMNS:
+                        ubicacion_sources[col] = True
+
                 schema = {field_map[col]: "string" for col in reader.fieldnames}
 
                 for row in reader:
-                    rows.append(
-                        {
-                            field_map[col]: value
-                            for col, value in row.items()
-                            if col is not None
-                        }
-                    )
+                    new_row = {}
+                    for col, value in row.items():
+                        if col is None:
+                            continue
+                        new_col = field_map.get(col, col)
+                        if col in ubicacion_sources and isinstance(value, str):
+                            value = f"Bogotá, {value}"
+                        new_row[new_col] = value
+                    rows.append(new_row)
 
             if not rows:
                 raise ValueError("CSV has no data rows")
@@ -262,5 +322,43 @@ class IngestionService:
 
     @staticmethod
     def _normalize_column_name(column: Any) -> str:
-        """Normalizes incoming source headers for schema validation."""
-        return str(column).strip().lstrip("\ufeff")
+        """Normaliza nombres de columna fuente y aplica mapeo a nombres del sistema.
+
+        Retorna siempre en minúsculas para que coincida con reglas de
+        normalización y limpieza (FormatCleaner, _normalizar_decimales).
+        """
+        col = str(column).strip().lstrip("\ufeff")
+        col_lower = col.lower().strip()
+        mapped = IngestionService.SOURCE_COLUMN_MAP.get(col_lower)
+        if mapped:
+            return mapped
+        return col_lower
+
+    @staticmethod
+    def _normalizar_decimales(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Convierte comas decimales europeas a puntos en campos numéricos.
+
+        - Si un valor tiene UNA sola coma (ej: "15,76235525"), se reemplaza
+          por punto: "15.76235525" (decimal europeo).
+        - Si tiene MÚLTIPLES comas (ej: "16,364,832.92"), se interpreta como
+          separador de millares y se eliminan todas las comas: "16364832.92".
+        - Búsqueda case-insensitive sobre nombres de columna.
+        """
+        from itertools import chain
+
+        all_keys = set(chain.from_iterable(row.keys() for row in rows))
+        campos_numericos_lower = {
+            "tamano_m2", "habitaciones", "banos", "estrato", "precio",
+            "parqueadero", "long_com_corr", "parques", "vias",
+            "remocion_masa", "grandes_superficies", "colegios", "hospitales",
+        }
+        for row in rows:
+            for actual_key in list(row.keys()):
+                if actual_key.lower() in campos_numericos_lower:
+                    val = row[actual_key]
+                    if isinstance(val, str):
+                        if val.count(",") == 1:
+                            row[actual_key] = val.replace(",", ".")
+                        elif val.count(",") > 1:
+                            row[actual_key] = val.replace(",", "")
+        return rows

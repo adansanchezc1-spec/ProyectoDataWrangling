@@ -62,15 +62,31 @@ class DatasetController:
             except Exception as e:
                 print(f"Error in observer callback: {e}")
 
-    def upload_and_process_dataset(self, file_path: str | list[str]) -> None:
+    def upload_and_process_dataset(
+        self,
+        file_path: str | list[str],
+        user_email: str = "",
+        year: int = 0,
+        smtp_user: str = "",
+        smtp_pass: str = "",
+        price_factor: float = 1.0,
+    ) -> None:
         """Carga y procesa un dataset (caso de uso principal).
 
         Ejecuta el pipeline en un thread separado para no bloquear la UI.
 
         Args:
             file_path: Ruta o rutas al archivo a procesar
+            user_email: Email del usuario para notificación
+            year: Año del dataset
+            smtp_user: Usuario SMTP (Gmail) para envío real
+            smtp_pass: Contraseña de aplicación SMTP
         """
         file_paths = [file_path] if isinstance(file_path, str) else list(file_path)
+
+        # Reconfigura email service si se dieron credenciales SMTP
+        if smtp_user and smtp_pass:
+            self._configure_email_service(smtp_user, smtp_pass)
 
         # Notifica inicio
         self._notify_observers("pipeline_started", {"file_paths": file_paths})
@@ -78,16 +94,43 @@ class DatasetController:
         # Ejecuta en thread separado
         thread = Thread(
             target=self._process_dataset_background,
-            args=(file_paths,),
+            args=(file_paths, user_email, year, price_factor),
             daemon=False,
         )
         thread.start()
 
-    def _process_dataset_background(self, file_paths: list[str]) -> None:
+    def _configure_email_service(self, smtp_user: str, smtp_pass: str) -> None:
+        """Configura el servicio de email con credenciales SMTP reales."""
+        try:
+            from infrastructure.notifications.email_service import EmailService
+            from infrastructure.notifications.email_decorators import (
+                ValidacionEmailDecorator,
+                NotificacionInsercionDecorator,
+            )
+            base = EmailService(
+                host="smtp.gmail.com", port=587,
+                username=smtp_user, password=smtp_pass,
+            )
+            self.pipeline_facade.email_service = ValidacionEmailDecorator(
+                NotificacionInsercionDecorator(base)
+            )
+        except Exception as e:
+            print(f"Warning: SMTP config failed, using default: {e}")
+
+    def _process_dataset_background(
+        self,
+        file_paths: list[str],
+        user_email: str = "",
+        year: int = 0,
+        price_factor: float = 1.0,
+    ) -> None:
         """Procesa el dataset en background (thread).
 
         Args:
             file_paths: Rutas a los archivos
+            user_email: Email del usuario para notificación
+            year: Año del dataset
+            price_factor: Factor multiplicador del precio unitario
         """
         try:
             results: list[Dict[str, Any]] = []
@@ -102,7 +145,12 @@ class DatasetController:
                         )
                     },
                 )
-                result = self.pipeline_facade.run_pipeline(file_path)
+                result = self.pipeline_facade.run_pipeline(
+                    file_path,
+                    user_email=user_email,
+                    year=year,
+                    price_factor=price_factor,
+                )
                 results.append(result)
 
             # Notifica resultado

@@ -20,7 +20,7 @@ class VistaResultado:
     - Botones de acción (Descargar, Nuevo Dataset, Exportar)
     """
 
-    def __init__(self, master: tk.Tk) -> None:
+    def __init__(self, master: tk.Tk | tk.Toplevel) -> None:
         """Inicializa la vista.
 
         Args:
@@ -180,11 +180,20 @@ class VistaResultado:
             self.tree_gateways.delete(item)
 
         # Añade estadísticas
+        email_info = result.get("email_result", {})
+        email_label = "No solicitado"
+        if email_info.get("to"):
+            if email_info.get("sent"):
+                email_label = f"Enviado a {email_info['to']}"
+            else:
+                email_label = f"FALLO a {email_info['to']}: {email_info.get('error', '?')}"
+
         stats = {
             "Dataset ID": result.get("dataset_id"),
             "Total de Registros": result.get("total_records"),
             "Registros Limpios": result.get("records_cleaned"),
             "Estado Final": result.get("pipeline_status"),
+            "Email": email_label,
             "MDM": result.get("storage_paths", {}).get("mdm"),
             "Procesado": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
@@ -327,6 +336,17 @@ class VistaResultado:
         self.txt_report.delete(1.0, tk.END)
 
         resumen = report.get("resumen", {})
+        email_info = (
+            self.current_result.get("email_result", {})
+            if self.current_result else {}
+        )
+        email_line = ""
+        if email_info.get("to"):
+            if email_info.get("sent"):
+                email_line = f"Correo: Enviado a {email_info['to']} "
+            else:
+                email_line = f"Correo: FALLO ({email_info.get('error', '?')}) "
+
         report_text = f"""
 REPORTE DE LIMPIEZA
 ===================
@@ -339,6 +359,7 @@ Detalle:
 - Nulos Removidos: {resumen.get('nulos_removidos')}
 - Duplicados Removidos: {resumen.get('duplicados_removidos')}
 - Pasos Ejecutados: {resumen.get('pasos_ejecutados')}
+{email_line}
         """
 
         self.txt_report.insert(tk.END, report_text)

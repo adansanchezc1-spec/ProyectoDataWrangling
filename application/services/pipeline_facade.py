@@ -36,6 +36,7 @@ from infrastructure.cleaning.format_cleaner import FormatCleaner
 from infrastructure.cleaning.duplicate_cleaner import DuplicateCleaner
 from infrastructure.notifications.notification_service import NotificationService
 from infrastructure.repositories.folder_storage import FolderStorage
+from infrastructure.analytics.feature_analyzer import FeatureAnalyzer
 
 
 class PipelineFacade:
@@ -75,7 +76,13 @@ class PipelineFacade:
         self.mdm_service = MDMService(repository, self.folder_storage)
         self.notification_service = NotificationService()
 
-    def run_pipeline(self, file_path: str) -> Dict[str, Any]:
+    def run_pipeline(
+        self,
+        file_path: str,
+        user_email: str = "",
+        year: int = 0,
+        price_factor: float = 1.0,
+    ) -> Dict[str, Any]:
         """Ejecuta el pipeline ETL completo.
 
         Flujo:
@@ -88,6 +95,8 @@ class PipelineFacade:
 
         Args:
             file_path: Ruta al archivo a procesar
+            user_email: Email del usuario para notificación
+            year: Año del dataset
 
         Returns:
             Dict con resultado del pipeline
@@ -108,6 +117,10 @@ class PipelineFacade:
         try:
             # ========== STAGE 1: INGESTION ==========
             dataset = self._stage_ingestion(file_path)
+            if user_email:
+                dataset.user_email = user_email
+            if year:
+                dataset.year = year
             raw_path = self.folder_storage.persist_raw(dataset)
 
             # ========== GATEWAY 1: ¿Extracción completa? ==========
@@ -159,7 +172,7 @@ class PipelineFacade:
                 )
 
             # ========== STAGE 4: PROFILING & QUALITY GATE ==========
-            dataset = self._stage_profiling(dataset)
+            dataset = self._stage_profiling(dataset, price_factor=price_factor)
 
             # ========== GATEWAY 4: ¿Calidad aceptable? ==========
             try:
@@ -180,7 +193,7 @@ class PipelineFacade:
             mdm_result = self._stage_mdm_loading(dataset)
 
             # ========== STAGE 6: NOTIFICATION ==========
-            self._stage_notification(dataset, cleaning_report)
+            email_result = self._stage_notification(dataset, cleaning_report)
 
             # Resultado final
             return {
@@ -190,6 +203,7 @@ class PipelineFacade:
                 "records_cleaned": dataset.total_rows,
                 "cleaning_report": cleaning_report.to_dict() if cleaning_report else None,
                 "mdm_summary": mdm_result,
+                "email_result": email_result,
                 "pipeline_status": dataset.status,
                 "storage_paths": {
                     "raw": str(raw_path),
@@ -285,19 +299,27 @@ class PipelineFacade:
         )
         return dataset, cleaning_report
 
-    def _stage_profiling(self, dataset: Dataset) -> Dataset:
+    def _stage_profiling(self, dataset: Dataset, price_factor: float = 1.0) -> Dataset:
         """Stage 4: Perfilado y análisis.
 
         Transición: CLEANING → PROFILING → QUALITY_GATE
 
         Args:
             dataset: Dataset a perfilar
+            price_factor: Factor multiplicador del precio unitario
 
         Returns:
             Dataset con estado actualizado
         """
         dataset.status = DatasetStatus.PROFILING.value
-        # Aquí podrían ir análisis estadísticos
+        analyzer = FeatureAnalyzer()
+        analysis = analyzer.analyze(dataset, price_factor=price_factor)
+        dataset.metadata["feature_analysis"] = {
+            "features": analysis["features"],
+            "stats": analysis["stats"],
+        }
+        if analysis.get("enriched_records"):
+            dataset.records = analysis["enriched_records"]
         dataset.status = DatasetStatus.QUALITY_GATE.value
         return dataset
 
@@ -319,7 +341,7 @@ class PipelineFacade:
         )
         return result
 
-    def _stage_notification(self, dataset: Dataset, cleaning_report: Optional[CleaningReport]) -> None:
+    def _stage_notification(self, dataset: Dataset, cleaning_report: Optional[CleaningReport]) -> Dict[str, Any]:
         """Stage 6: Notificación final.
 
         Transición: MDM_LOADED → NOTIFIED
@@ -327,31 +349,36 @@ class PipelineFacade:
         Args:
             dataset: Dataset procesado
             cleaning_report: Reporte de limpieza
+
+        Returns:
+            Dict con resultado de la notificación
         """
         dataset.status = DatasetStatus.NOTIFIED.value
+        email_result = {"sent": False, "to": "", "error": ""}
 
-        if self.email_service and hasattr(self.email_service, "validate_email"):
+        if self.email_service and dataset.user_email:
             try:
                 subject = f"Dataset {dataset.id} procesado exitosamente"
-                body = f"""
-El dataset ha sido procesado:
-- ID: {dataset.id}
-- Records: {dataset.total_rows}
-- Status: {dataset.status}
-- Archivo: {dataset.source_path}
-
-Resumen de limpieza:
-{cleaning_report.generar_resumen() if cleaning_report else 'N/A'}
-                """
-                # Enviar notificación (con decoradores si están aplicados)
-                # self.email_service.send(subject, body, admin_email)
+                body = (
+                    f"El dataset ha sido procesado:\n"
+                    f"- ID: {dataset.id}\n"
+                    f"- Records: {dataset.total_rows}\n"
+                    f"- Status: {dataset.status}\n"
+                    f"- Archivo: {dataset.source_path}\n"
+                    f"- Año: {dataset.year}\n"
+                    f"\nResumen de limpieza:\n"
+                    f"{cleaning_report.generar_resumen() if cleaning_report else 'N/A'}\n"
+                )
+                self.email_service.send(subject, body, dataset.user_email)
+                email_result = {"sent": True, "to": dataset.user_email, "error": ""}
             except Exception as e:
-                pass  # Silenciosamente sigue si notificación falla
+                email_result = {"sent": False, "to": dataset.user_email, "error": str(e)}
 
         self.notification_service.notify_all(
             "stage_notification_sent",
-            {"dataset_id": dataset.id},
+            {"dataset_id": dataset.id, "email": email_result},
         )
+        return email_result
 
     # ========== GATEWAYS ==========
 

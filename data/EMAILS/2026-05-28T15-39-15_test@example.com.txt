@@ -1,0 +1,10 @@
+To: test@example.com
+Subject: [Data Wrangling - MDM Insertion] Test asunto
+Date: 2026-05-28T15-39-15
+============================================================
+Cuerpo de prueba
+
+---
+Sistema de Data Wrangling - Bogotá Real Estate
+Inserción procesada: 2026-05-28T20:39:15.769864
+Mensaje automático - No responder

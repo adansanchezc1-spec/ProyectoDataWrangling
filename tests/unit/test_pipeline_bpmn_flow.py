@@ -59,7 +59,7 @@ def test_pipeline_persists_raw_cleaned_and_mdm(tmp_path):
     assert result["records_cleaned"] == 1
     assert (tmp_path / "data" / "RAW").exists()
     assert (tmp_path / "data" / "CLEANED").exists()
-    assert (tmp_path / "data" / "PROCESSED" / "MDM" / "master_dataset.json").exists()
+    assert (tmp_path / "data" / "PROCESSED" / "MDM" / "master_dataset.csv").exists()
 
 
 def test_pipeline_rejects_non_bogota_dataset(tmp_path):

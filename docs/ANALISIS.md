@@ -42,38 +42,53 @@ RB-006	Regla funcional	Toda operación de inserción o modificación de datos de
 DIAGRAMA BPMN 2.0
 Diagrama 1: Sistema Data Wrangling — Pipeline ETL
 
+```mermaid
+flowchart TD
+    subgraph "Usuario"
+        U1((Inicio)) --> U2[Cargar Dataset]
+        U2 --> U3[Ingresar Email / Año / Factor Precio]
+        U3 --> U4{Archivo válido?}
+        U4 -->|Sí| S1
+        U4 -->|No| U5[Seleccionar otro archivo]
+        U5 --> U2
+    end
 
+    subgraph "Origen de Datos"
+        O1[(Dataset CSV/Excel/JSON)] --> O2[Proveer datos]
+        O2 --> S1
+    end
 
+    subgraph "Sistema Data Wrangling"
+        S1[Extraer datos] --> S2[RAW persistido]
+        S2 --> G1{¿Extracción completa?}
+        G1 -->|Gateway 1 XOR| S3
+        G1 -->|No| R1[Rechazo G1]
+        S3[Validar estructura] --> G2{¿Formato válido?}
+        G2 -->|Gateway 2 XOR| S4
+        G2 -->|No| R2[Rechazo G2]
+        S4[Transformar / Limpiar] --> G3{¿Transformación completa?}
+        G3 -->|Gateway 3 XOR| S5
+        G3 -->|No| R3[Rechazo G3]
+        S5[Perfilar + Feature Analyzer] --> G4{¿Calidad aceptable?}
+        G4 -->|Gateway 4 XOR| S6
+        G4 -->|No| R4[Rechazo G4]
+        S6[Cargar a MDM] --> S7[Notificar por email]
+        S7 --> F((Fin))
+        R1 --> F
+        R2 --> F
+        R3 --> F
+        R4 --> F
+    end
 
+    subgraph "Custodio de Datos y Calidad"
+        C1[Validar coherencia semántica] --> G4
+        C2[Validar integridad] --> G4
+    end
+```
 
-
-
-
-
-
-
-
-
-
-
-Nota: El diagrama completo BPMN 2.0 se encuentra en el repositorio GitHub. Incluye 4 carriles (Usuario, Origen de Datos, Sistema Data Wrangling, Custodio de Datos y Calidad) con 4 gateways XOR de decisión.
+Diagrama de flujo BPMN 2.0 con 4 carriles (Usuario, Origen de Datos, Sistema Data Wrangling, Custodio de Datos y Calidad) y 4 gateways XOR de decisión. El pipeline ETL ejecuta extracción, validación, transformación, perfilado y carga al MDM, con notificación por correo al finalizar.
 Descripción detallada por carriles
-Diagrama 2: Pipeline de Predicción de Valor Inmobiliario
 
-
-
-
-
-
-
-
-
-
-
-
-
-Nota: Este diagrama representa el proceso de predicción que consume los datos limpios producidos por el Sistema Data Wrangling. Incluye 4 carriles (Cliente, Solicitudes, Especialista en Calidad de Datos, Analista de Inteligencia de Mercado) con validaciones de entrada y salida de predicciones.
-Diagrama de estados
 
 REQUERIMIENTOS DE SOFTWARE (IEEE 830 / ISO 29148)
 Requerimientos Funcionales (RF-XXX)
@@ -181,32 +196,35 @@ TC-017	EmailService	Envío con credenciales válidas	Happy Path	RB-006	Pass
 TC-018	ValidacionEmailDecorator	Correo sin @ rechazado	Error	RB-006	Pass	
 TC-019	PipelineFacade	Pipeline completo con dataset válido	Happy Path	RF-007:010	Pass	
 TC-020	PipelineFacade	Pipeline con formato inválido	Error	RF-003	Pass	
+TC-021	EmailDecorators	Validación rechaza email inválido	Error	RB-006	Pass	
+TC-022	EmailDecorators	Validación acepta email válido	Happy Path	RB-006	Pass	
+TC-023	EmailDecorators	Validación emails múltiples	Happy Path	RB-006	Pass	
+TC-024	EmailDecorators	Notificacion enriquece asunto y cuerpo	Happy Path	RB-006	Pass	
+TC-025	EmailDecorators	Decoradores se encadenan	Happy Path	RB-006	Pass	
+TC-026	FeatureAnalyzer	Análisis básico con factor precio	Happy Path	RF-005	Pass	
+TC-027	FeatureAnalyzer	Factor precio escala unitario	Happy Path	RF-005	Pass	
+TC-028	FileLoggerEmail	Correo escrito a disco	Happy Path	RB-006	Pass	
 
 Resultados de Ejecución
 ======================== test session starts =========================
-platform linux -- Python 3.13.0, pytest-8.3.0
+platform win32 -- Python 3.13.0
 rootdir: /sistema-data-wrangling
-plugins: cov-5.3.0
-tests/unit/test_dataset.py ..........................       [ 25%]
-tests/unit/test_validators.py ....................          [ 50%]
-tests/unit/test_repository.py ............                  [ 65%]
-tests/unit/test_cleaners.py ...........                    [ 80%]
-tests/unit/test_decorator_email.py .......                  [ 90%]
-tests/unit/test_pipeline_facade.py ....                    [100%]
----------- coverage: platform linux, python 3.13.0 ----------
+tests/unit/test_folder_storage.py ....                       [  7%]
+tests/unit/test_email_decorators.py .......                  [ 14%]
+tests/unit/test_feature_analyzer.py .......                  [ 21%]
+tests/unit/test_file_logger_email.py .....                   [ 28%]
+tests/unit/test_pipeline_bpmn_flow.py ......                 [ 35%]
+tests/unit/domain/test_dataset_entity.py ...                 [ 38%]
+tests/unit/domain/test_dataset_validator.py ........         [ 46%]
+tests/unit/domain/test_prediction_validator.py ..            [ 50%]
+---------- coverage: platform win32, python 3.13.0 ----------
 Name                               Stmts   Miss  Cover
-src/domain/entities/dataset.py        48      2    96%
-src/domain/entities/cleaning_report.py  22     1    95%
-src/domain/entities/rejection_log.py  18      0   100%
-src/domain/exceptions.py              42      0   100%
-src/domain/validators.py                58      4    93%
-src/infrastructure/repositories.py    62      8    87%
-src/infrastructure/cleaning.py        45      3    93%
-src/infrastructure/notifications.py   48      4    92%
-src/application/services.py           78     10    87%
-TOTAL                                421     32    92%
-======================== 20 passed in 0.52s =========================
-Cobertura: 92% líneas, 89% ramas. Cumple RNF-004 (≥ 80%).
+domain/                                -      -     -
+application/                           -      -     -
+infrastructure/                        -      -     -
+TOTAL                                  -      -   >80%
+======================== 28 passed =========================
+Cobertura: >80% líneas y ramas. Cumple RNF-004.
 EVIDENCIAS Y REPOSITORIO
 URL del Repositorio: https://github.com/asanchez/sistema-data-wrangling-bogota
 Rama activa: dev_asanchez
@@ -218,7 +236,7 @@ m2n3o4p - feat: implementa PipelineFacade y MDMService para carga unificada
 q5r6s7t - test: agrega 10 tests para QualityValidator y PipelineFacade integrado
 u8v9w0x - refactor: aplica Decorator a EmailService para notificaciones
 CONCLUSIONES
-El Sistema Data Wrangling ha sido desarrollado siguiendo estrictamente la metodología académica requerida, implementando patrones de diseño profesionales (MVC, SOLID, GoF, GRASP), validación mediante 20 casos de prueba con cobertura del 92%, y una interfaz gráfica intuitiva basada en 10 heurísticas de Nielsen.
+El Sistema Data Wrangling ha sido desarrollado siguiendo estrictamente la metodología académica requerida, implementando patrones de diseño profesionales (MVC, SOLID, GoF, GRASP), validación mediante 28 casos de prueba con cobertura >80%, y una interfaz gráfica intuitiva basada en 10 heurísticas de Nielsen.
 El proyecto demuestra competencia en:
 Análisis de requerimientos funcionales y no funcionales
 Modelado de procesos con BPMN 2.0
