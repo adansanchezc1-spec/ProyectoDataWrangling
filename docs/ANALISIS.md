@@ -114,6 +114,28 @@ CARRIL: Custodio de Datos y Calidad
 
 Descripción detallada por carriles
 
+### Diccionario de Variables del Dataset
+| Variable | Tipo | Descripción | Rango esperado | Regla |
+|---|---|---|---|---|
+| ubicacion | str | Barrio o localidad del inmueble en Bogotá | "bogota ..." | RB-001 |
+| tamano_m2 | float | Área construida del inmueble en metros cuadrados | 1 - 50000 | RB-005 |
+| habitaciones | int | Número de habitaciones | 1 - 10 | RB-005 |
+| banos | int | Número de baños | 1 - 8 | RB-005 |
+| estrato | int | Estrato socioeconómico (1=menor, 6=mayor) | 1 - 6 | RB-002 |
+| precio | float | Precio del inmueble en pesos colombianos (COP) | 1 - 50,000,000,000 | RB-005 |
+| parqueadero | int | Número de parqueaderos disponibles | 0 - 20 | RB-005 |
+| parques | int | Cantidad de parques cercanos al inmueble | 0 - 200 | RB-005 |
+| vias | int | Cantidad de vías principales cercanas | 0 - 100 | RB-005 |
+| remocion_masa | float | Área de riesgo por remoción en masa (m²) | >= 0 | RB-005 |
+| grandes_superficies | int | Cantidad de centros comerciales cercanos | 0 - 500 | RB-005 |
+| colegios | int | Cantidad de colegios cercanos | 0 - 500 | RB-005 |
+| hospitales | int | Cantidad de hospitales cercanos | 0 - 100 | RB-005 |
+| long_com_corr | float | Longitud geográfica corregida de la comuna | Coordenada | -- |
+| precio_unitario | float | Precio por metro cuadrado (derivado: precio / tamano * factor) | Calculado | RF-005 |
+| puntaje_entorno | int | Suma de parques+colegios+hospitales cercanos (derivado) | Calculado | RF-005 |
+| bano_por_hab | float | Relación baños/habitaciones (derivado) | 0.1 - 4.0 | RF-005 |
+| densidad_comercial | float | Grandes superficies / tamano_m2 (derivado) | Calculado | RF-005 |
+| parqueadero_ratio | float | Parqueaderos / tamano_m2 (derivado) | Calculado | RF-005 |
 
 REQUERIMIENTOS DE SOFTWARE (IEEE 830 / ISO 29148)
 Requerimientos Funcionales (RF-XXX)
@@ -231,6 +253,18 @@ TC-025	EmailDecorators	Decoradores se encadenan	Happy Path	RB-006	Pass
 TC-026	FeatureAnalyzer	Análisis básico con factor precio	Happy Path	RF-005	Pass	
 TC-027	FeatureAnalyzer	Factor precio escala unitario	Happy Path	RF-005	Pass	
 TC-028	FileLoggerEmail	Correo escrito a disco	Happy Path	RB-006	Pass	
+TC-029	FileLoggerEmail	Correo con caracteres especiales	Happy Path	RB-006	Pass	
+TC-030	FileLoggerEmail	Validación formato email	Happy Path	RB-006	Pass	
+TC-031	FeatureAnalyzer	Campos vacíos retorna vacío	Edge	RF-005	Pass	
+TC-032	FeatureAnalyzer	Valores nulos no rompen análisis	Edge	RF-005	Pass	
+TC-033	FeatureAnalyzer	Estadísticas con múltiples filas	Happy Path	RF-005	Pass	
+TC-034	FeatureAnalyzer	Features derivadas en registros	Happy Path	RF-005	Pass	
+TC-035	FeatureAnalyzer	Factor precio default 1.0	Happy Path	RF-005	Pass	
+TC-036	EmailDecorators	Decorador envuelto delega envío	Happy Path	RB-006	Pass	
+TC-037	FileLoggerEmail	Directorio creado automáticamente	Happy Path	RB-006	Pass	
+TC-038	FileLoggerEmail	Asunto y cuerpo persisten exactos	Happy Path	RB-006	Pass	
+TC-039	PipelineFacade	Dataset semánticamente inválido rechazado	Error	RB-005	Pass	
+TC-040	FolderStorage	Rechazo con detalle de gateway	Happy Path	RB-004	Pass	
 
 Resultados de Ejecución
 ======================== test session starts =========================
@@ -250,7 +284,7 @@ domain/                                -      -     -
 application/                           -      -     -
 infrastructure/                        -      -     -
 TOTAL                                  -      -   >80%
-======================== 28 passed =========================
+======================== 40 passed =========================
 Cobertura: >80% líneas y ramas. Cumple RNF-004.
 EVIDENCIAS Y REPOSITORIO
 URL del Repositorio: https://github.com/asanchez/sistema-data-wrangling-bogota
@@ -263,7 +297,7 @@ m2n3o4p - feat: implementa PipelineFacade y MDMService para carga unificada
 q5r6s7t - test: agrega 10 tests para QualityValidator y PipelineFacade integrado
 u8v9w0x - refactor: aplica Decorator a EmailService para notificaciones
 CONCLUSIONES
-El Sistema Data Wrangling ha sido desarrollado siguiendo estrictamente la metodología académica requerida, implementando patrones de diseño profesionales (MVC, SOLID, GoF, GRASP), validación mediante 28 casos de prueba con cobertura >80%, y una interfaz gráfica intuitiva basada en 10 heurísticas de Nielsen.
+El Sistema Data Wrangling ha sido desarrollado siguiendo estrictamente la metodología académica requerida, implementando patrones de diseño profesionales (MVC, SOLID, GoF, GRASP), validación mediante 40 casos de prueba con cobertura >80%, y una interfaz gráfica intuitiva basada en 10 heurísticas de Nielsen.
 El proyecto demuestra competencia en:
 Análisis de requerimientos funcionales y no funcionales
 Modelado de procesos con BPMN 2.0
