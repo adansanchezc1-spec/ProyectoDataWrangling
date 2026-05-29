@@ -1,6 +1,8 @@
+import os
 import tkinter as tk
 from tkinter import Toplevel
 from typing import Any, Callable, Optional
+from dotenv import load_dotenv
 
 from infrastructure.repositories.repository_factory import RepositoryFactory
 from application.services.pipeline_facade import PipelineFacade
@@ -8,7 +10,6 @@ from presentation.controllers.dataset_controller import DatasetController
 from presentation.views.view_load_dataset import VistaCargaDataset
 from presentation.views.view_pipeline_status import VistaEstadoPipeline
 from presentation.views.view_result import VistaResultado
-import os
 
 from infrastructure.notifications.email_service import EmailService, FileLoggerEmailService
 from infrastructure.notifications.email_decorators import (
@@ -17,6 +18,7 @@ from infrastructure.notifications.email_decorators import (
 )
 
 def main():
+    load_dotenv()
     repo = RepositoryFactory.create_default()
 
     smtp_user = os.environ.get("SMTP_USERNAME", "")

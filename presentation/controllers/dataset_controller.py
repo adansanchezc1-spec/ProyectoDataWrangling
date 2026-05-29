@@ -67,26 +67,20 @@ class DatasetController:
         file_path: str | list[str],
         user_email: str = "",
         year: int = 0,
-        smtp_user: str = "",
-        smtp_pass: str = "",
         price_factor: float = 1.0,
     ) -> None:
         """Carga y procesa un dataset (caso de uso principal).
 
         Ejecuta el pipeline en un thread separado para no bloquear la UI.
+        Las credenciales SMTP se cargan desde variables de entorno (.env).
 
         Args:
             file_path: Ruta o rutas al archivo a procesar
             user_email: Email del usuario para notificación
             year: Año del dataset
-            smtp_user: Usuario SMTP (Gmail) para envío real
-            smtp_pass: Contraseña de aplicación SMTP
+            price_factor: Factor multiplicador del precio unitario
         """
         file_paths = [file_path] if isinstance(file_path, str) else list(file_path)
-
-        # Reconfigura email service si se dieron credenciales SMTP
-        if smtp_user and smtp_pass:
-            self._configure_email_service(smtp_user, smtp_pass)
 
         # Notifica inicio
         self._notify_observers("pipeline_started", {"file_paths": file_paths})
@@ -98,24 +92,6 @@ class DatasetController:
             daemon=False,
         )
         thread.start()
-
-    def _configure_email_service(self, smtp_user: str, smtp_pass: str) -> None:
-        """Configura el servicio de email con credenciales SMTP reales."""
-        try:
-            from infrastructure.notifications.email_service import EmailService
-            from infrastructure.notifications.email_decorators import (
-                ValidacionEmailDecorator,
-                NotificacionInsercionDecorator,
-            )
-            base = EmailService(
-                host="smtp.gmail.com", port=587,
-                username=smtp_user, password=smtp_pass,
-            )
-            self.pipeline_facade.email_service = ValidacionEmailDecorator(
-                NotificacionInsercionDecorator(base)
-            )
-        except Exception as e:
-            print(f"Warning: SMTP config failed, using default: {e}")
 
     def _process_dataset_background(
         self,

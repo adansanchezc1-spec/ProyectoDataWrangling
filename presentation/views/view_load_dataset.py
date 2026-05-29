@@ -15,7 +15,7 @@ class VistaCargaDataset:
 
         self.selected_file: Optional[str] = None
         self.selected_files: list[str] = []
-        self.on_process_requested: Optional[Callable[[list[str], str, int, str, str, float], None]] = None
+        self.on_process_requested: Optional[Callable[[list[str], str, int, float], None]] = None
 
         self._create_widgets()
 
@@ -72,24 +72,6 @@ class VistaCargaDataset:
         self.entry_email = ttk.Entry(config_frame, width=40)
         self.entry_email.grid(row=row_idx, column=1, padx=5, pady=3, sticky=tk.W)
         ttk.Label(config_frame, text="Recibira el resumen", foreground="gray", font=("", 8)).grid(row=row_idx, column=2, padx=5, pady=3, sticky=tk.W)
-
-        row_idx += 1
-        ttk.Label(config_frame, text="SMTP usuario (Gmail):").grid(row=row_idx, column=0, padx=5, pady=3, sticky=tk.W)
-        self.entry_smtp_user = ttk.Entry(config_frame, width=40)
-        self.entry_smtp_user.insert(0, "danysancubi@gmail.com")
-        self.entry_smtp_user.grid(row=row_idx, column=1, padx=5, pady=3, sticky=tk.W)
-
-        row_idx += 1
-        ttk.Label(config_frame, text="SMTP contraseña (App Password):").grid(row=row_idx, column=0, padx=5, pady=3, sticky=tk.W)
-        self.entry_smtp_pass = ttk.Entry(config_frame, width=40, show="*")
-        self.entry_smtp_pass.insert(0, "wrld jgev vahn juxu")
-        self.entry_smtp_pass.grid(row=row_idx, column=1, padx=5, pady=3, sticky=tk.W)
-        self.btn_smtp_help = ttk.Button(
-            config_frame, text="?",
-            width=2,
-            command=self._show_smtp_help,
-        )
-        self.btn_smtp_help.grid(row=row_idx, column=2, padx=2, pady=3, sticky=tk.W)
 
         row_idx += 1
         ttk.Label(config_frame, text="Factor precio:").grid(row=row_idx, column=0, padx=5, pady=3, sticky=tk.W)
@@ -201,9 +183,6 @@ Tipos: {types}
             messagebox.showerror("Error", "El año debe ser un numero valido (ej: 2024)")
             return
 
-        smtp_user = self.entry_smtp_user.get().strip()
-        smtp_pass = self.entry_smtp_pass.get().strip()
-
         try:
             price_factor = float(self.entry_price_factor.get().strip())
         except ValueError:
@@ -214,7 +193,7 @@ Tipos: {types}
             self.lbl_status.config(text="Procesando...", foreground="orange")
             self.progress.start()
             self.btn_process.config(state=tk.DISABLED)
-            self.on_process_requested(self.selected_files, email, year, smtp_user, smtp_pass, price_factor)
+            self.on_process_requested(self.selected_files, email, year, price_factor)
 
     def _on_clear_clicked(self) -> None:
         self.selected_file = None
@@ -230,24 +209,8 @@ Tipos: {types}
         self.entry_email.delete(0, tk.END)
         self.entry_year.delete(0, tk.END)
         self.entry_year.insert(0, "2024")
-        self.entry_smtp_user.delete(0, tk.END)
-        self.entry_smtp_user.insert(0, "danysancubi@gmail.com")
-        self.entry_smtp_pass.delete(0, tk.END)
-        self.entry_smtp_pass.insert(0, "wrld jgev vahn juxu")
         self.entry_price_factor.delete(0, tk.END)
         self.entry_price_factor.insert(0, "1.0")
-
-    def _show_smtp_help(self) -> None:
-        messagebox.showinfo(
-            "App Password - Gmail",
-            "Para usar Gmail SMTP necesitas un App Password:\n\n"
-            "1. Activa 2FA en tu cuenta Google\n"
-            "2. Ve a: https://myaccount.google.com/apppasswords\n"
-            "3. Selecciona 'Correo' y 'Windows' como dispositivo\n"
-            "4. Copia el password de 16 caracteres generado\n"
-            "5. Usalo en el campo 'SMTP contrasena'\n\n"
-            "No uses tu contrasena normal de Gmail.",
-        )
 
     def show_error(self, title: str, message: str) -> None:
         self.lbl_status.config(text="Error en procesamiento", foreground="red")
