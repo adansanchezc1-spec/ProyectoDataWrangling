@@ -46,8 +46,8 @@ Diagrama 1: Sistema Data Wrangling — Pipeline ETL
 flowchart TD
     subgraph "Usuario"
         U1((Inicio)) --> U2[Cargar Dataset]
-        U2 --> U3[Ingresar Email / Año / Factor Precio]
-        U3 --> U4{Archivo válido?}
+        U2 --> U3[Ingresar Email / Factor Precio]
+        U3 --> U4{Archivo(s) válido(s)?}
         U4 -->|Sí| S1
         U4 -->|No| U5[Seleccionar otro archivo]
         U5 --> U2
@@ -130,6 +130,8 @@ Descripción detallada por carriles
 | grandes_superficies | int | Cantidad de centros comerciales cercanos | 0 - 500 | RB-005 |
 | colegios | int | Cantidad de colegios cercanos | 0 - 500 | RB-005 |
 | hospitales | int | Cantidad de hospitales cercanos | 0 - 100 | RB-005 |
+| fecha | int | Año del registro inmobiliario | 1900 - 2026 | RB-005 |
+| factor_precio | float | Factor de conversión a millones COP (opcional, default 1.000.000) | > 0 | RF-005 |
 | long_com_corr | float | Longitud geográfica corregida de la comuna | Coordenada | -- |
 | precio_unitario | float | Precio por metro cuadrado (derivado: precio / tamano * factor) | Calculado | RF-005 |
 | puntaje_entorno | int | Suma de parques+colegios+hospitales cercanos (derivado) | Calculado | RF-005 |
@@ -150,6 +152,7 @@ RF-007	Validar consistencia semántica de atributos	Alta	Dataset	UC-007	Custodio
 RF-008	Validar integridad de datos	Alta	Dataset	UC-008	Custodio
 RF-009	Cargar datos limpios en tabla maestra única	Alta	Dataset	UC-009	Custodio
 RF-010	Notificar por correo ante rechazos o éxito	Alta	Notificación	UC-010	Todos
+RF-011	Incorporar columna temporal (fecha/año) como feature en cada registro para predicción	Alta	Dataset / FeatureAnalyzer	UC-011	Sistema
 
 Requerimientos No Funcionales (RNF-XXX)
 ID	Tipo	Descripción	Métrica
@@ -265,6 +268,11 @@ TC-037	FileLoggerEmail	Directorio creado automáticamente	Happy Path	RB-006	Pass
 TC-038	FileLoggerEmail	Asunto y cuerpo persisten exactos	Happy Path	RB-006	Pass	
 TC-039	PipelineFacade	Dataset semánticamente inválido rechazado	Error	RB-005	Pass	
 TC-040	FolderStorage	Rechazo con detalle de gateway	Happy Path	RB-004	Pass	
+TC-041	PipelineFacade	Columna fecha extraída desde CSV	Happy Path	RF-011	Pass	
+TC-042	PipelineFacade	Fecha en string (2023-06-15) extrae año	Happy Path	RF-011	Pass	
+TC-043	PipelineFacade	CSV sin fecha no falla	Edge	RF-011	Pass	
+TC-044	PipelineFacade	Batch acumula dos archivos en master	Happy Path	RF-009	Pass	
+TC-045	PipelineFacade	Batch resultados mixtos (éxito + rechazo)	Happy Path	RF-003	Pass	
 
 Resultados de Ejecución
 ======================== test session starts =========================
@@ -284,7 +292,7 @@ domain/                                -      -     -
 application/                           -      -     -
 infrastructure/                        -      -     -
 TOTAL                                  -      -   >80%
-======================== 40 passed =========================
+======================== 45 passed =========================
 Cobertura: >80% líneas y ramas. Cumple RNF-004.
 EVIDENCIAS Y REPOSITORIO
 URL del Repositorio: https://github.com/asanchez/sistema-data-wrangling-bogota

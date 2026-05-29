@@ -15,7 +15,7 @@ class VistaCargaDataset:
 
         self.selected_file: Optional[str] = None
         self.selected_files: list[str] = []
-        self.on_process_requested: Optional[Callable[[list[str], str, int, float], None]] = None
+        self.on_process_requested: Optional[Callable[[list[str], str, float], None]] = None
 
         self._create_widgets()
 
@@ -42,32 +42,48 @@ class VistaCargaDataset:
         desc.pack(pady=10)
 
         file_frame = ttk.LabelFrame(main_frame, text="Seleccionar Archivos", padding="10")
-        file_frame.pack(fill=tk.X, pady=20)
+        file_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+
+        btn_row = ttk.Frame(file_frame)
+        btn_row.pack(fill=tk.X)
 
         self.btn_browse = ttk.Button(
-            file_frame,
-            text="Explorar...",
+            btn_row,
+            text="Agregar archivos",
             command=self._on_browse_clicked,
         )
-        self.btn_browse.pack(side=tk.LEFT, padx=10)
+        self.btn_browse.pack(side=tk.LEFT, padx=(0, 5))
 
-        self.lbl_file = ttk.Label(
-            file_frame,
-            text="Ningun archivo seleccionado",
-            foreground="gray",
+        self.btn_remove = ttk.Button(
+            btn_row,
+            text="Quitar seleccionado",
+            command=self._on_remove_clicked,
         )
-        self.lbl_file.pack(side=tk.LEFT, padx=10, fill=tk.X, expand=True)
+        self.btn_remove.pack(side=tk.LEFT, padx=5)
+
+        self.btn_clear = ttk.Button(
+            btn_row,
+            text="Limpiar todo",
+            command=self._on_clear_clicked,
+        )
+        self.btn_clear.pack(side=tk.LEFT, padx=5)
+
+        self.lbl_file_count = ttk.Label(btn_row, text="Ningun archivo seleccionado", foreground="gray")
+        self.lbl_file_count.pack(side=tk.RIGHT, padx=5)
+
+        list_frame = ttk.Frame(file_frame)
+        list_frame.pack(fill=tk.BOTH, expand=True, pady=(5, 0))
+
+        scroll = ttk.Scrollbar(list_frame, orient=tk.VERTICAL)
+        self.lst_files = tk.Listbox(list_frame, yscrollcommand=scroll.set, height=6)
+        scroll.config(command=self.lst_files.yview)
+        scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self.lst_files.pack(fill=tk.BOTH, expand=True)
 
         config_frame = ttk.LabelFrame(main_frame, text="Configuracion", padding="10")
         config_frame.pack(fill=tk.X, pady=5)
 
         row_idx = 0
-        ttk.Label(config_frame, text="Año del dataset:").grid(row=row_idx, column=0, padx=5, pady=3, sticky=tk.W)
-        self.entry_year = ttk.Entry(config_frame, width=8)
-        self.entry_year.insert(0, "2024")
-        self.entry_year.grid(row=row_idx, column=1, padx=5, pady=3, sticky=tk.W)
-
-        row_idx += 1
         ttk.Label(config_frame, text="Email destino:").grid(row=row_idx, column=0, padx=5, pady=3, sticky=tk.W)
         self.entry_email = ttk.Entry(config_frame, width=40)
         self.entry_email.grid(row=row_idx, column=1, padx=5, pady=3, sticky=tk.W)
@@ -76,9 +92,9 @@ class VistaCargaDataset:
         row_idx += 1
         ttk.Label(config_frame, text="Factor precio:").grid(row=row_idx, column=0, padx=5, pady=3, sticky=tk.W)
         self.entry_price_factor = ttk.Entry(config_frame, width=12)
-        self.entry_price_factor.insert(0, "1.0")
+        self.entry_price_factor.insert(0, "1000000")
         self.entry_price_factor.grid(row=row_idx, column=1, padx=5, pady=3, sticky=tk.W)
-        ttk.Label(config_frame, text="Multiplicador del precio (ej: 1000000)", foreground="gray", font=("", 8)).grid(row=row_idx, column=2, padx=5, pady=3, sticky=tk.W)
+        ttk.Label(config_frame, text="Multiplicador (millones COP, default 1.000.000)", foreground="gray", font=("", 8)).grid(row=row_idx, column=2, padx=5, pady=3, sticky=tk.W)
 
         info_frame = ttk.LabelFrame(main_frame, text="Informacion del Archivo", padding="10")
         info_frame.pack(fill=tk.X, pady=10)
@@ -137,31 +153,48 @@ class VistaCargaDataset:
             ],
         )
 
-        if file_paths:
-            self.selected_files = list(file_paths)
-            self.selected_file = self.selected_files[0]
-            self._update_file_display()
-
-    def _update_file_display(self) -> None:
-        if not self.selected_files:
+        if not file_paths:
             return
 
-        paths = [Path(file_path) for file_path in self.selected_files]
-        total_size = sum(path.stat().st_size for path in paths) / (1024 * 1024)
+        existing = set(self.selected_files)
+        nuevos = [p for p in file_paths if p not in existing]
+        if not nuevos:
+            return
 
-        if len(paths) == 1:
-            self.lbl_file.config(text=paths[0].name, foreground="green")
-        else:
-            self.lbl_file.config(text=f"{len(paths)} archivos seleccionados", foreground="green")
+        self.selected_files.extend(nuevos)
+        self.selected_file = self.selected_files[0]
+        self._update_file_display()
 
-        names = "\n".join(f"- {path.name}" for path in paths)
-        types = ", ".join(sorted({path.suffix.upper()[1:] for path in paths}))
-        info_text = f"""Archivos:
-{names}
-Cantidad: {len(paths)}
-Tamano total: {total_size:.2f} MB
-Tipos: {types}
-"""
+    def _on_remove_clicked(self) -> None:
+        selection = self.lst_files.curselection()
+        if not selection:
+            return
+        index = selection[0]
+        removed = self.selected_files.pop(index)
+        self._update_file_display()
+
+    def _update_file_display(self) -> None:
+        self.lst_files.delete(0, tk.END)
+
+        if not self.selected_files:
+            self.lbl_file_count.config(text="Ningun archivo seleccionado", foreground="gray")
+            self.btn_process.config(state=tk.DISABLED)
+            self.txt_info.config(state=tk.NORMAL)
+            self.txt_info.delete(1.0, tk.END)
+            self.txt_info.config(state=tk.DISABLED)
+            return
+
+        paths = [Path(f) for f in self.selected_files]
+        total_size = sum(p.stat().st_size for p in paths) / (1024 * 1024)
+
+        for p in paths:
+            self.lst_files.insert(tk.END, p.name)
+
+        label = f"{len(paths)} archivos — {total_size:.2f} MB"
+        self.lbl_file_count.config(text=label, foreground="green")
+
+        types = ", ".join(sorted({p.suffix.upper()[1:] for p in paths}))
+        info_text = f"Cantidad: {len(paths)}\nTamano total: {total_size:.2f} MB\nTipos: {types}"
         self.txt_info.config(state=tk.NORMAL)
         self.txt_info.delete(1.0, tk.END)
         self.txt_info.insert(tk.END, info_text)
@@ -178,39 +211,27 @@ Tipos: {types}
         email = self.entry_email.get().strip()
 
         try:
-            year = int(self.entry_year.get().strip())
-        except ValueError:
-            messagebox.showerror("Error", "El año debe ser un numero valido (ej: 2024)")
-            return
-
-        try:
             price_factor = float(self.entry_price_factor.get().strip())
         except ValueError:
-            messagebox.showerror("Error", "El factor precio debe ser un numero valido (ej: 1.0)")
+            messagebox.showerror("Error", "El factor precio debe ser un numero valido (ej: 1000000)")
             return
 
         if self.on_process_requested:
             self.lbl_status.config(text="Procesando...", foreground="orange")
             self.progress.start()
             self.btn_process.config(state=tk.DISABLED)
-            self.on_process_requested(self.selected_files, email, year, price_factor)
+            self.on_process_requested(self.selected_files, email, price_factor)
 
     def _on_clear_clicked(self) -> None:
         self.selected_file = None
         self.selected_files = []
-        self.lbl_file.config(text="Ningun archivo seleccionado", foreground="gray")
-        self.txt_info.config(state=tk.NORMAL)
-        self.txt_info.delete(1.0, tk.END)
-        self.txt_info.config(state=tk.DISABLED)
-        self.btn_process.config(state=tk.DISABLED)
+        self._update_file_display()
         self.lbl_status.config(text="Listo", foreground="blue")
         self.progress.stop()
         self.progress_var.set(0)
         self.entry_email.delete(0, tk.END)
-        self.entry_year.delete(0, tk.END)
-        self.entry_year.insert(0, "2024")
         self.entry_price_factor.delete(0, tk.END)
-        self.entry_price_factor.insert(0, "1.0")
+        self.entry_price_factor.insert(0, "1000000")
 
     def show_error(self, title: str, message: str) -> None:
         self.lbl_status.config(text="Error en procesamiento", foreground="red")

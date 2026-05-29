@@ -80,7 +80,6 @@ class PipelineFacade:
         self,
         file_path: str,
         user_email: str = "",
-        year: int = 0,
         price_factor: float = 1.0,
     ) -> Dict[str, Any]:
         """Ejecuta el pipeline ETL completo.
@@ -96,7 +95,6 @@ class PipelineFacade:
         Args:
             file_path: Ruta al archivo a procesar
             user_email: Email del usuario para notificación
-            year: Año del dataset
 
         Returns:
             Dict con resultado del pipeline
@@ -119,8 +117,6 @@ class PipelineFacade:
             dataset = self._stage_ingestion(file_path)
             if user_email:
                 dataset.user_email = user_email
-            if year:
-                dataset.year = year
             raw_path = self.folder_storage.persist_raw(dataset)
 
             # ========== GATEWAY 1: ¿Extracción completa? ==========
@@ -365,7 +361,6 @@ class PipelineFacade:
                     f"- Records: {dataset.total_rows}\n"
                     f"- Status: {dataset.status}\n"
                     f"- Archivo: {dataset.source_path}\n"
-                    f"- Año: {dataset.year}\n"
                     f"\nResumen de limpieza:\n"
                     f"{cleaning_report.generar_resumen() if cleaning_report else 'N/A'}\n"
                 )

@@ -6,12 +6,13 @@ class FeatureAnalyzer:
     def analyze(self, dataset, price_factor: float = 1.0) -> Dict[str, Any]:
         records = dataset.records if dataset.records else dataset.rows_preview
         if not records:
-            return {"features": [], "derived": {}, "stats": {}}
+            return {"features": [], "derived": {}, "stats": {}, "time_stats": {}}
 
         derived = self._compute_derived_features(records, price_factor)
         enriched = self._enrich_records(records, derived)
         stats = self._compute_statistics(enriched)
-        return {"features": list(derived.keys()), "derived": derived, "stats": stats, "enriched_records": enriched}
+        time_stats = self._compute_time_stats(enriched)
+        return {"features": list(derived.keys()), "derived": derived, "stats": stats, "enriched_records": enriched, "time_stats": time_stats}
 
     @staticmethod
     def _compute_derived_features(records: List[Dict[str, Any]], price_factor: float = 1.0) -> Dict[str, List[Optional[float]]]:
@@ -79,8 +80,8 @@ class FeatureAnalyzer:
         stats = {}
         numeric_cols = [
             "precio", "tamano_m2", "habitaciones", "banos", "estrato",
-            "parqueadero", "precio_unitario", "puntaje_entorno", "densidad_comercial",
-            "bano_por_hab", "parqueadero_ratio",
+            "parqueadero", "fecha", "precio_unitario", "puntaje_entorno",
+            "densidad_comercial", "bano_por_hab", "parqueadero_ratio",
         ]
         for col in numeric_cols:
             vals = [_float(r.get(col)) for r in enriched]
@@ -96,6 +97,44 @@ class FeatureAnalyzer:
             elif len(vals) == 1:
                 stats[col] = {"mean": vals[0], "min": vals[0], "max": vals[0], "std": 0, "count": 1}
         return stats
+
+
+    @staticmethod
+    def _compute_time_stats(enriched: List[Dict[str, Any]]) -> Dict[str, Any]:
+        years = {}
+        for r in enriched:
+            f = r.get("fecha")
+            if f is None:
+                continue
+            try:
+                year = int(f)
+            except (ValueError, TypeError):
+                continue
+            if year not in years:
+                years[year] = {"count": 0, "precios": [], "tamanos": []}
+            years[year]["count"] += 1
+            try:
+                years[year]["precios"].append(float(r.get("precio", 0)))
+            except (ValueError, TypeError):
+                pass
+            try:
+                years[year]["tamanos"].append(float(r.get("tamano_m2", 0)))
+            except (ValueError, TypeError):
+                pass
+
+        result = {}
+        for year in sorted(years):
+            data = years[year]
+            precios = data["precios"]
+            tamanos = data["tamanos"]
+            result[str(year)] = {
+                "count": data["count"],
+                "precio_mean": round(mean(precios), 2) if precios else None,
+                "precio_min": round(min(precios), 2) if precios else None,
+                "precio_max": round(max(precios), 2) if precios else None,
+                "tamano_mean": round(mean(tamanos), 2) if tamanos else None,
+            }
+        return result
 
 
 def _float(value: Any, default: float = 0.0) -> float:

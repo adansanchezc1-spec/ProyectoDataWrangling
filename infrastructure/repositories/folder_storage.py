@@ -124,7 +124,7 @@ class FolderStorage:
             "ubicacion", "tamano_m2", "habitaciones", "banos", "estrato", "precio",
             "parqueadero", "long_com_corr", "parques", "vias",
             "remocion_masa", "grandes_superficies", "colegios", "hospitales",
-            "precio_unitario", "puntaje_entorno", "densidad_comercial",
+            "fecha", "precio_unitario", "puntaje_entorno", "densidad_comercial",
             "bano_por_hab", "parqueadero_ratio",
         ]
         present = {k for r in records for k in r.keys()}

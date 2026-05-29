@@ -279,6 +279,15 @@ class QualityValidator:
                         context={"field": "colegios", "value": col},
                     )
 
+            if "fecha" in row and row["fecha"] is not None:
+                fecha = int(row["fecha"])
+                if fecha < 1900 or fecha > 2026:
+                    raise CoherenciaDatosException(
+                        f"fecha out of range [1900,2026], got: {fecha}",
+                        reason="RB-005",
+                        context={"field": "fecha", "value": fecha},
+                    )
+
             if "hospitales" in row and row["hospitales"] is not None:
                 hosp = float(row["hospitales"])
                 if hosp < 0 or hosp > 100:

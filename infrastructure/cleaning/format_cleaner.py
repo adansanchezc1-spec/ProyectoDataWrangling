@@ -75,4 +75,5 @@ class FormatCleaner(IDataCleaner):
             "grandes_superficies": lambda x: int(round(float(x))),
             "colegios": lambda x: int(round(float(x))),
             "hospitales": lambda x: int(round(float(x))),
+            "fecha": lambda x: int(str(x)[:4]),
         }

@@ -278,14 +278,17 @@ class VistaResultado:
         self.txt_report.config(state=tk.DISABLED)
 
     def _show_batch_result(self, result: Dict[str, Any]) -> None:
-        """Muestra resumen de procesamiento multiple."""
+        """Muestra resumen de procesamiento multiple con detalle expandible."""
         self.title_label.config(text="Procesamiento Multiple Finalizado")
         self.lbl_status.config(text="FINALIZADO", foreground="blue")
+        success_count = result.get('success_count', 0)
+        rejected_count = result.get('rejected_count', 0)
+        error_count = result.get('error_count', 0)
         self.lbl_info.config(
             text=(
-                f"Exitosos: {result.get('success_count', 0)} | "
-                f"Rechazados: {result.get('rejected_count', 0)} | "
-                f"Errores: {result.get('error_count', 0)}"
+                f"Exitosos: {success_count} | "
+                f"Rechazados: {rejected_count} | "
+                f"Errores: {error_count}"
             )
         )
 
@@ -294,19 +297,93 @@ class VistaResultado:
         for item in self.tree_gateways.get_children():
             self.tree_gateways.delete(item)
 
-        for index, item in enumerate(result.get("results", []), start=1):
-            label = f"Dataset {index} - {item.get('dataset_id', 'N/A')}"
-            detail = item.get("status")
-            if item.get("status") == "success":
-                detail = item.get("storage_paths", {}).get("mdm", "success")
-            elif item.get("status") == "rejected":
-                detail = item.get("rejection_log", {}).get("motivo", "rejected")
-            self.tree_stats.insert("", "end", text=label, values=[str(detail)])
+        root_id = self.tree_stats.insert(
+            "", "end",
+            text=f"Lote ({len(result.get('results', []))} archivos)",
+            values=[f"{success_count} ok, {rejected_count} rej, {error_count} err"],
+            open=True,
+        )
+
+        self._batch_results = result.get("results", [])
+
+        for index, item in enumerate(self._batch_results):
+            ds_id = item.get('dataset_id', 'N/A')
+            status = item.get("status", "?")
+            if status == "success":
+                detail = "MDM cargado"
+            elif status == "rejected":
+                detail = f"Rechazado G{item.get('gateway_bpmn', '?')}"
+            else:
+                detail = item.get("error", "error")
+            child_id = self.tree_stats.insert(
+                root_id, "end",
+                text=f"{ds_id}",
+                values=[f"{status.upper()} — {detail}"],
+                tags=(str(index - 1),),
+            )
+
+            if status == "rejected":
+                log = item.get("rejection_log", {})
+                self.tree_stats.insert(
+                    child_id, "end",
+                    text=f"Gateway {item.get('gateway_bpmn', '?')}",
+                    values=[log.get("motivo", "")],
+                )
+                if log.get("regla_negocio"):
+                    self.tree_stats.insert(
+                        child_id, "end",
+                        text="Regla",
+                        values=[log.get("regla_negocio", "")],
+                    )
+            elif status == "error":
+                self.tree_stats.insert(
+                    child_id, "end",
+                    text="Error",
+                    values=[item.get("error", "")],
+                )
+
+        self.tree_stats.tag_bind("batch_file", "<<TreeviewSelect>>", self._on_batch_file_selected)
 
         self.txt_report.config(state=tk.NORMAL)
         self.txt_report.delete(1.0, tk.END)
-        self.txt_report.insert(tk.END, "Resumen por dataset disponible en la tabla superior.")
+        self.txt_report.insert(tk.END, "Selecciona un dataset en el arbol superior para ver su detalle.")
         self.txt_report.config(state=tk.DISABLED)
+
+    def _on_batch_file_selected(self, event: Any) -> None:
+        selection = self.tree_stats.selection()
+        if not selection:
+            return
+        item = self.tree_stats.item(selection[0])
+        tags = item.get("tags", [])
+        if not tags:
+            return
+        try:
+            idx = int(tags[0])
+        except (ValueError, IndexError):
+            return
+        if idx < 0 or idx >= len(self._batch_results):
+            return
+        r = self._batch_results[idx]
+
+        for gitem in self.tree_gateways.get_children():
+            self.tree_gateways.delete(gitem)
+
+        gateways = [
+            ("Gateway 1", "✓" if r.get("gateway_bpmn", 1) > 1 or r.get("status") in ("success", "rejected") else "✗", "Extraccion"),
+            ("Gateway 2", "✓" if r.get("gateway_bpmn", 2) > 2 or r.get("status") in ("success", "rejected") else "✗", "Formato"),
+            ("Gateway 3", "✓" if r.get("gateway_bpmn", 3) > 3 or r.get("status") in ("success", "rejected") else "✗", "Transformacion"),
+            ("Gateway 4", "✓" if r.get("status") == "success" or r.get("gateway_bpmn", 0) >= 4 else "✗", "Calidad"),
+        ]
+        if r.get("status") == "success":
+            for g, res, det in gateways:
+                self.tree_gateways.insert("", "end", text=g, values=[res, det])
+        elif r.get("status") == "rejected":
+            gw = r.get("gateway_bpmn", 1)
+            for g, res, det in gateways:
+                passed = int(g[-1]) < gw
+                self.tree_gateways.insert("", "end", text=g, values=["✓" if passed else "✗ RECHAZO", det])
+
+        self._display_cleaning_report(r.get("cleaning_report"))
 
     def _show_error_result(self, result: Dict[str, Any]) -> None:
         """Muestra resultado de error.

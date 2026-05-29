@@ -46,7 +46,6 @@ class Dataset:
     records: List[Dict[str, Any]] = field(default_factory=list)
     total_rows: int = 0
     user_email: str = ""
-    year: int = 0
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     # Columnas requeridas por RB-004
@@ -157,7 +156,6 @@ class Dataset:
             "records": self.records,
             "total_rows": self.total_rows,
             "user_email": self.user_email,
-            "year": self.year,
             "metadata": self.metadata,
         }
 

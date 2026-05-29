@@ -66,6 +66,13 @@ class IngestionService:
         "ba\u00f1os": "banos",
         "banos": "banos",
         "estrato": "estrato",
+        "fecha": "fecha",
+        "año": "fecha",
+        "year": "fecha",
+        "date": "fecha",
+        "fecha_construccion": "fecha",
+        "anio": "fecha",
+        "annio": "fecha",
     }
 
     UBICACION_SOURCE_COLUMNS = {"subzona", "zona", "barrio", "localidad"}

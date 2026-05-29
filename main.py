@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import tkinter as tk
 from tkinter import Toplevel
 from typing import Any, Callable, Optional
@@ -53,8 +54,9 @@ def main():
     result_view = VistaResultado(result_win)
     result_win.withdraw()
 
-    # Wire: when user requests processing, call controller
-    load_view.on_process_requested = controller.upload_and_process_dataset
+    load_view.on_process_requested = lambda files, email, price_factor: controller.upload_and_process_dataset(
+        files, user_email=email, price_factor=price_factor,
+    )
 
     def ui(callback: Callable[[dict[str, Any]], None]):
         return lambda data: root.after(0, lambda: callback(data or {}))
@@ -77,6 +79,16 @@ def main():
     def on_pipeline_progress(data: dict[str, Any]) -> None:
         show_status_window()
         status_view.add_info_line(data.get("message", "Procesando dataset..."))
+
+    def on_pipeline_file_progress(data: dict[str, Any]) -> None:
+        show_status_window()
+        idx = data.get("index", 0)
+        total = data.get("total", 0)
+        file = data.get("file", "")
+        status = data.get("status", "")
+        line = f"Archivo {idx}/{total}: {Path(file).name} → {status}"
+        status_view.add_info_line(line)
+        status_view.update_overall_progress(idx / total * 100)
 
     def on_pipeline_completed(result: dict[str, Any]) -> None:
         load_view.set_processing(False)
@@ -121,6 +133,7 @@ def main():
     # Subscribe controller events to update views
     controller.subscribe("pipeline_started", ui(on_pipeline_started))
     controller.subscribe("pipeline_progress", ui(on_pipeline_progress))
+    controller.subscribe("pipeline_file_progress", ui(on_pipeline_file_progress))
     controller.subscribe("pipeline_completed", ui(on_pipeline_completed))
     controller.subscribe("pipeline_error", ui(on_pipeline_error))
 

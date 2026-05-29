@@ -34,6 +34,7 @@ class DatasetController:
         self._observers: Dict[str, list[Callable]] = {
             "pipeline_started": [],
             "pipeline_progress": [],
+            "pipeline_file_progress": [],
             "pipeline_completed": [],
             "pipeline_error": [],
         }
@@ -66,7 +67,6 @@ class DatasetController:
         self,
         file_path: str | list[str],
         user_email: str = "",
-        year: int = 0,
         price_factor: float = 1.0,
     ) -> None:
         """Carga y procesa un dataset (caso de uso principal).
@@ -77,7 +77,6 @@ class DatasetController:
         Args:
             file_path: Ruta o rutas al archivo a procesar
             user_email: Email del usuario para notificación
-            year: Año del dataset
             price_factor: Factor multiplicador del precio unitario
         """
         file_paths = [file_path] if isinstance(file_path, str) else list(file_path)
@@ -88,7 +87,7 @@ class DatasetController:
         # Ejecuta en thread separado
         thread = Thread(
             target=self._process_dataset_background,
-            args=(file_paths, user_email, year, price_factor),
+            args=(file_paths, user_email, price_factor),
             daemon=False,
         )
         thread.start()
@@ -97,7 +96,6 @@ class DatasetController:
         self,
         file_paths: list[str],
         user_email: str = "",
-        year: int = 0,
         price_factor: float = 1.0,
     ) -> None:
         """Procesa el dataset en background (thread).
@@ -105,7 +103,6 @@ class DatasetController:
         Args:
             file_paths: Rutas a los archivos
             user_email: Email del usuario para notificación
-            year: Año del dataset
             price_factor: Factor multiplicador del precio unitario
         """
         try:
@@ -124,10 +121,20 @@ class DatasetController:
                 result = self.pipeline_facade.run_pipeline(
                     file_path,
                     user_email=user_email,
-                    year=year,
                     price_factor=price_factor,
                 )
                 results.append(result)
+
+                self._notify_observers(
+                    "pipeline_file_progress",
+                    {
+                        "index": index,
+                        "total": len(file_paths),
+                        "file": file_path,
+                        "status": result.get("status"),
+                        "dataset_id": result.get("dataset_id"),
+                    },
+                )
 
             # Notifica resultado
             if len(results) == 1:
@@ -150,6 +157,7 @@ class DatasetController:
                         "results": results,
                     },
                 )
+                self._send_batch_email(results, user_email)
 
         except DominioException as e:
             self._notify_observers(
@@ -168,6 +176,35 @@ class DatasetController:
                     "error_type": type(e).__name__,
                 },
             )
+
+    def _send_batch_email(self, results: list[Dict[str, Any]], user_email: str) -> None:
+        if not user_email or not self.pipeline_facade.email_service:
+            return
+        success = sum(1 for r in results if r.get("status") == "success")
+        rejected = sum(1 for r in results if r.get("status") == "rejected")
+        errors = sum(1 for r in results if r.get("status") == "error")
+        lines = ["Archivo | Estado | Detalle"]
+        for r in results:
+            f = r.get("dataset_id", "?")
+            s = r.get("status", "?")
+            d = ""
+            if s == "rejected":
+                d = f"Gateway {r.get('gateway_bpmn', '?')}: {r.get('rejection_log', {}).get('motivo', '')}"
+            elif s == "error":
+                d = r.get("error", "")
+            lines.append(f"{f} | {s} | {d}")
+        subject = f"Data Wrangling — Batch completado: {success} exitosos, {rejected} rechazados, {errors} errores"
+        body = (
+            f"Resumen del lote ({len(results)} archivos):\n"
+            f"  Exitosos: {success}\n"
+            f"  Rechazados: {rejected}\n"
+            f"  Errores: {errors}\n"
+            f"\nDetalle:\n" + "\n".join(lines)
+        )
+        try:
+            self.pipeline_facade.email_service.send(subject, body, user_email)
+        except Exception:
+            pass
 
     def get_dataset(self, dataset_id: str) -> Optional[Dict[str, Any]]:
         """Recupera un dataset procesado desde el MDM.

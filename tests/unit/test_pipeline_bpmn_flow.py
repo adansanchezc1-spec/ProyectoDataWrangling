@@ -5,19 +5,19 @@ from infrastructure.repositories.folder_storage import FolderStorage
 from infrastructure.repositories.json_repository import JsonRepository
 
 
-def _write_csv(path, rows):
+def _write_csv(path, rows, extra_cols=None):
+    fieldnames = [
+        "ubicacion",
+        "tamano_m2",
+        "habitaciones",
+        "banos",
+        "estrato",
+        "precio",
+    ]
+    if extra_cols:
+        fieldnames.extend(extra_cols)
     with path.open("w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(
-            file,
-            fieldnames=[
-                "ubicacion",
-                "tamano_m2",
-                "habitaciones",
-                "banos",
-                "estrato",
-                "precio",
-            ],
-        )
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
@@ -105,3 +105,94 @@ def test_pipeline_rejects_semantically_incoherent_dataset(tmp_path):
 
     assert result["status"] == "rejected"
     assert result["gateway_bpmn"] == 4
+
+
+def test_fecha_column_extracted_from_csv(tmp_path):
+    source = tmp_path / "with_fecha.csv"
+    _write_csv(
+        source,
+        [
+            {"ubicacion": "Bogota Centro", "tamano_m2": "50", "habitaciones": "2", "banos": "1", "estrato": "3", "precio": "200000000", "fecha": "2020"},
+            {"ubicacion": "Bogota Norte", "tamano_m2": "80", "habitaciones": "3", "banos": "2", "estrato": "4", "precio": "300000000", "fecha": "2021"},
+            {"ubicacion": "Bogota Sur", "tamano_m2": "60", "habitaciones": "2", "banos": "1", "estrato": "2", "precio": "150000000", "fecha": "2022"},
+        ],
+        extra_cols=["fecha"],
+    )
+    result = _facade(tmp_path).run_pipeline(str(source))
+    assert result["status"] == "success"
+    master = tmp_path / "data" / "PROCESSED" / "MDM" / "master_dataset.csv"
+    assert master.exists()
+    with master.open(encoding="utf-8-sig") as f:
+        rows = list(csv.DictReader(f, delimiter=";"))
+    fechas = sorted(int(r["fecha"]) for r in rows if r.get("fecha"))
+    assert fechas == [2020, 2021, 2022]
+
+
+def test_fecha_date_string_extracted_to_year(tmp_path):
+    source = tmp_path / "fecha_str.csv"
+    _write_csv(
+        source,
+        [
+            {"ubicacion": "Bogota Centro", "tamano_m2": "50", "habitaciones": "2", "banos": "1", "estrato": "3", "precio": "200000000", "fecha": "2023-06-15"},
+        ],
+        extra_cols=["fecha"],
+    )
+    result = _facade(tmp_path).run_pipeline(str(source))
+    assert result["status"] == "success"
+    master = tmp_path / "data" / "PROCESSED" / "MDM" / "master_dataset.csv"
+    with master.open(encoding="utf-8-sig") as f:
+        rows = list(csv.DictReader(f, delimiter=";"))
+    assert rows[0]["fecha"] == "2023"
+
+
+def test_fecha_missing_does_not_fail(tmp_path):
+    source = tmp_path / "no_fecha.csv"
+    _write_csv(
+        source,
+        [
+            {"ubicacion": "Bogota Centro", "tamano_m2": "50", "habitaciones": "2", "banos": "1", "estrato": "3", "precio": "200000000"},
+        ],
+    )
+    result = _facade(tmp_path).run_pipeline(str(source))
+    assert result["status"] == "success"
+
+
+def test_batch_accumulates_two_files(tmp_path):
+    f1 = tmp_path / "batch1.csv"
+    f2 = tmp_path / "batch2.csv"
+    _write_csv(
+        f1,
+        [
+            {"ubicacion": "Bogota A", "tamano_m2": "50", "habitaciones": "2", "banos": "1", "estrato": "3", "precio": "100000000", "fecha": "2020"},
+        ],
+        extra_cols=["fecha"],
+    )
+    _write_csv(
+        f2,
+        [
+            {"ubicacion": "Bogota B", "tamano_m2": "70", "habitaciones": "3", "banos": "2", "estrato": "4", "precio": "200000000", "fecha": "2021"},
+        ],
+        extra_cols=["fecha"],
+    )
+    facade = _facade(tmp_path)
+    facade.run_pipeline(str(f1))
+    facade.run_pipeline(str(f2))
+    master = tmp_path / "data" / "PROCESSED" / "MDM" / "master_dataset.csv"
+    with master.open(encoding="utf-8-sig") as f:
+        rows = list(csv.DictReader(f, delimiter=";"))
+    assert len(rows) == 2
+    ubicaciones = {r["ubicacion"] for r in rows}
+    assert ubicaciones == {"bogota a", "bogota b"}
+
+
+def test_batch_mixed_success_rejection(tmp_path):
+    valid = tmp_path / "ok.csv"
+    rejected = tmp_path / "bad.csv"
+    _write_csv(valid, [{"ubicacion": "Bogota C", "tamano_m2": "50", "habitaciones": "2", "banos": "1", "estrato": "3", "precio": "100000000"}])
+    _write_csv(rejected, [{"ubicacion": "Cali", "tamano_m2": "50", "habitaciones": "2", "banos": "1", "estrato": "3", "precio": "100000000"}])
+    facade = _facade(tmp_path)
+    r1 = facade.run_pipeline(str(valid))
+    r2 = facade.run_pipeline(str(rejected))
+    assert r1["status"] == "success"
+    assert r2["status"] == "rejected"
+    assert r2["gateway_bpmn"] == 2
