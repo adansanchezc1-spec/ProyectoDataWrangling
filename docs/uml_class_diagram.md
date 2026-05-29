@@ -14,21 +14,23 @@ classDiagram
         -master: tk.Tk
         -selected_file: Optional[str]
         -selected_files: list[str]
-        -on_process_requested: Optional[Callable]
+        -on_process_requested: Optional[Callable[[list[str], str, float], None]]
         -btn_browse: ttk.Button
-        -lbl_file: ttk.Label
-        -entry_year: ttk.Entry
+        -btn_remove: ttk.Button
+        -btn_clear: ttk.Button
+        -lst_files: tk.Listbox
+        -lbl_file_count: ttk.Label
         -entry_email: ttk.Entry
         -entry_price_factor: ttk.Entry
         -txt_info: tk.Text
         -btn_process: ttk.Button
-        -btn_clear: ttk.Button
         -progress_var: tk.DoubleVar
         -progress: ttk.Progressbar
         -lbl_status: ttk.Label
         +__init__(master: tk.Tk) void
         -_create_widgets() void
         -_on_browse_clicked() void
+        -_on_remove_clicked() void
         -_update_file_display() void
         -_on_process_clicked() void
         -_on_clear_clicked() void
@@ -61,6 +63,7 @@ classDiagram
     class VistaResultado {
         -master: tk.Tk | tk.Toplevel
         -current_result: Optional[Dict[str, Any]]
+        -_batch_results: list[Dict[str, Any]]
         -title_label: ttk.Label
         -lbl_status: ttk.Label
         -lbl_info: ttk.Label
@@ -79,6 +82,7 @@ classDiagram
         -_show_batch_result(result: Dict[str, Any]) void
         -_show_error_result(result: Dict[str, Any]) void
         -_display_cleaning_report(report: Optional[Dict]) void
+        -_on_batch_file_selected(event: Any) void
         -_on_new_dataset_clicked() void
         -_on_close_clicked() void
     }
@@ -93,8 +97,8 @@ classDiagram
         +__init__(pipeline_facade: PipelineFacade) void
         +subscribe(event: str, callback: Callable) void
         -_notify_observers(event: str, data: Optional[Dict]) void
-        +upload_and_process_dataset(file_path: str|list[str], user_email: str, year: int, price_factor: float) void
-        -_process_dataset_background(file_paths: list[str], user_email: str, year: int, price_factor: float) void
+        +upload_and_process_dataset(file_path: str|list[str], user_email: str = "", price_factor: float = 1.0) void
+        -_process_dataset_background(file_paths: list[str], user_email: str = "", price_factor: float = 1.0) void
         +get_dataset(dataset_id: str) Optional[Dict]
         +list_all_datasets() list[Dict]
         +get_pipeline_status() Dict
@@ -119,7 +123,7 @@ classDiagram
         -mdm_service: MDMService
         -notification_service: NotificationService
         +__init__(repository: IDataRepository, email_service: Optional[IEmailService], folder_storage: Optional[FolderStorage]) void
-        +run_pipeline(file_path: str, user_email: str, year: int, price_factor: float) Dict
+        +run_pipeline(file_path: str, user_email: str = "", price_factor: float = 1.0) Dict
         -_stage_ingestion(file_path: str) Dataset
         -_stage_validation(dataset: Dataset) Dataset
         -_stage_cleaning(dataset: Dataset) Tuple[Dataset, CleaningReport]
@@ -199,7 +203,6 @@ classDiagram
         +records: List[Dict]
         +total_rows: int
         +user_email: str
-        +year: int
         +metadata: Dict[str, Any]
         +validar_estructura() bool
         +normalizar_ubicacion() void
@@ -535,10 +538,11 @@ classDiagram
     }
 
     class FeatureAnalyzer {
-        +analyze(dataset: Dataset, price_factor: float) Dict
+        +analyze(dataset, price_factor: float = 1.0) Dict
         -_compute_derived_features(records, price_factor)$ Dict
         -_enrich_records(records, derived)$ List[Dict]
         -_compute_statistics(enriched)$ Dict
+        -_compute_time_stats(enriched)$ Dict
     }
 
     class PredictionEngine {
@@ -642,7 +646,7 @@ classDiagram
 
     %% Observer pattern
     NotificationService o-- INotificationObserver : notifica
-    DatasetController ..|> INotificationObserver : se suscribe
+    DatasetController ..> DatasetController : callback observers internos
 
     %% Infrastructure → Domain
     FolderStorage --> Dataset : persiste
