@@ -87,6 +87,31 @@ flowchart TD
 ```
 
 Diagrama de flujo BPMN 2.0 con 4 carriles (Usuario, Origen de Datos, Sistema Data Wrangling, Custodio de Datos y Calidad) y 4 gateways XOR de decisión. El pipeline ETL ejecuta extracción, validación, transformación, perfilado y carga al MDM, con notificación por correo al finalizar.
+
+```
+CARRIL: Usuario
+  (Inicio) → [Cargar Dataset] → [Ingresar Email/Año/Factor Precio] → ¿Archivo válido?
+                                                                        ├── Sí ──────────────────┐
+                                                                        └── No → [Seleccionar otro] → (vuelve a Cargar)
+
+CARRIL: Origen de Datos
+  [(Dataset CSV/Excel/JSON)] → [Proveer datos] ─────────────────────────┘
+
+CARRIL: Sistema Data Wrangling
+  [Extraer datos] → [RAW persistido] → G1: ¿Extracción completa? ────Sí──→ [Validar estructura]
+                                           └──No → [Rechazo G1] → (Fin)
+  [Validar estructura] → G2: ¿Formato válido? ────Sí──→ [Transformar / Limpiar]
+                                └──No → [Rechazo G2] → (Fin)
+  [Transformar / Limpiar] → G3: ¿Transformación completa? ────Sí──→ [Perfilar + Feature Analyzer]
+                                  └──No → [Rechazo G3] → (Fin)
+  [Perfilar + Feature Analyzer] → G4: ¿Calidad aceptable? ────Sí──→ [Cargar a MDM] → [Notificar por email] → (Fin)
+                                         └──No → [Rechazo G4] → (Fin)
+
+CARRIL: Custodio de Datos y Calidad
+  [Validar coherencia semántica] ───→ G4
+  [Validar integridad] ──────────────→ G4
+```
+
 Descripción detallada por carriles
 
 
@@ -124,6 +149,8 @@ Se adoptó Model-View-Controller (MVC) porque:
 Separa la lógica de negocio del wrangling (Modelo) de la interfaz gráfica (Vista) y del flujo de control (Controlador).
 Permite testear el pipeline ETL sin instanciar componentes gráficos.
 Es el patrón estándar de la asignatura y mapea directamente los requerimientos a componentes evaluables.
+Diagrama de Clases UML (versión completa): `docs/uml_class_diagram.md`
+
 Capas y Componentes
 sistema-data-wrangling/
 ├── presentation/ (VISTA - UI gráfica Tkinter)
