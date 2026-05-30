@@ -14,54 +14,33 @@ Pipeline ETL automatizado que transforma datasets inmobiliarios heterogéneos en
 El sistema resuelve el problema de calidad de datos en el sector inmobiliario de Bogotá. Toma datasets de múltiples fuentes (CSV, Excel, JSON) con esquemas inconsistentes, valores nulos, duplicados y ubicaciones fuera del dominio, y ejecuta un pipeline ETL con 4 gateways de validación BPMN 2.0 para producir un Master Data Management (MDM) unificado.
 
 ```mermaid
-flowchart LR
-    A[(Dataset<br/>CSV/Excel/JSON)] --> B[Extraer datos]
-    B --> C{¿Extracción<br/>completa?}
-    C -->|No| D[Rechazo G1]
-    C -->|Sí| E[Validar estructura]
-    E --> F{¿Formato<br/>válido?}
-    F -->|No| G[Rechazo G2]
-    F -->|Sí| H[Limpiar y transformar]
-    H --> I{¿Transformación<br/>completa?}
-    I -->|No| J[Rechazo G3]
-    I -->|Sí| K[Perfilar + Features]
-    K --> L{¿Calidad<br/>aceptable?}
-    L -->|No| M[Rechazo G4]
-    L -->|Sí| N[Cargar a MDM]
-    N --> O[Notificar por email]
-    D --> P((Fin))
-    G --> P
-    J --> P
-    M --> P
-    O --> P
-```
 
----
 
 ## Arquitectura
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                     PRESENTATION                         │
-│          VistaCargaDataset  VistaEstadoPipeline          │
-│                VistaResultado  DatasetController          │
-├─────────────────────────────────────────────────────────┤
-│                     APPLICATION                          │
-│         PipelineFacade  IngestionService  CleaningService │
-│                PredictionService  DTOs                    │
-├─────────────────────────────────────────────────────────┤
-│                      DOMAIN                              │
-│    Dataset  CleaningReport  RejectionLog  Prediccion     │
-│    DatasetValidator  QualityValidator  PredictionValidator│
-│    Interfaces: IDataRepository  IEmailService  IDataCleaner│
-│    Enums: DatasetStatus  Formato  TipoVariable            │
-├─────────────────────────────────────────────────────────┤
-│                   INFRASTRUCTURE                          │
-│    JsonRepository  FolderStorage  MDMService             │
-│    EmailService + Decorators  NotificationService        │
-│    NullCleaner  FormatCleaner  DuplicateCleaner          │
-│    FeatureAnalyzer  PredictionEngine  Preprocessor        │
-└─────────────────────────────────────────────────────────┘
+`
+┌───────────────────────────────────────────────────────────────┐
+│                         VIEW (Tkinter)                         │
+│              VistaCargaDataset  VistaEstadoPipeline            │
+│                      VistaResultado                            │
+├───────────────────────────────────────────────────────────────┤
+│                       CONTROLLER                               │
+│              DatasetController  SolicitudController            │
+├───────────────────────────────────────────────────────────────┤
+│                          MODEL                                 │
+│  ┌────────────────────────────────────────────────────────┐    │
+│  │              DOMAIN — ENTIDADES                        │    │
+│  │  Dataset  CleaningReport  RejectionLog  Prediccion     │    │
+│  │  Validators  Enums  Exceptions  Interfaces (puertos)    │    │
+│  ├────────────────────────────────────────────────────────┤    │
+│  │           APPLICATION — SERVICIOS                      │    │
+│  │  PipelineFacade  IngestionService  CleaningService     │    │
+│  │  PredictionService  DTOs                               │    │
+│  ├────────────────────────────────────────────────────────┤    │
+│  │         INFRASTRUCTURE — ADAPTADORES                   │    │
+│  │  Repositories  Cleaners  EmailService + Decorators    │    │
+│  │  FeatureAnalyzer  MDMService  NotificationService     │    │
+│  └────────────────────────────────────────────────────────┘    │
+└───────────────────────────────────────────────────────────────┘
 ```
 
 ### Patrones de Diseño Aplicados
