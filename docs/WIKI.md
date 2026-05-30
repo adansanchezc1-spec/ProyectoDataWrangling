@@ -50,24 +50,14 @@ Cada etapa tiene un **gateway de validación** que decide si el proceso continú
 
 ### Ciclo de Vida de un Dataset
 
-```mermaid
-stateDiagram-v2
-    [*] --> Cargado: Selección multi-archivo
-    Cargado --> EnExtraccion: Iniciar pipeline
-    EnExtraccion --> RAW: Datos extraídos
-    RAW --> EnValidacion: Gateway 1 ✓
-    RAW --> Rechazado: Gateway 1 ✗ (extracción incompleta)
-    EnValidacion --> EnLimpieza: Gateway 2 ✓ (formato + Bogotá)
-    EnValidacion --> Rechazado: Gateway 2 ✗ (formato inválido / no Bogotá)
-    EnLimpieza --> EnPerfilado: Gateway 3 ✓ (transformación completa)
-    EnLimpieza --> Rechazado: Gateway 3 ✗ (pocas filas válidas)
-    EnPerfilado --> EnCalidad: Features generadas
-    EnCalidad --> MDM: Gateway 4 ✓ (calidad aceptable)
-    EnCalidad --> Rechazado: Gateway 4 ✗ (calidad insuficiente)
-    MDM --> Notificado: Email enviado
-    Notificado --> [*]
-    Rechazado --> [*]
-```
+| Etapa | Gateway | Éxito | Rechazo |
+|-------|:-------:|-------|---------|
+| Extracción | G1 | ✓ Datos extraídos → RAW | ✗ Extracción incompleta |
+| Validación | G2 | ✓ Formato + Bogotá → Limpieza | ✗ Formato inválido o no Bogotá |
+| Limpieza | G3 | ✓ Transformación completa → Perfilado | ✗ Pocas filas válidas |
+| Calidad | G4 | ✓ Coherencia semántica → MDM | ✗ Calidad insuficiente |
+| Carga | — | ✓ MDM cargado → Notificación | — |
+| Notificación | — | ✓ Email enviado → Fin | — |
 
 ---
 

@@ -38,36 +38,41 @@ flowchart LR
 
 ---
 
-## Arquitectura
+## Arquitectura MVC
+
+El sistema sigue el patrón **Model-View-Controller (MVC)**. La Vista (interfaz Tkinter) captura la interacción del usuario y delega en el Controlador, que orquesta los Servicios de Aplicación y las Entidades de Dominio (Modelo). La Infraestructura provee implementaciones concretas desacopladas mediante interfaces.
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                     PRESENTATION                         │
-│          VistaCargaDataset  VistaEstadoPipeline          │
-│                VistaResultado  DatasetController          │
-├─────────────────────────────────────────────────────────┤
-│                     APPLICATION                          │
-│         PipelineFacade  IngestionService  CleaningService │
-│                PredictionService  DTOs                    │
-├─────────────────────────────────────────────────────────┤
-│                      DOMAIN                              │
-│    Dataset  CleaningReport  RejectionLog  Prediccion     │
-│    DatasetValidator  QualityValidator  PredictionValidator│
-│    Interfaces: IDataRepository  IEmailService  IDataCleaner│
-│    Enums: DatasetStatus  Formato  TipoVariable            │
-├─────────────────────────────────────────────────────────┤
-│                   INFRASTRUCTURE                          │
-│    JsonRepository  FolderStorage  MDMService             │
-│    EmailService + Decorators  NotificationService        │
-│    NullCleaner  FormatCleaner  DuplicateCleaner          │
-│    FeatureAnalyzer  PredictionEngine  Preprocessor        │
-└─────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                         VIEW (Tkinter)                         │
+│              VistaCargaDataset  VistaEstadoPipeline            │
+│                      VistaResultado                            │
+├───────────────────────────────────────────────────────────────┤
+│                       CONTROLLER                               │
+│              DatasetController  SolicitudController            │
+├───────────────────────────────────────────────────────────────┤
+│                          MODEL                                 │
+│  ┌────────────────────────────────────────────────────────┐    │
+│  │              DOMAIN — ENTIDADES                        │    │
+│  │  Dataset  CleaningReport  RejectionLog  Prediccion     │    │
+│  │  Validators  Enums  Exceptions  Interfaces (puertos)    │    │
+│  ├────────────────────────────────────────────────────────┤    │
+│  │           APPLICATION — SERVICIOS                      │    │
+│  │  PipelineFacade  IngestionService  CleaningService     │    │
+│  │  PredictionService  DTOs                               │    │
+│  ├────────────────────────────────────────────────────────┤    │
+│  │         INFRASTRUCTURE — ADAPTADORES                   │    │
+│  │  Repositories  Cleaners  EmailService + Decorators    │    │
+│  │  FeatureAnalyzer  MDMService  NotificationService     │    │
+│  └────────────────────────────────────────────────────────┘    │
+└───────────────────────────────────────────────────────────────┘
 ```
 
 ### Patrones de Diseño Aplicados
 
 | Patrón | Tipo | Componente |
 |--------|------|------------|
+| **MVC** | Arquitectónico | `Views` + `Controllers` + `Domain/Application/Infrastructure` |
 | **Facade** | Estructural GoF | `PipelineFacade` |
 | **Repository** | GRASP | `JsonRepository`, `IDataRepository` |
 | **Strategy** | Comportamiento GoF | `NullCleaner`, `FormatCleaner`, `DuplicateCleaner` |
