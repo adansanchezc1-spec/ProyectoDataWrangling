@@ -1,0 +1,70 @@
+{
+  "id": "f92dec13",
+  "source_path": "C:\\Users\\ADAN\\Downloads\\datasets_data_wrangling_bogota\\dataset_semantica_invalida.csv",
+  "format": "CSV",
+  "status": "EXTRACTING",
+  "created_at": "2026-05-30T14:51:59.701979",
+  "schema": {
+    "ubicacion": "string",
+    "tamano_m2": "string",
+    "habitaciones": "string",
+    "banos": "string",
+    "estrato": "string",
+    "precio": "string"
+  },
+  "rows_preview": [
+    {
+      "ubicacion": "Suba",
+      "tamano_m2": "-120",
+      "habitaciones": "4",
+      "banos": "3",
+      "estrato": "5",
+      "precio": "780000000"
+    },
+    {
+      "ubicacion": "Chapinero",
+      "tamano_m2": "80",
+      "habitaciones": "-2",
+      "banos": "2",
+      "estrato": "4",
+      "precio": "450000000"
+    },
+    {
+      "ubicacion": "Usaquen",
+      "tamano_m2": "90",
+      "habitaciones": "3",
+      "banos": "-1",
+      "estrato": "6",
+      "precio": "620000000"
+    }
+  ],
+  "records": [
+    {
+      "ubicacion": "Suba",
+      "tamano_m2": "-120",
+      "habitaciones": "4",
+      "banos": "3",
+      "estrato": "5",
+      "precio": "780000000"
+    },
+    {
+      "ubicacion": "Chapinero",
+      "tamano_m2": "80",
+      "habitaciones": "-2",
+      "banos": "2",
+      "estrato": "4",
+      "precio": "450000000"
+    },
+    {
+      "ubicacion": "Usaquen",
+      "tamano_m2": "90",
+      "habitaciones": "3",
+      "banos": "-1",
+      "estrato": "6",
+      "precio": "620000000"
+    }
+  ],
+  "total_rows": 3,
+  "user_email": "adansanchezc1@gmail.com",
+  "metadata": {}
+}
