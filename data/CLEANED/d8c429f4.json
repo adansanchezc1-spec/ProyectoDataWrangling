@@ -1,0 +1,102 @@
+{
+  "id": "d8c429f4",
+  "source_path": "C:\\Users\\ADAN\\Downloads\\datasetparalimpiar.csv",
+  "format": "CSV",
+  "status": "CLEANED",
+  "created_at": "2026-05-30T14:48:29.143741",
+  "schema": {
+    "ubicacion": "string",
+    "tamano_m2": "string",
+    "habitaciones": "string",
+    "banos": "string",
+    "estrato": "string",
+    "precio": "string"
+  },
+  "rows_preview": [
+    {
+      "ubicacion": "bogota",
+      "tamano_m2": 120.0,
+      "habitaciones": 4,
+      "banos": 3,
+      "estrato": 5,
+      "precio": 780000000.0
+    },
+    {
+      "ubicacion": "bogota",
+      "tamano_m2": 100.0,
+      "habitaciones": 3,
+      "banos": 2,
+      "estrato": 4,
+      "precio": 650000000.0
+    },
+    {
+      "ubicacion": "bogota dc",
+      "tamano_m2": 90.0,
+      "habitaciones": 3,
+      "banos": 2,
+      "estrato": 5,
+      "precio": 700000000.0
+    },
+    {
+      "ubicacion": "bogota dc",
+      "tamano_m2": 110.0,
+      "habitaciones": 4,
+      "banos": 3,
+      "estrato": 6,
+      "precio": 900000000.0
+    },
+    {
+      "ubicacion": "bogota dc",
+      "tamano_m2": 95.0,
+      "habitaciones": 3,
+      "banos": 2,
+      "estrato": 4,
+      "precio": 600000000.0
+    }
+  ],
+  "records": [
+    {
+      "ubicacion": "bogota",
+      "tamano_m2": 120.0,
+      "habitaciones": 4,
+      "banos": 3,
+      "estrato": 5,
+      "precio": 780000000.0
+    },
+    {
+      "ubicacion": "bogota",
+      "tamano_m2": 100.0,
+      "habitaciones": 3,
+      "banos": 2,
+      "estrato": 4,
+      "precio": 650000000.0
+    },
+    {
+      "ubicacion": "bogota dc",
+      "tamano_m2": 90.0,
+      "habitaciones": 3,
+      "banos": 2,
+      "estrato": 5,
+      "precio": 700000000.0
+    },
+    {
+      "ubicacion": "bogota dc",
+      "tamano_m2": 110.0,
+      "habitaciones": 4,
+      "banos": 3,
+      "estrato": 6,
+      "precio": 900000000.0
+    },
+    {
+      "ubicacion": "bogota dc",
+      "tamano_m2": 95.0,
+      "habitaciones": 3,
+      "banos": 2,
+      "estrato": 4,
+      "precio": 600000000.0
+    }
+  ],
+  "total_rows": 5,
+  "user_email": "adansanchezc1@gmail.com",
+  "metadata": {}
+}

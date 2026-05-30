@@ -1,40 +1,37 @@
-# State Diagrams (Mermaid)
-
-## Dataset lifecycle
+# State Diagram - Pipeline ETL BPMN
 
 ```mermaid
 stateDiagram-v2
-    [*] --> RAW
-    RAW --> VALIDATED
-    VALIDATED --> STORED
-    STORED --> CLEANING
-    CLEANING --> PROFILED
-    PROFILED --> TRANSFORMED
-    TRANSFORMED --> UNIFIED
-    UNIFIED --> READY
-    READY --> [*]
-    anyState: ERROR
-    RAW --> ERROR
-    VALIDATED --> ERROR
-    CLEANING --> ERROR
+    [*] --> SELECTED: Usuario proporciona dataset original
+    SELECTED --> RAW: Extraer datos de fuente / persistir data/RAW
+
+    RAW --> REJECTED: Gateway 1 no / extraccion incompleta
+    RAW --> EXTRACTING: Gateway 1 si
+
+    EXTRACTING --> VALIDATING: Validar formato, estructura y columnas
+    VALIDATING --> REJECTED: Gateway 2 no / formato o estructura invalida
+    VALIDATING --> TRANSFORMING: Gateway 2 si
+
+    TRANSFORMING --> CLEANING: Transformar estructura, normalizar valores y tipos
+    CLEANING --> CLEANED: Eliminar duplicados / persistir data/CLEANED
+    CLEANED --> REJECTED: Gateway 3 no / transformacion incompleta
+    CLEANED --> QUALITY_GATE: Gateway 3 si
+
+    QUALITY_GATE --> REJECTED: Gateway 4 no / calidad insuficiente
+    QUALITY_GATE --> PROCESSED_MDM: Gateway 4 si / cargar tabla maestra unica
+
+    PROCESSED_MDM --> NOTIFIED: Persistir data/PROCESSED/MDM/master_dataset.json
+    NOTIFIED --> DELIVERED: Usuario recibe dataset limpio
+    DELIVERED --> [*]
+
+    REJECTED --> REJECTION_STORED: Persistir data/REJECTED con detalle del fallo
+    REJECTION_STORED --> NOTIFIED_REJECTION: Usuario recibe rechazo
+    NOTIFIED_REJECTION --> [*]
 ```
 
-## Solicitud lifecycle
+## Data Storages BPMN
 
-```mermaid
-stateDiagram-v2
-    [*] --> RECIBIDA
-    RECIBIDA --> VALIDANDO_UBICACION
-    VALIDANDO_UBICACION --> VALIDANDO_COHERENCIA
-    VALIDANDO_COHERENCIA --> PARAMETRIZADA
-    PARAMETRIZADA --> PREDICCION_GENERADA
-    PREDICCION_GENERADA --> VALIDANDO_SIGNIFICANCIA
-    VALIDANDO_SIGNIFICANCIA --> VALIDANDO_MARGEN
-    VALIDANDO_MARGEN --> APROBADA
-    APROBADA --> [*]
-
-    VALIDANDO_UBICACION --> RECHAZADA_UBICACION
-    VALIDANDO_COHERENCIA --> RECHAZADA_COHERENCIA
-    VALIDANDO_SIGNIFICANCIA --> RECHAZADA_SIGNIFICANCIA
-    VALIDANDO_MARGEN --> RECHAZADA_MARGEN
-```
+- `data/RAW/`: datasets originales extraidos.
+- `data/CLEANED/`: datasets transformados, normalizados y deduplicados.
+- `data/PROCESSED/MDM/master_dataset.json`: tabla maestra unica.
+- `data/REJECTED/`: rechazos con gateway, regla y detalle del fallo.

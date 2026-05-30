@@ -1,0 +1,12 @@
+{
+  "id": "b4da8230",
+  "dataset_id": "unknown",
+  "motivo": "Extension not supported: .TXT",
+  "gateway_bpmn": 2,
+  "regla_negocio": "RB-004",
+  "fecha": "2026-05-30T14:51:56.664594",
+  "detalles": {
+    "extension": "TXT"
+  },
+  "row_index": null
+}

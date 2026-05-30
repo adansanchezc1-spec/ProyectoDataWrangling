@@ -48,10 +48,11 @@ def test_normalizar_ubicacion_and_es_bogota():
         format="csv",
         status="new",
         created_at=datetime.now(timezone.utc),
-        rows_preview=[{"ubicacion": " Bogotá,  Cundinamarca "}, {"ubicacion": "Medellín"}],
+        rows_preview=[{"ubicacion": " Bogotá,  Cundinamarca "}, {"ubicacion": "Bogotá, Usaquén"}],
     )
 
     ds.normalizar_ubicacion()
     assert ds.rows_preview[0]["ubicacion"] == "bogota cundinamarca"
-    # es_bogota checks first preview row
+    assert ds.rows_preview[1]["ubicacion"] == "bogota usaquen"
+    # es_bogota checks que todas las filas sean Bogotá (RB-001)
     assert ds.es_bogota() is True

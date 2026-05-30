@@ -24,6 +24,7 @@ class DatasetStatus(Enum):
     VALIDATING = "VALIDATING"  # En proceso de validación (Gateway 2)
     TRANSFORMING = "TRANSFORMING"  # En proceso de transformación (Gateway 3)
     CLEANING = "CLEANING"  # En proceso de limpieza
+    CLEANED = "CLEANED"  # Persistido como datos limpios
     PROFILING = "PROFILING"  # En proceso de perfilado
     QUALITY_GATE = "QUALITY_GATE"  # En evaluación de calidad (Gateway 4)
     MDM_LOADED = "MDM_LOADED"  # Cargado en Master Data Management

@@ -20,7 +20,7 @@ class VistaResultado:
     - Botones de acción (Descargar, Nuevo Dataset, Exportar)
     """
 
-    def __init__(self, master: tk.Tk) -> None:
+    def __init__(self, master: tk.Tk | tk.Toplevel) -> None:
         """Inicializa la vista.
 
         Args:
@@ -153,6 +153,8 @@ class VistaResultado:
             self._show_success_result(result)
         elif result.get("status") == "rejected":
             self._show_rejection_result(result)
+        elif result.get("status") == "batch_completed":
+            self._show_batch_result(result)
         else:
             self._show_error_result(result)
 
@@ -178,11 +180,21 @@ class VistaResultado:
             self.tree_gateways.delete(item)
 
         # Añade estadísticas
+        email_info = result.get("email_result", {})
+        email_label = "No solicitado"
+        if email_info.get("to"):
+            if email_info.get("sent"):
+                email_label = f"Enviado a {email_info['to']}"
+            else:
+                email_label = f"FALLO a {email_info['to']}: {email_info.get('error', '?')}"
+
         stats = {
             "Dataset ID": result.get("dataset_id"),
             "Total de Registros": result.get("total_records"),
             "Registros Limpios": result.get("records_cleaned"),
             "Estado Final": result.get("pipeline_status"),
+            "Email": email_label,
+            "MDM": result.get("storage_paths", {}).get("mdm"),
             "Procesado": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
 
@@ -260,7 +272,118 @@ class VistaResultado:
         self.txt_report.config(state=tk.NORMAL)
         self.txt_report.delete(1.0, tk.END)
         self.txt_report.insert(tk.END, "El dataset fue rechazado y no cargado en el MDM.")
+        rejection_path = result.get("rejection_path")
+        if rejection_path:
+            self.txt_report.insert(tk.END, f"\nDetalle persistido en: {rejection_path}")
         self.txt_report.config(state=tk.DISABLED)
+
+    def _show_batch_result(self, result: Dict[str, Any]) -> None:
+        """Muestra resumen de procesamiento multiple con detalle expandible."""
+        self.title_label.config(text="Procesamiento Multiple Finalizado")
+        self.lbl_status.config(text="FINALIZADO", foreground="blue")
+        success_count = result.get('success_count', 0)
+        rejected_count = result.get('rejected_count', 0)
+        error_count = result.get('error_count', 0)
+        self.lbl_info.config(
+            text=(
+                f"Exitosos: {success_count} | "
+                f"Rechazados: {rejected_count} | "
+                f"Errores: {error_count}"
+            )
+        )
+
+        for item in self.tree_stats.get_children():
+            self.tree_stats.delete(item)
+        for item in self.tree_gateways.get_children():
+            self.tree_gateways.delete(item)
+
+        root_id = self.tree_stats.insert(
+            "", "end",
+            text=f"Lote ({len(result.get('results', []))} archivos)",
+            values=[f"{success_count} ok, {rejected_count} rej, {error_count} err"],
+            open=True,
+        )
+
+        self._batch_results = result.get("results", [])
+
+        for index, item in enumerate(self._batch_results):
+            ds_id = item.get('dataset_id', 'N/A')
+            status = item.get("status", "?")
+            if status == "success":
+                detail = "MDM cargado"
+            elif status == "rejected":
+                detail = f"Rechazado G{item.get('gateway_bpmn', '?')}"
+            else:
+                detail = item.get("error", "error")
+            child_id = self.tree_stats.insert(
+                root_id, "end",
+                text=f"{ds_id}",
+                values=[f"{status.upper()} — {detail}"],
+                tags=(str(index - 1),),
+            )
+
+            if status == "rejected":
+                log = item.get("rejection_log", {})
+                self.tree_stats.insert(
+                    child_id, "end",
+                    text=f"Gateway {item.get('gateway_bpmn', '?')}",
+                    values=[log.get("motivo", "")],
+                )
+                if log.get("regla_negocio"):
+                    self.tree_stats.insert(
+                        child_id, "end",
+                        text="Regla",
+                        values=[log.get("regla_negocio", "")],
+                    )
+            elif status == "error":
+                self.tree_stats.insert(
+                    child_id, "end",
+                    text="Error",
+                    values=[item.get("error", "")],
+                )
+
+        self.tree_stats.tag_bind("batch_file", "<<TreeviewSelect>>", self._on_batch_file_selected)
+
+        self.txt_report.config(state=tk.NORMAL)
+        self.txt_report.delete(1.0, tk.END)
+        self.txt_report.insert(tk.END, "Selecciona un dataset en el arbol superior para ver su detalle.")
+        self.txt_report.config(state=tk.DISABLED)
+
+    def _on_batch_file_selected(self, event: Any) -> None:
+        selection = self.tree_stats.selection()
+        if not selection:
+            return
+        item = self.tree_stats.item(selection[0])
+        tags = item.get("tags", [])
+        if not tags:
+            return
+        try:
+            idx = int(tags[0])
+        except (ValueError, IndexError):
+            return
+        if idx < 0 or idx >= len(self._batch_results):
+            return
+        r = self._batch_results[idx]
+
+        for gitem in self.tree_gateways.get_children():
+            self.tree_gateways.delete(gitem)
+
+        gateways = [
+            ("Gateway 1", "✓" if r.get("gateway_bpmn", 1) > 1 or r.get("status") in ("success", "rejected") else "✗", "Extraccion"),
+            ("Gateway 2", "✓" if r.get("gateway_bpmn", 2) > 2 or r.get("status") in ("success", "rejected") else "✗", "Formato"),
+            ("Gateway 3", "✓" if r.get("gateway_bpmn", 3) > 3 or r.get("status") in ("success", "rejected") else "✗", "Transformacion"),
+            ("Gateway 4", "✓" if r.get("status") == "success" or r.get("gateway_bpmn", 0) >= 4 else "✗", "Calidad"),
+        ]
+        if r.get("status") == "success":
+            for g, res, det in gateways:
+                self.tree_gateways.insert("", "end", text=g, values=[res, det])
+        elif r.get("status") == "rejected":
+            gw = r.get("gateway_bpmn", 1)
+            for g, res, det in gateways:
+                passed = int(g[-1]) < gw
+                self.tree_gateways.insert("", "end", text=g, values=["✓" if passed else "✗ RECHAZO", det])
+
+        self._display_cleaning_report(r.get("cleaning_report"))
 
     def _show_error_result(self, result: Dict[str, Any]) -> None:
         """Muestra resultado de error.
@@ -290,6 +413,17 @@ class VistaResultado:
         self.txt_report.delete(1.0, tk.END)
 
         resumen = report.get("resumen", {})
+        email_info = (
+            self.current_result.get("email_result", {})
+            if self.current_result else {}
+        )
+        email_line = ""
+        if email_info.get("to"):
+            if email_info.get("sent"):
+                email_line = f"Correo: Enviado a {email_info['to']} "
+            else:
+                email_line = f"Correo: FALLO ({email_info.get('error', '?')}) "
+
         report_text = f"""
 REPORTE DE LIMPIEZA
 ===================
@@ -302,6 +436,7 @@ Detalle:
 - Nulos Removidos: {resumen.get('nulos_removidos')}
 - Duplicados Removidos: {resumen.get('duplicados_removidos')}
 - Pasos Ejecutados: {resumen.get('pasos_ejecutados')}
+{email_line}
         """
 
         self.txt_report.insert(tk.END, report_text)

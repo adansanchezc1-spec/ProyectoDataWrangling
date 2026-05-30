@@ -10,6 +10,7 @@ from domain.entities import Dataset
 from domain.interfaces import IDataRepository
 from domain.enums import DatasetStatus
 from domain.exceptions import RepositorioException
+from infrastructure.repositories.folder_storage import FolderStorage
 
 
 class MDMService:
@@ -21,13 +22,18 @@ class MDMService:
     - Mantener historial de versiones
     """
 
-    def __init__(self, repository: IDataRepository) -> None:
+    def __init__(
+        self,
+        repository: IDataRepository,
+        folder_storage: FolderStorage | None = None,
+    ) -> None:
         """Inicializa el servicio MDM.
 
         Args:
             repository: Repositorio donde persiste el MDM
         """
         self.repository = repository
+        self.folder_storage = folder_storage or FolderStorage()
 
     def load_to_mdm(self, dataset: Dataset) -> Dict[str, Any]:
         """Carga un dataset limpiolimited y validado en el MDM.
@@ -53,6 +59,7 @@ class MDMService:
 
             # Persiste en repositorio
             self.repository.save(dataset)
+            master_path = self.folder_storage.append_to_master(dataset)
 
             # Genera resumen
             summary = {
@@ -62,6 +69,7 @@ class MDMService:
                 "source_file": dataset.source_path,
                 "format": dataset.format,
                 "status": dataset.status,
+                "master_dataset_path": str(master_path),
                 "timestamp": __import__("datetime").datetime.utcnow().isoformat(),
             }
 

@@ -20,7 +20,7 @@ class VistaEstadoPipeline:
     - Log de eventos en tiempo real
     """
 
-    def __init__(self, master: tk.Tk) -> None:
+    def __init__(self, master: tk.Tk | tk.Toplevel) -> None:
         """Inicializa la vista.
 
         Args:
