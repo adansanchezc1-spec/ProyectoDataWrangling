@@ -27,8 +27,9 @@ class VistaEstadoPipeline:
             master: Widget Tk padre
         """
         self.master = master
-        self.master.title("Data Wrangling - Estado del Pipeline")
-        self.master.geometry("800x600")
+        self.master.title("InmoInsight - Estado del procesamiento")
+        self.master.geometry("900x650")
+        self.master.minsize(760, 560)
 
         self.pipeline_data: Dict[str, Any] = {}
         self._create_widgets()
@@ -128,12 +129,12 @@ class VistaEstadoPipeline:
     def _initialize_stages_tree(self) -> None:
         """Inicializa el árbol con las etapas del pipeline."""
         stages = {
-            "1. Ingestion": ["Extracción", "Gateway 1: ¿Completa?"],
-            "2. Validation": ["Validación", "Gateway 2: ¿Formato válido?"],
-            "3. Cleaning": ["Limpieza", "Gateway 3: ¿Transformación completa?"],
-            "4. Quality Gate": ["Perfilado", "Gateway 4: ¿Calidad aceptable?"],
-            "5. MDM Loading": ["Persistencia", "Carga en repositorio"],
-            "6. Notification": ["Notificación", "Envío de alertas"],
+            "1. Lectura del archivo": ["Extracción", "¿Se pudo leer el contenido?"],
+            "2. Validación del formato": ["Estructura y ubicación", "¿Cumple el formato requerido?"],
+            "3. Limpieza y transformación": ["Normalización", "¿Hay suficientes registros válidos?"],
+            "4. Revisión de calidad": ["Perfilado", "¿La calidad es aceptable?"],
+            "5. Guardado del resultado": ["Inventario maestro", "Persistencia del lote"],
+            "6. Notificación": ["Resumen", "Envío opcional de correo"],
         }
 
         for stage, details in stages.items():
@@ -187,11 +188,11 @@ class VistaEstadoPipeline:
 
         if result.get("status") == "success":
             info_text = f"""
-RESULTADO EXITOSO
-=================
-Dataset ID: {result.get('dataset_id')}
-Total de registros: {result.get('total_records')}
-Registros limpios: {result.get('records_cleaned')}
+PROCESAMIENTO COMPLETADO
+========================
+Lote: {result.get('dataset_id')}
+Registros leídos: {result.get('total_records')}
+Registros verificados: {result.get('records_cleaned')}
 Estado: {result.get('pipeline_status')}
 
 Reporte de limpieza:
@@ -202,11 +203,11 @@ Reporte de limpieza:
 
         else:
             info_text = f"""
-ERROR EN PIPELINE
-=================
-Error: {result.get('error')}
-Tipo: {result.get('error_type')}
-Dataset ID: {result.get('dataset_id')}
+NO SE COMPLETÓ EL PROCESAMIENTO
+===============================
+Detalle: {result.get('error')}
+Tipo de error: {result.get('error_type')}
+Lote: {result.get('dataset_id')}
             """
             self.progress_var.set(0)
             self.lbl_progress.config(text="Error")

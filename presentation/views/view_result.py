@@ -27,8 +27,9 @@ class VistaResultado:
             master: Widget Tk padre
         """
         self.master = master
-        self.master.title("Data Wrangling - Resultados")
-        self.master.geometry("900x700")
+        self.master.title("InmoInsight - Resultados del procesamiento")
+        self.master.geometry("1000x740")
+        self.master.minsize(820, 640)
 
         self.current_result: Optional[Dict[str, Any]] = None
         self._create_widgets()
@@ -48,7 +49,7 @@ class VistaResultado:
         self.title_label.pack(pady=10)
 
         # Frame para estado general
-        status_frame = ttk.LabelFrame(main_frame, text="Estado General", padding="10")
+        status_frame = ttk.LabelFrame(main_frame, text="Estado general", padding="10")
         status_frame.pack(fill=tk.X, pady=10)
 
         # Label de estado (color dinámico)
@@ -80,7 +81,7 @@ class VistaResultado:
         self.tree_stats.pack(fill=tk.BOTH, expand=True)
 
         # Frame para gateways
-        gateways_frame = ttk.LabelFrame(main_frame, text="Gateways BPMN", padding="10")
+        gateways_frame = ttk.LabelFrame(main_frame, text="Etapas de validación", padding="10")
         gateways_frame.pack(fill=tk.BOTH, expand=True, pady=10)
 
         self.tree_gateways = ttk.Treeview(
@@ -88,7 +89,7 @@ class VistaResultado:
             columns=("Resultado", "Detalles"),
             height=5,
         )
-        self.tree_gateways.heading("#0", text="Gateway")
+        self.tree_gateways.heading("#0", text="Etapa")
         self.tree_gateways.heading("Resultado", text="Resultado")
         self.tree_gateways.heading("Detalles", text="Detalles")
         self.tree_gateways.column("#0", width=150)
@@ -115,14 +116,14 @@ class VistaResultado:
 
         self.btn_download = ttk.Button(
             button_frame,
-            text="Descargar",
+            text="Descarga no disponible",
             state=tk.DISABLED,
         )
         self.btn_download.pack(side=tk.LEFT, padx=5)
 
         self.btn_export = ttk.Button(
             button_frame,
-            text="Exportar Reporte",
+            text="Exportación no disponible",
             state=tk.DISABLED,
         )
         self.btn_export.pack(side=tk.LEFT, padx=5)
@@ -158,6 +159,19 @@ class VistaResultado:
         else:
             self._show_error_result(result)
 
+    @staticmethod
+    def _gateway_label(gateway: Any) -> str:
+        labels = {
+            1: "1. Lectura del archivo",
+            2: "2. Validación del formato",
+            3: "3. Limpieza y transformación",
+            4: "4. Revisión de calidad",
+        }
+        try:
+            return labels.get(int(gateway), "Etapa no identificada")
+        except (TypeError, ValueError):
+            return "Etapa no identificada"
+
     def _show_success_result(self, result: Dict[str, Any]) -> None:
         """Muestra resultado exitoso.
 
@@ -165,12 +179,12 @@ class VistaResultado:
             result: Resultado del pipeline
         """
         # Actualiza título
-        self.title_label.config(text="✓ Procesamiento Completado Exitosamente")
+        self.title_label.config(text="Procesamiento completado")
 
         # Actualiza estado
-        self.lbl_status.config(text="✓ ÉXITO", foreground="green")
+        self.lbl_status.config(text="COMPLETADO", foreground="green")
         self.lbl_info.config(
-            text=f"Dataset {result.get('dataset_id')} cargado en MDM"
+            text=f"Lote {result.get('dataset_id')} guardado en el inventario maestro"
         )
 
         # Limpia tablas
@@ -189,12 +203,12 @@ class VistaResultado:
                 email_label = f"FALLO a {email_info['to']}: {email_info.get('error', '?')}"
 
         stats = {
-            "Dataset ID": result.get("dataset_id"),
-            "Total de Registros": result.get("total_records"),
-            "Registros Limpios": result.get("records_cleaned"),
+            "Lote": result.get("dataset_id"),
+            "Registros leídos": result.get("total_records"),
+            "Registros verificados": result.get("records_cleaned"),
             "Estado Final": result.get("pipeline_status"),
             "Email": email_label,
-            "MDM": result.get("storage_paths", {}).get("mdm"),
+            "Ruta del inventario maestro": result.get("storage_paths", {}).get("mdm"),
             "Procesado": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
 
@@ -203,10 +217,10 @@ class VistaResultado:
 
         # Todos los gateways pasaron
         gateways = [
-            ("Gateway 1", "✓ APROBADO", "Extracción completa"),
-            ("Gateway 2", "✓ APROBADO", "Formato válido"),
-            ("Gateway 3", "✓ APROBADO", "Transformación completa"),
-            ("Gateway 4", "✓ APROBADO", "Calidad aceptable"),
+            ("1. Lectura del archivo", "APROBADO", "Extracción completa"),
+            ("2. Validación del formato", "APROBADO", "Estructura y ubicación revisadas"),
+            ("3. Limpieza y transformación", "APROBADO", "Transformación completa"),
+            ("4. Revisión de calidad", "APROBADO", "Calidad aceptable"),
         ]
 
         for gateway, resultado, detalles in gateways:
@@ -215,24 +229,21 @@ class VistaResultado:
         # Muestra reporte de limpieza
         self._display_cleaning_report(result.get("cleaning_report"))
 
-        # Habilita botones
-        self.btn_download.config(state=tk.NORMAL)
-        self.btn_export.config(state=tk.NORMAL)
-
     def _show_rejection_result(self, result: Dict[str, Any]) -> None:
         """Muestra resultado de rechazo.
 
         Args:
             result: Resultado de rechazo
         """
-        self.title_label.config(text="✗ Dataset Rechazado")
-        self.lbl_status.config(text="✗ RECHAZADO", foreground="red")
+        self.title_label.config(text="El lote no superó una validación")
+        self.lbl_status.config(text="REQUIERE REVISIÓN", foreground="red")
 
         rejection_log = result.get("rejection_log", {})
         gateway = result.get("gateway_bpmn", "Desconocido")
+        stage_label = self._gateway_label(gateway)
 
         self.lbl_info.config(
-            text=f"Rechazo en Gateway {gateway}: {rejection_log.get('motivo', 'Sin detalles')}"
+            text=f"{stage_label}: {rejection_log.get('motivo', 'No hay detalle disponible')}"
         )
 
         # Limpia tablas
@@ -245,7 +256,7 @@ class VistaResultado:
         self.tree_stats.insert(
             "",
             "end",
-            text="Dataset ID",
+            text="Lote",
             values=[result.get("dataset_id", "N/A")],
         )
         self.tree_stats.insert(
@@ -257,7 +268,7 @@ class VistaResultado:
         self.tree_stats.insert(
             "",
             "end",
-            text="Regla de Negocio",
+            text="Regla aplicada",
             values=[rejection_log.get("regla_negocio", "N/A")],
         )
 
@@ -265,8 +276,8 @@ class VistaResultado:
         self.tree_gateways.insert(
             "",
             "end",
-            text=f"Gateway {gateway}",
-            values=["✗ RECHAZO", rejection_log.get("motivo", "")],
+            text=stage_label,
+            values=["NO SUPERADA", rejection_log.get("motivo", "")],
         )
 
         self.txt_report.config(state=tk.NORMAL)
@@ -279,8 +290,8 @@ class VistaResultado:
 
     def _show_batch_result(self, result: Dict[str, Any]) -> None:
         """Muestra resumen de procesamiento multiple con detalle expandible."""
-        self.title_label.config(text="Procesamiento Multiple Finalizado")
-        self.lbl_status.config(text="FINALIZADO", foreground="blue")
+        self.title_label.config(text="Procesamiento de varios archivos finalizado")
+        self.lbl_status.config(text="LOTE FINALIZADO", foreground="blue")
         success_count = result.get('success_count', 0)
         rejected_count = result.get('rejected_count', 0)
         error_count = result.get('error_count', 0)
@@ -312,21 +323,21 @@ class VistaResultado:
             if status == "success":
                 detail = "MDM cargado"
             elif status == "rejected":
-                detail = f"Rechazado G{item.get('gateway_bpmn', '?')}"
+                detail = f"No superó {self._gateway_label(item.get('gateway_bpmn'))}"
             else:
                 detail = item.get("error", "error")
             child_id = self.tree_stats.insert(
                 root_id, "end",
                 text=f"{ds_id}",
                 values=[f"{status.upper()} — {detail}"],
-                tags=(str(index - 1),),
+                tags=(str(index), "batch_file"),
             )
 
             if status == "rejected":
                 log = item.get("rejection_log", {})
                 self.tree_stats.insert(
                     child_id, "end",
-                    text=f"Gateway {item.get('gateway_bpmn', '?')}",
+                    text=self._gateway_label(item.get("gateway_bpmn")),
                     values=[log.get("motivo", "")],
                 )
                 if log.get("regla_negocio"):
@@ -368,20 +379,26 @@ class VistaResultado:
         for gitem in self.tree_gateways.get_children():
             self.tree_gateways.delete(gitem)
 
-        gateways = [
-            ("Gateway 1", "✓" if r.get("gateway_bpmn", 1) > 1 or r.get("status") in ("success", "rejected") else "✗", "Extraccion"),
-            ("Gateway 2", "✓" if r.get("gateway_bpmn", 2) > 2 or r.get("status") in ("success", "rejected") else "✗", "Formato"),
-            ("Gateway 3", "✓" if r.get("gateway_bpmn", 3) > 3 or r.get("status") in ("success", "rejected") else "✗", "Transformacion"),
-            ("Gateway 4", "✓" if r.get("status") == "success" or r.get("gateway_bpmn", 0) >= 4 else "✗", "Calidad"),
+        try:
+            rejected_at = int(r.get("gateway_bpmn") or 0)
+        except (TypeError, ValueError):
+            rejected_at = 0
+        stages = [
+            (1, "1. Lectura del archivo", "Extracción"),
+            (2, "2. Validación del formato", "Estructura y ubicación"),
+            (3, "3. Limpieza y transformación", "Limpieza"),
+            (4, "4. Revisión de calidad", "Calidad"),
         ]
-        if r.get("status") == "success":
-            for g, res, det in gateways:
-                self.tree_gateways.insert("", "end", text=g, values=[res, det])
-        elif r.get("status") == "rejected":
-            gw = r.get("gateway_bpmn", 1)
-            for g, res, det in gateways:
-                passed = int(g[-1]) < gw
-                self.tree_gateways.insert("", "end", text=g, values=["✓" if passed else "✗ RECHAZO", det])
+        for number, name, detail in stages:
+            if r.get("status") == "success" or number < rejected_at:
+                stage_status = "APROBADO"
+            elif r.get("status") == "rejected" and number == rejected_at:
+                stage_status = "NO SUPERADA"
+            else:
+                stage_status = "PENDIENTE"
+            self.tree_gateways.insert(
+                "", "end", text=name, values=[stage_status, detail]
+            )
 
         self._display_cleaning_report(r.get("cleaning_report"))
 
@@ -391,13 +408,13 @@ class VistaResultado:
         Args:
             result: Resultado de error
         """
-        self.title_label.config(text="✗ Error en el Procesamiento")
-        self.lbl_status.config(text="✗ ERROR", foreground="red")
-        self.lbl_info.config(text=result.get("error", "Error desconocido"))
+        self.title_label.config(text="No se pudo completar el procesamiento")
+        self.lbl_status.config(text="ERROR", foreground="red")
+        self.lbl_info.config(text="Revisa el detalle para identificar el siguiente paso.")
 
         self.txt_report.config(state=tk.NORMAL)
         self.txt_report.delete(1.0, tk.END)
-        self.txt_report.insert(tk.END, f"Error: {result.get('error')}\nTipo: {result.get('error_type')}")
+        self.txt_report.insert(tk.END, f"Detalle: {result.get('error', 'No hay detalle disponible')}\nTipo de error: {result.get('error_type', 'No especificado')}")
         self.txt_report.config(state=tk.DISABLED)
 
     def _display_cleaning_report(self, report: Optional[Dict[str, Any]]) -> None:
@@ -445,9 +462,10 @@ Detalle:
     def _on_new_dataset_clicked(self) -> None:
         """Maneja el clic en botón Nuevo Dataset."""
         if messagebox.askyesno("Confirmación", "¿Deseas procesar otro dataset?"):
-            # Podría estar wired a cambiar de vista
-            pass
+            self.master.withdraw()
+            self.master.master.deiconify()
+            self.master.master.lift()
 
     def _on_close_clicked(self) -> None:
         """Maneja el clic en botón Cerrar."""
-        self.master.quit()
+        self.master.withdraw()

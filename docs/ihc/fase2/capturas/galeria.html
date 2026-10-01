@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Capturas del prototipo InmoInsight</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #1e2925; font: 15px/1.4 "Segoe UI", sans-serif; background: #eef2ef; }
+    header { padding: 18px 24px; background: #18392d; color: white; }
+    header h1 { margin: 0; font-size: 22px; }
+    header p { margin: 5px 0 0; color: #d8e5dc; }
+    main { max-width: 1100px; margin: auto; padding: 20px; }
+    figure { margin: 0 auto 22px; padding: 12px; background: white; border: 1px solid #d9e1dc; border-radius: 6px; break-after: page; page-break-after: always; }
+    figure:last-child { break-after: auto; page-break-after: auto; }
+    figcaption { font-weight: 700; padding: 0 0 9px; }
+    img { display: block; width: 100%; max-height: 175mm; object-fit: contain; object-position: top left; }
+    @page { size: A4 landscape; margin: 10mm; }
+    @media print {
+      body { background: white; }
+      header { padding: 0 0 8px; color: #1e2925; background: white; border-bottom: 1px solid #aebdb4; }
+      header p { color: #53615a; }
+      main { max-width: none; padding: 10px 0 0; }
+      figure { border: 0; padding: 0; margin: 0; }
+      img { max-height: 165mm; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>InmoInsight · Capturas del prototipo</h1>
+    <p>Diez pantallas del prototipo navegable. Datos de demostración, sin conexión al pipeline.</p>
+  </header>
+  <main>
+    <figure><figcaption>01 · Resumen del inventario</figcaption><img src="01-pantalla.png" alt="Resumen del inventario"></figure>
+    <figure><figcaption>02 · Selección del archivo</figcaption><img src="02-pantalla.png" alt="Selección de archivo para iniciar una carga"></figure>
+    <figure><figcaption>03 · Estructura de ejemplo</figcaption><img src="03-pantalla.png" alt="Vista de ejemplo con aviso de datos ficticios"></figure>
+    <figure><figcaption>04 · Asignación de campos</figcaption><img src="04-pantalla.png" alt="Mapeo de seis campos obligatorios"></figure>
+    <figure><figcaption>05 · Confirmación</figcaption><img src="05-pantalla.png" alt="Resumen previo a simular el procesamiento"></figure>
+    <figure><figcaption>06 · Progreso</figcaption><img src="06-pantalla.png" alt="Progreso simulado del pipeline"></figure>
+    <figure><figcaption>07 · Resultados</figcaption><img src="07-pantalla.png" alt="Resumen demostrativo de resultados"></figure>
+    <figure><figcaption>08 · Auditoría</figcaption><img src="08-pantalla.png" alt="Lista de registros de ejemplo con filtros"></figure>
+    <figure><figcaption>09 · Diagnóstico</figcaption><img src="09-pantalla.png" alt="Detalle de un hallazgo ficticio"></figure>
+    <figure><figcaption>10 · Inventario y exportación</figcaption><img src="10-pantalla.png" alt="Filtros y exportación simulada del inventario"></figure>
+  </main>
+</body>
+</html>
