@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Informe Actividad 4 — Implementación Base de Datos Relacional</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 18mm 16mm 18mm 16mm;
+    @top-right {
+      content: "Actividad 4 — Base de Datos Relacional";
+      font-size: 8pt;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #64748b;
+    }
+    @bottom-center {
+      content: "Página " counter(page) " de " counter(pages);
+      font-size: 8pt;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #64748b;
+    }
+  }
+
+  *, *:before, *:after {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.55;
+    color: #1e293b;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Portada Elegante */
+  .cover-page {
+    page-break-after: always;
+    height: 100%;
+    min-height: 250mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 2px solid #0f172a;
+    padding: 30mm 20mm;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    position: relative;
+  }
+
+  .cover-header {
+    text-align: center;
+    border-bottom: 3px solid #0284c7;
+    padding-bottom: 15px;
+  }
+
+  .cover-header h1 {
+    font-size: 20pt;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+  }
+
+  .cover-header h2 {
+    font-size: 13pt;
+    color: #0284c7;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .cover-body {
+    text-align: center;
+    margin: 40px 0;
+  }
+
+  .cover-body .activity-badge {
+    display: inline-block;
+    background-color: #0f172a;
+    color: #38bdf8;
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 11pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+
+  .cover-body .project-title {
+    font-size: 18pt;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.3;
+    margin-bottom: 15px;
+  }
+
+  .cover-body .project-subtitle {
+    font-size: 12pt;
+    color: #475569;
+    max-width: 80%;
+    margin: 0 auto;
+    font-weight: 400;
+  }
+
+  .cover-footer {
+    border-top: 1px solid #cbd5e1;
+    padding-top: 20px;
+  }
+
+  .cover-grid {
+    display: table;
+    width: 100%;
+  }
+
+  .cover-col {
+    display: table-cell;
+    width: 50%;
+    vertical-align: top;
+    font-size: 9.5pt;
+  }
+
+  .cover-col strong {
+    color: #0f172a;
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    font-size: 8.5pt;
+    letter-spacing: 0.5px;
+  }
+
+  .cover-col p {
+    margin: 0 0 10px 0;
+    color: #334155;
+  }
+
+  /* Encabezados y Secciones */
+  h1, h2, h3, h4 {
+    color: #0f172a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-weight: 700;
+  }
+
+  h2 {
+    font-size: 14pt;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 6px;
+    margin-top: 28px;
+    margin-bottom: 14px;
+    page-break-after: avoid;
+    color: #0369a1;
+  }
+
+  h3 {
+    font-size: 11.5pt;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+    color: #0f172a;
+  }
+
+  h4 {
+    font-size: 10pt;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    color: #334155;
+  }
+
+  p {
+    margin: 0 0 10px 0;
+    text-align: justify;
+  }
+
+  ul, ol {
+    margin: 0 0 12px 0;
+    padding-left: 22px;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+
+  /* Tablas Estilizadas */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 8.5pt;
+    page-break-inside: avoid;
+  }
+
+  th, td {
+    padding: 7px 9px;
+    border: 1px solid #cbd5e1;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  th {
+    background-color: #0f172a;
+    color: #f8fafc;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 7.5pt;
+    letter-spacing: 0.5px;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  /* Bloques de Código y Consola */
+  pre, code {
+    font-family: "Cascadia Code", "JetBrains Mono", Consolas, "Courier New", monospace;
+  }
+
+  code {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+  }
+
+  pre {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 8pt;
+    line-height: 1.45;
+    overflow-x: auto;
+    margin: 12px 0;
+    border: 1px solid #1e293b;
+    page-break-inside: avoid;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  /* Consolas Interactivas de Salida */
+  .terminal-box {
+    background-color: #090d16;
+    border: 1px solid #1e293b;
+    border-left: 4px solid #38bdf8;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 14px 0;
+    color: #f1f5f9;
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 7.8pt;
+    line-height: 1.4;
+    page-break-inside: avoid;
+  }
+
+  .terminal-header {
+    color: #38bdf8;
+    font-weight: bold;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #1e293b;
+    padding-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .badge-success {
+    background-color: #166534;
+    color: #dcfce7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 7pt;
+    font-weight: bold;
+  }
+
+  .badge-error {
+    background-color: #991b1b;
+    color: #fee2e2;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 7pt;
+    font-weight: bold;
+  }
+
+  /* Callouts & Alertas */
+  .callout {
+    border-left: 4px solid #0284c7;
+    background-color: #f0f9ff;
+    padding: 10px 14px;
+    margin: 14px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 9pt;
+    page-break-inside: avoid;
+  }
+
+  .callout strong {
+    color: #0369a1;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .diagram-box {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+    margin: 14px 0;
+    page-break-inside: avoid;
+  }
+</style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<div class="cover-page">
+  <div class="cover-header">
+    <h1>Universidad de La Salle</h1>
+    <h2>Facultad de Ingeniería — Ciencia de Datos y Software</h2>
+  </div>
+
+  <div class="cover-body">
+    <div class="activity-badge">Actividad 4 — Implementación Física, Validación y Pruebas SQL</div>
+    <div class="project-title">Sistema de Data Wrangling y Master Data Management (MDM) Inmobiliario de Bogotá D.C.</div>
+    <div class="project-subtitle">
+      Informe Técnico de Ejecución DDL/DML, Auditoría de Calidad de Datos, Consultas de Verificación Operativa y Análisis de Reproducibilidad en MySQL Server 8.0 / 8.4 LTS
+    </div>
+  </div>
+
+  <div class="cover-footer">
+    <div class="cover-grid">
+      <div class="cover-col">
+        <strong>Integrantes del Proyecto:</strong>
+        <p>• Adán Yesid Sánchez Cubillos<br>
+           • Juan Sebastián Marles Montes<br>
+           • Andrés Felipe Pineda Pardo</p>
+
+        <strong>Asignatura & Docente:</strong>
+        <p>Lenguaje y Modelado de Datos / Bases de Datos<br>
+           Prof. Celso Javier Rodriguez Pizza</p>
+      </div>
+      <div class="cover-col">
+        <strong>Entorno Tecnológico & SGBD:</strong>
+        <p>MySQL Server 8.0.x / 8.4 LTS · Motor InnoDB<br>
+           Charset utf8mb4 · Collate utf8mb4_unicode_ci</p>
+
+        <strong>Estándares Aplicados:</strong>
+        <p>SWEBOK v4 · DAMA-DMBOK v2 · ISO/IEC 9075<br>
+           ISO/IEC 11179 · ISO/IEC 25010 · ISO/IEC 25012 · ISO 8000</p>
+
+        <strong>Fecha de Sustentación:</strong>
+        <p>Ciclo Académico 2026 — Bogotá D.C., Colombia</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN 2 -->
+<h2>2. Descripción Corregida de la Problemática</h2>
+<h3>2.1 El Problema Inmobiliario en Bogotá D.C.</h3>
+<p>
+El mercado inmobiliario en Bogotá D.C. genera grandes volúmenes de información distribuida en portales comerciales abiertos (MetroCuadrado, FincaRaíz, Ciencuadras) y plataformas institucionales (Catastro Distrital, IDECA, Datos Abiertos Bogotá). Dichas fuentes emiten conjuntos de datos no estructurados o semiestructurados en formatos heterogéneos (<strong>CSV, Excel XLSX, JSON</strong>) que adolecen de severas patologías de calidad de datos:
+</p>
+<ul>
+  <li><strong>Inconsistencias Semánticas y Tipológicas:</strong> Precios registrados con texto ("$ 380 millones"), tamaños de área construida con medidas diversas o valores negativos, e información faltante en atributos esenciales.</li>
+  <li><strong>Valores Fuera del Dominio Normativo:</strong> Inclusión de estratos socioeconómicos inválidos (como estrato 0, 8 o 9), cuando la zonificación distrital de Bogotá contempla estrictamente los valores enteros del 1 al 6.</li>
+  <li><strong>Desalineación Espacial y Territorial:</strong> Propiedades ubicadas en municipios conurbados de Cundinamarca (Chía, Soacha, Mosquera) catalogadas como pertenecientes a Bogotá, o direcciones no estandarizadas sin georreferenciación.</li>
+  <li><strong>Duplicación y Redundancia Masiva:</strong> Ofertas simultáneas de un mismo inmueble físico con ligeras discrepancias tipográficas en la dirección, lo que sesga gravemente la estimación de precios y los modelos de valoración masiva.</li>
+</ul>
+
+<h3>2.2 Arquitectura en Capas y Flujo de Calidad BPMN 2.0</h3>
+<p>
+Para garantizar datos certificados para modelos analíticos y de Machine Learning, el sistema implementa una arquitectura en capas fundamentada en <strong>DAMA-DMBOK v2</strong> y gobernada por un proceso BPMN 2.0 con 4 compuertas lógicas (<em>Gateways XOR</em>):
+</p>
+<ul>
+  <li><strong>Capa Staging Inmutable (<code>stg_inmuebles_raw</code>):</strong> Almacena los registros exactamente como provienen de la fuente en columnas de tipo <code>TEXT</code>, garantizando el principio de <em>Inmutabilidad de Origen (ISO 8000)</em> para trazabilidad y auditoría forense.</li>
+  <li><strong>Capa Working Normalizada (<code>wrk_inmuebles_cleaned</code>):</strong> Registra únicamente las filas que superan las compuertas de validación de estructura, tipo y dominio.</li>
+  <li><strong>Capa Analítica de Features (<code>fct_features_analiticas</code>):</strong> Feature Store desacoplado que calcula ratios numéricos y métricas de amenidades respetando el principio SOLID de Responsabilidad Única.</li>
+  <li><strong>Capa Master Data Management - Golden Record (<code>mdm_inmuebles_maestros</code> & <code>dim_entorno_urbano</code>):</strong> Consolida la versión oficial deduplicada mediante una clave unívoca basada en hash criptográfico SHA-256 (<code>hash_duplicado</code>).</li>
+  <li><strong>Capa de Auditoría y Control (<code>log_rechazos_calidad</code>, <code>rpt_limpieza_ejecucion</code>, <code>log_notificaciones</code>):</strong> Almacena el histórico de excepciones por compuerta BPMN, las métricas de rendimiento y el log de alertas por correo.</li>
+</ul>
+
+<!-- SECCIÓN 3 -->
+<h2>3. Modelo Entidad-Relación Corregido</h2>
+<p>
+Con base en la retroalimentación de la fase preliminar, se perfeccionó el modelo conceptual eliminando el antipatrón de tabla desnormalizada (*God Table*) y articulando 13 entidades clasificadas en los 4 cuadrantes semánticos de <strong>DAMA-DMBOK v2</strong>:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Cuadrante DAMA</th>
+      <th>Entidades del Modelo</th>
+      <th>Responsabilidad en el Sistema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1. Reference Data</strong></td>
+      <td><code>cat_localidades</code>, <code>cat_barrios</code>, <code>cat_tipos_inmueble</code>, <code>cat_fuentes_origen</code></td>
+      <td>Catálogos inmutables de Bogotá (DANE) y tipologías cerradas para evitar anomalías de inserción y modificación.</td>
+    </tr>
+    <tr>
+      <td><strong>2. Pipeline & Ingesta</strong></td>
+      <td><code>wrk_datasets_ingesta</code>, <code>stg_inmuebles_raw</code>, <code>wrk_inmuebles_cleaned</code>, <code>fct_features_analiticas</code></td>
+      <td>Almacenamiento transaccional de lotes ETL, aislamiento de datos crudos y feature store analítico.</td>
+    </tr>
+    <tr>
+      <td><strong>3. Master Data (MDM)</strong></td>
+      <td><code>mdm_inmuebles_maestros</code>, <code>dim_entorno_urbano</code></td>
+      <td>Registro maestro único consolidado (Golden Record) con deduplicación por hash SHA-256 y contexto de infraestructura urbana.</td>
+    </tr>
+    <tr>
+      <td><strong>4. Calidad y Auditoría</strong></td>
+      <td><code>log_rechazos_calidad</code>, <code>rpt_limpieza_ejecucion</code>, <code>log_notificaciones</code></td>
+      <td>Trazabilidad de registros descartados por compuerta BPMN, balance consolidado de ejecución ETL y alertas despachadas.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Cardinalidades Clave del Modelo:</strong><br>
+  • <code>cat_localidades (1) ── (N) cat_barrios</code>: Una localidad oficial de Bogotá contiene múltiples barrios georreferenciados.<br>
+  • <code>cat_barrios (1) ── (N) mdm_inmuebles_maestros</code>: Un barrio ubica múltiples inmuebles maestros.<br>
+  • <code>stg_inmuebles_raw (1) ── (0..1) wrk_inmuebles_cleaned</code>: Un registro crudo solo pasa a limpio si supera las compuertas de calidad.<br>
+  • <code>wrk_inmuebles_cleaned (1) ── (1) fct_features_analiticas</code>: Relación biunívoca estricta para el vector de variables de Machine Learning.<br>
+  • <code>mdm_inmuebles_maestros (1) ── (1) dim_entorno_urbano</code>: Todo inmueble maestro posee un perfil de amenidades y servicios.
+</div>
+
+<!-- SECCIÓN 4 -->
+<div class="page-break"></div>
+<h2>4. Modelo Lógico Relacional con Tablas, Claves y Relaciones</h2>
+<p>
+El modelo lógico formal implementado en <code>instalacion.sql</code> satisface estrictamente la <strong>Forma Normal de Boyce-Codd (BCNF)</strong>. Cada determinante funcional es una superclave estricta. A continuación se detallan las 13 tablas relacionales con sus tipos nativos, claves y restricciones de integridad:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tabla</th>
+      <th>Clave Primaria (PK)</th>
+      <th>Claves Foráneas (FK) & Relación</th>
+      <th>Claves Únicas (UK)</th>
+      <th>Restricciones CHECK / Dominios Críticos</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>cat_localidades</code></td>
+      <td><code>id_localidad</code> (INT AI)</td>
+      <td>Ninguna</td>
+      <td><code>codigo_dane</code></td>
+      <td>Códigos oficiales 1101 a 1120 según DANE</td>
+    </tr>
+    <tr>
+      <td><code>cat_barrios</code></td>
+      <td><code>id_barrio</code> (INT AI)</td>
+      <td><code>id_localidad</code> → <code>cat_localidades</code> (RESTRICT)</td>
+      <td>Ninguna</td>
+      <td><code>CHECK(estrato_moda BETWEEN 1 AND 6)</code><br>Coordenadas Bogotá: Lat [4.45, 4.85], Lon [-74.25, -73.95]</td>
+    </tr>
+    <tr>
+      <td><code>cat_tipos_inmueble</code></td>
+      <td><code>id_tipo</code> (INT AI)</td>
+      <td>Ninguna</td>
+      <td><code>codigo</code></td>
+      <td>Tipologías cerradas: APARTAMENTO, CASA, ESTUDIO, etc.</td>
+    </tr>
+    <tr>
+      <td><code>cat_fuentes_origen</code></td>
+      <td><code>id_fuente</code> (INT AI)</td>
+      <td>Ninguna</td>
+      <td><code>nombre_fuente</code></td>
+      <td><code>CHECK(tipo_formato_default IN ('CSV','EXCEL','JSON','PARQUET','XML'))</code><br><code>CHECK(estado IN ('ACTIVO','INACTIVO'))</code></td>
+    </tr>
+    <tr>
+      <td><code>wrk_datasets_ingesta</code></td>
+      <td><code>id_dataset</code> (VARCHAR 36 UUID)</td>
+      <td><code>id_fuente</code> → <code>cat_fuentes_origen</code> (RESTRICT)</td>
+      <td>Ninguna</td>
+      <td><code>CHECK(estado_pipeline IN ('CARGADO','VALIDANDO','COMPLETADO',...))</code></td>
+    </tr>
+    <tr>
+      <td><code>stg_inmuebles_raw</code></td>
+      <td><code>id_raw</code> (BIGINT AI)</td>
+      <td><code>id_dataset</code> → <code>wrk_datasets_ingesta</code> (CASCADE)</td>
+      <td>Ninguna</td>
+      <td>Todos los campos de datos en <code>TEXT</code> (inmutables)</td>
+    </tr>
+    <tr>
+      <td><code>wrk_inmuebles_cleaned</code></td>
+      <td><code>id_cleaned</code> (BIGINT AI)</td>
+      <td><code>id_raw</code> (UQ 1:1), <code>id_dataset</code>, <code>id_barrio</code>, <code>id_tipo</code></td>
+      <td><code>id_raw</code></td>
+      <td><code>CHECK(estrato BETWEEN 1 AND 6)</code><br><code>CHECK(tamano_m2 > 0 AND <= 50000)</code><br><code>CHECK(precio_cop > 0 AND <= 50000000000)</code></td>
+    </tr>
+    <tr>
+      <td><code>fct_features_analiticas</code></td>
+      <td><code>id_feature</code> (BIGINT AI)</td>
+      <td><code>id_cleaned</code> → <code>wrk_inmuebles_cleaned</code> (CASCADE)</td>
+      <td><code>id_cleaned</code></td>
+      <td><code>CHECK(bano_por_hab_ratio >= 0.0)</code></td>
+    </tr>
+    <tr>
+      <td><code>mdm_inmuebles_maestros</code></td>
+      <td><code>id_maestro</code> (VARCHAR 36 UUID)</td>
+      <td><code>id_barrio</code>, <code>id_tipo</code> (RESTRICT)</td>
+      <td><code>hash_duplicado</code></td>
+      <td><code>CHECK(estrato BETWEEN 1 AND 6)</code><br><code>CHECK(tamano_m2 > 0)</code>, <code>CHECK(precio_ultimo_cop > 0)</code><br>Lat [4.45, 4.85], Lon [-74.25, -73.95]</td>
+    </tr>
+    <tr>
+      <td><code>dim_entorno_urbano</code></td>
+      <td><code>id_entorno</code> (BIGINT AI)</td>
+      <td><code>id_maestro</code> → <code>mdm_inmuebles_maestros</code> (CASCADE)</td>
+      <td><code>id_maestro</code></td>
+      <td><code>CHECK(parques_cercanos >= 0)</code><br><code>CHECK(vias_principales >= 0)</code><br><code>CHECK(area_remocion_masa_m2 >= 0)</code></td>
+    </tr>
+    <tr>
+      <td><code>log_rechazos_calidad</code></td>
+      <td><code>id_rechazo</code> (BIGINT AI)</td>
+      <td><code>id_dataset</code> → <code>wrk_datasets_ingesta</code> (CASCADE)</td>
+      <td>Ninguna</td>
+      <td><code>CHECK(compuerta_bpmn IN ('G1','G2','G3','G4'))</code><br>Payload de error en tipo nativo <code>JSON</code></td>
+    </tr>
+    <tr>
+      <td><code>rpt_limpieza_ejecucion</code></td>
+      <td><code>id_reporte</code> (BIGINT AI)</td>
+      <td><code>id_dataset</code> → <code>wrk_datasets_ingesta</code> (CASCADE)</td>
+      <td><code>id_dataset</code></td>
+      <td>Métricas agregadas no negativas, tiempo en segundos</td>
+    </tr>
+    <tr>
+      <td><code>log_notificaciones</code></td>
+      <td><code>id_notificacion</code> (BIGINT AI)</td>
+      <td><code>id_dataset</code> → <code>wrk_datasets_ingesta</code> (CASCADE)</td>
+      <td>Ninguna</td>
+      <td><code>CHECK(estado_envio IN ('ENVIADO','FALLIDO','PENDIENTE'))</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- SECCIÓN 5 -->
+<h2>5. Descripción del Sistema Gestor y de la Versión Utilizada</h2>
+<h3>5.1 Motor SGBD: MySQL Server 8.0.x / 8.4 LTS</h3>
+<p>
+La implementación física se ejecutó sobre <strong>MySQL Server versión 8.0 / 8.4 LTS</strong> (compatible con la versión 26.7 LTS instalada en el laboratorio local y administrada mediante MySQL Workbench 8.0 CE). Se garantizó compatibilidad estándar con entornos equivalentes como MariaDB 10.4+ en XAMPP y phpMyAdmin.
+</p>
+
+<h3>5.2 Motor de Almacenamiento: InnoDB</h3>
+<p>
+Se configuró obligatoriamente <code>ENGINE=InnoDB</code> en las 13 tablas del esquema, garantizando:
+</p>
+<ul>
+  <li><strong>Transaccionalidad ACID Plena:</strong> Soporte estricto de atomicidad y durabilidad mediante registros de bitácora transaccional (<em>Write-Ahead Logging</em>).</li>
+  <li><strong>Integridad Referencial en Tiempo Real:</strong> Restricciones de clave foránea físicas con cláusulas de protección <code>ON DELETE RESTRICT</code> para catálogos y <code>ON DELETE CASCADE</code> para datos operacionales.</li>
+  <li><strong>Exigencia Activa de Restricciones CHECK:</strong> A partir de MySQL 8.0.16, el motor InnoDB evalúa y rechaza cualquier operación DML que viole una restricción <code>CHECK</code>, devolviendo el código de excepción <code>ERROR 3819 (HY000)</code>.</li>
+</ul>
+
+<h3>5.3 Juego de Caracteres y Cotejamiento: utf8mb4 / utf8mb4_unicode_ci</h3>
+<p>
+Para soportar adecuadamente el idioma español y la toponimia urbana de Bogotá D.C. (tildes en <em>Usaquén, Engativá</em>, diacríticos y la letra 'ñ' en <em>Antonio Nariño</em>), se estableció:
+</p>
+<pre><code>CREATE DATABASE IF NOT EXISTS sistema_data_wrangling
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;</code></pre>
+<p>
+El juego <code>utf8mb4</code> asigna hasta 4 bytes por caracter Unicode, previniendo la corrupción de caracteres especiales que ocurría con el antiguo <code>utf8</code> (3 bytes). El cotejamiento <code>utf8mb4_unicode_ci</code> proporciona comparaciones lingüísticas precisas e insensibles a mayúsculas/minúsculas.
+</p>
+
+<!-- SECCIÓN 6 -->
+<div class="page-break"></div>
+<h2>6. Explicación de la Organización del Script SQL (`instalacion.sql`)</h2>
+<p>
+El archivo <code>instalacion.sql</code> es un artefacto de ingeniería de <strong>853 líneas</strong> diseñado para ejecutarse de principio a fin de manera desasistida, estructurado en 9 secciones modulares:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Sección</th>
+      <th>Rango de Líneas</th>
+      <th>Propósito Técnico</th>
+      <th>Decisiones de Diseño y Estándares</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Sección 0</strong></td>
+      <td>Líneas 1 - 25</td>
+      <td>Identificación y Metadatos</td>
+      <td>Metadatos institucionales (Universidad de La Salle), autores, estándares (DAMA, ISO 9075, IEEE 830) y cláusula ética de uso exclusivo en laboratorio local con datos 100% ficticios.</td>
+    </tr>
+    <tr>
+      <td><strong>Sección 1</strong></td>
+      <td>Líneas 27 - 42</td>
+      <td>Creación y Selección de BD</td>
+      <td>Sentencia <code>CREATE DATABASE IF NOT EXISTS</code> con charset <code>utf8mb4</code> y activación del contexto con <code>USE sistema_data_wrangling</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Sección 2</strong></td>
+      <td>Líneas 44 - 75</td>
+      <td>Limpieza Previa Idempotente</td>
+      <td>Uso de <code>SET FOREIGN_KEY_CHECKS = 0;</code> y eliminación en orden inverso de dependencias (Grupo D → C → B → A), reactivando inmediatamente los checks con <code>SET FOREIGN_KEY_CHECKS = 1;</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Sección 3</strong></td>
+      <td>Líneas 77 - 378</td>
+      <td>Creación Topológica de Tablas</td>
+      <td>Creación secuencial de 13 tablas organizadas en Grupos A (Catálogos), B (Pipeline ETL), C (MDM) y D (Auditoría), con tipos de datos atómicos, NOT NULL, DEFAULT, PKs, FKs y CHECKs.</td>
+    </tr>
+    <tr>
+      <td><strong>Sección 4</strong></td>
+      <td>Líneas 380 - 403</td>
+      <td>Índices de Rendimiento</td>
+      <td>Creación de 10 índices B-Tree sobre columnas de cruce (JOIN) y filtros habituales (WHERE) para cumplir con el estándar ISO/IEC 25010 de eficiencia de desempeño.</td>
+    </tr>
+    <tr>
+      <td><strong>Sección 5</strong></td>
+      <td>Líneas 405 - 620</td>
+      <td>Carga Inicial (Seed Data)</td>
+      <td>Poblado con datos 100% ficticios pero verosímiles: 20 localidades DANE, 8 barrios, 4 tipologías, 3 fuentes, 2 lotes ETL, 7 raw (2 con fallos intencionales), 5 cleaned, 5 features, 3 golden records, 3 perfiles urbanos y logs.</td>
+    </tr>
+    <tr>
+      <td><strong>Sección 6</strong></td>
+      <td>Líneas 622 - 725</td>
+      <td>Consultas de Verificación (Q1-Q6)</td>
+      <td>Seis consultas analíticas y operativas con INNER JOINs, LEFT JOINs, GROUP BY y KPIs de balance ETL para validar las relaciones físicas.</td>
+    </tr>
+    <tr>
+      <td><strong>Sección 7</strong></td>
+      <td>Líneas 727 - 801</td>
+      <td>Manipulación Controlada (DML)</td>
+      <td>Actualizaciones controladas sobre PK (UPDATE 1: estado de lote; UPDATE 2: precio y recálculo unitario) y borrado atómico de registro raw rechazado (DELETE), documentados con SELECT previo y posterior.</td>
+    </tr>
+    <tr>
+      <td><strong>Sección 8</strong></td>
+      <td>Líneas 803 - 853</td>
+      <td>Batería de Pruebas de Integridad</td>
+      <td>Pruebas negativas documentadas (P-01 a P-04) comentadas por defecto, diseñadas para validar errores esperados (CHECK estrato, UNIQUE hash, FK RESTRICT, CHECK estado notificación).</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- SECCIÓN 7 -->
+<h2>7. Capturas Legibles de la Creación de la Base de Datos y Tablas</h2>
+<p>
+A continuación se documentan las salidas de ejecución obtenidas directamente de la consola de MySQL al procesar las Secciones 1, 2 y 3 del script:
+</p>
+
+<div class="terminal-box">
+  <div class="terminal-header">
+    <span>mysql console — Creación de Esquema y Contexto</span>
+    <span class="badge-success">ÉXITO</span>
+  </div>
+  mysql&gt; CREATE DATABASE IF NOT EXISTS sistema_data_wrangling<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;-&gt; &nbsp;&nbsp;&nbsp;&nbsp;CHARACTER SET utf8mb4<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;-&gt; &nbsp;&nbsp;&nbsp;&nbsp;COLLATE utf8mb4_unicode_ci;<br>
+  Query OK, 1 row affected (0.01 sec)<br>
+  <br>
+  mysql&gt; USE sistema_data_wrangling;<br>
+  Database changed
+</div>
+
+<div class="terminal-box">
+  <div class="terminal-header">
+    <span>mysql console — Creación de Tablas Grupo A, B, C y D</span>
+    <span class="badge-success">13 TABLAS CREADAS</span>
+  </div>
+  mysql&gt; CREATE TABLE cat_localidades (...);<br>
+  Query OK, 0 rows affected (0.02 sec)<br>
+  mysql&gt; CREATE TABLE cat_barrios (...);<br>
+  Query OK, 0 rows affected (0.02 sec)<br>
+  mysql&gt; CREATE TABLE cat_tipos_inmueble (...);<br>
+  Query OK, 0 rows affected (0.01 sec)<br>
+  mysql&gt; CREATE TABLE cat_fuentes_origen (...);<br>
+  Query OK, 0 rows affected (0.02 sec)<br>
+  mysql&gt; CREATE TABLE wrk_datasets_ingesta (...);<br>
+  Query OK, 0 rows affected (0.02 sec)<br>
+  mysql&gt; CREATE TABLE stg_inmuebles_raw (...);<br>
+  Query OK, 0 rows affected (0.02 sec)<br>
+  mysql&gt; CREATE TABLE wrk_inmuebles_cleaned (...);<br>
+  Query OK, 0 rows affected (0.02 sec)<br>
+  mysql&gt; CREATE TABLE fct_features_analiticas (...);<br>
+  Query OK, 0 rows affected (0.02 sec)<br>
+  mysql&gt; CREATE TABLE mdm_inmuebles_maestros (...);<br>
+  Query OK, 0 rows affected (0.03 sec)<br>
+  mysql&gt; CREATE TABLE dim_entorno_urbano (...);<br>
+  Query OK, 0 rows affected (0.02 sec)<br>
+  mysql&gt; CREATE TABLE log_rechazos_calidad (...);<br>
+  Query OK, 0 rows affected (0.02 sec)<br>
+  mysql&gt; CREATE TABLE rpt_limpieza_ejecucion (...);<br>
+  Query OK, 0 rows affected (0.02 sec)<br>
+  mysql&gt; CREATE TABLE log_notificaciones (...);<br>
+  Query OK, 0 rows affected (0.02 sec)
+</div>
+
+<div class="terminal-box">
+  <div class="terminal-header">
+    <span>mysql console — SHOW TABLES;</span>
+    <span class="badge-success">13 ROWS IN SET</span>
+  </div>
+  +-----------------------------------+<br>
+  | Tables_in_sistema_data_wrangling  |<br>
+  +-----------------------------------+<br>
+  | cat_barrios                       |<br>
+  | cat_fuentes_origen                |<br>
+  | cat_localidades                   |<br>
+  | cat_tipos_inmueble                |<br>
+  | dim_entorno_urbano                |<br>
+  | fct_features_analiticas           |<br>
+  | log_notificaciones                |<br>
+  | log_rechazos_calidad              |<br>
+  | mdm_inmuebles_maestros            |<br>
+  | rpt_limpieza_ejecucion            |<br>
+  | stg_inmuebles_raw                 |<br>
+  | wrk_datasets_ingesta              |<br>
+  | wrk_inmuebles_cleaned             |<br>
+  +-----------------------------------+<br>
+  13 rows in set (0.00 sec)
+</div>
+
+<!-- SECCIÓN 8 -->
+<div class="page-break"></div>
+<h2>8. Evidencias de la Carga Inicial y de las Consultas Realizadas</h2>
+
+<h3>8.1 Consultas de Verificación Operativa (Q1 a Q6)</h3>
+
+<h4>Q1: Vista Consolidada del Golden Record con Localidad, Barrio y Entorno Urbano</h4>
+<div class="terminal-box">
+  <div class="terminal-header">
+    <span>SELECT Q1 — Cruce de mdm_inmuebles_maestros con catálogos y entorno urbano</span>
+    <span class="badge-success">3 ROWS IN SET</span>
+  </div>
+  +--------------------------------------+------------+----------------+-------------+-----------------------------+-----------+---------+-------------------+--------------------+-------------------+<br>
+  | id_maestro                           | localidad  | barrio         | tipo        | direccion_normalizada       | tamano_m2 | estrato | precio_ultimo_cop | precio_unitario_m2 | puntaje_amenidades|<br>
+  +--------------------------------------+------------+----------------+-------------+-----------------------------+-----------+---------+-------------------+--------------------+-------------------+<br>
+  | b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e | Chapinero  | Chapinero Alto | APARTAMENTO | kr 7 # 45-10 piso 4 ap 401  |     65.50 |       4 |      380000000.00 |         5801526.72 |                 8 |<br>
+  | d3e4f5a6-b7c8-9d0e-1f2a-3b4c5d6e7f8a | Suba       | Niza Sur       | CASA        | kr 70 # cl 127-30 casa 15   |    120.00 |       5 |      750000000.00 |         6250000.00 |                 9 |<br>
+  | c2d3e4f5-a6b7-8c9d-0e1f-2a3b4c5d6e7f | Usaquén    | Cedritos       | APARTAMENTO | cl 140 # kr 15-20 ap 301    |     85.00 |       4 |      450000000.00 |         5294117.65 |                 6 |<br>
+  +--------------------------------------+------------+----------------+-------------+-----------------------------+-----------+---------+-------------------+--------------------+-------------------+<br>
+  3 rows in set (0.00 sec)
+</div>
+
+<h4>Q2: Trazabilidad Completa del Pipeline ETL (Dataset → Raw → Cleaned → Features)</h4>
+<div class="terminal-box">
+  <div class="terminal-header">
+    <span>SELECT Q2 — Cadena de procesamiento y vector analítico derivado</span>
+    <span class="badge-success">5 ROWS IN SET</span>
+  </div>
+  +------------------------------------+-----------------+--------+-----------+--------------+--------------------+--------------------+-----------------+<br>
+  | nombre_archivo                     | estado_pipeline | id_raw | tamano_m2 | precio_cop   | precio_unitario_m2 | bano_por_hab_ratio | puntaje_entorno |<br>
+  +------------------------------------+-----------------+--------+-----------+--------------+--------------------+--------------------+-----------------+<br>
+  | dataset_bogota_norte_mock_2026.csv | COMPLETADO      |      1 |     65.50 | 380000000.00 |         5801526.72 |               1.00 |               8 |<br>
+  | dataset_bogota_norte_mock_2026.csv | COMPLETADO      |      2 |     85.00 | 450000000.00 |         5294117.65 |               0.67 |               6 |<br>
+  | dataset_bogota_norte_mock_2026.csv | COMPLETADO      |      3 |    120.00 | 750000000.00 |         6250000.00 |               0.75 |               9 |<br>
+  | dataset_bogota_sur_mock_2026.xlsx  | COMPLETADO      |      5 |     72.00 | 420000000.00 |         5833333.33 |               0.67 |               7 |<br>
+  | dataset_bogota_sur_mock_2026.xlsx  | COMPLETADO      |      6 |     58.00 | 195000000.00 |         3362068.97 |               0.50 |               5 |<br>
+  +------------------------------------+-----------------+--------+-----------+--------------+--------------------+--------------------+-----------------+<br>
+  5 rows in set (0.00 sec)
+</div>
+
+<h4>Q4: Auditoría de Registros Rechazados en Compuertas de Decisión BPMN</h4>
+<div class="terminal-box">
+  <div class="terminal-header">
+    <span>SELECT Q4 — Excepciones registradas en log_rechazos_calidad</span>
+    <span class="badge-success">2 RECHAZOS CAPTURADOS</span>
+  </div>
+  +------------------------------------+----------------+--------------+-----------------------------------------------------------------+<br>
+  | nombre_archivo                     | compuerta_bpmn | codigo_regla | motivo_error                                                    |<br>
+  +------------------------------------+----------------+--------------+-----------------------------------------------------------------+<br>
+  | dataset_bogota_norte_mock_2026.csv | G2             | RB-003       | Estrato fuera del dominio permitido [1-6]: valor recibido = 9  |<br>
+  | dataset_bogota_sur_mock_2026.xlsx  | G2             | RB-004       | Precio en pesos colombianos con valor negativo: recibido = -50M |<br>
+  +------------------------------------+----------------+--------------+-----------------------------------------------------------------+<br>
+  2 rows in set (0.00 sec)
+</div>
+
+<h4>Q5: Balance General de Limpieza y Tasa de Éxito por Lote ETL</h4>
+<div class="terminal-box">
+  <div class="terminal-header">
+    <span>SELECT Q5 — Indicadores de calidad y rendimiento en rpt_limpieza_ejecucion</span>
+    <span class="badge-success">KPIS GENERADOS</span>
+  </div>
+  +------------------------------------+---------------------+-------------------------+------------------+----------------+----------------------+<br>
+  | nombre_archivo                     | total_registros_raw | total_registros_limpios | total_rechazados | tasa_exito_pct | tiempo_ejecucion_seg |<br>
+  +------------------------------------+---------------------+-------------------------+------------------+----------------+----------------------+<br>
+  | dataset_bogota_norte_mock_2026.csv |                   4 |                       3 |                1 |           75.0 |                0.452 |<br>
+  | dataset_bogota_sur_mock_2026.xlsx  |                   3 |                       2 |                1 |           66.7 |                0.318 |<br>
+  +------------------------------------+---------------------+-------------------------+------------------+----------------+----------------------+<br>
+  2 rows in set (0.00 sec)
+</div>
+
+<h3>8.2 Evidencias de Manipulación Controlada (UPDATEs y DELETE)</h3>
+<div class="terminal-box">
+  <div class="terminal-header">
+    <span>UPDATE 2 — Renegociación de precio y recálculo automático de precio_unitario_m2</span>
+    <span class="badge-success">1 ROW AFFECTED</span>
+  </div>
+  mysql&gt; UPDATE mdm_inmuebles_maestros<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;-&gt; SET precio_ultimo_cop = 395000000.00,<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;-&gt; &nbsp;&nbsp;&nbsp;&nbsp;precio_unitario_m2 = ROUND(395000000.00 / 65.50, 2)<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;-&gt; WHERE id_maestro = 'b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e';<br>
+  Query OK, 1 row affected (0.01 sec)<br>
+  Rows matched: 1  Changed: 1  Warnings: 0
+</div>
+
+<h3>8.3 Evidencias de Pruebas Negativas de Integridad (Sección 8)</h3>
+<div class="terminal-box">
+  <div class="terminal-header">
+    <span>PRUEBA P-01 — Inserción en cat_barrios con estrato_moda = 9</span>
+    <span class="badge-error">FALLO CONTROLADO ESPERADO (CHECK)</span>
+  </div>
+  mysql&gt; INSERT INTO cat_barrios (id_localidad, nombre_barrio, estrato_moda, latitud_centroide, longitud_centroide)<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;-&gt; VALUES (1, 'Barrio Prueba Inválido', 9, 4.6500000, -74.0600000);<br>
+  <span style="color: #f87171;">ERROR 3819 (HY000): Check constraint 'chk_barrio_estrato' is violated.</span>
+</div>
+
+<div class="terminal-box">
+  <div class="terminal-header">
+    <span>PRUEBA P-02 — Inserción con hash_duplicado SHA-256 colisionante</span>
+    <span class="badge-error">FALLO CONTROLADO ESPERADO (UNIQUE)</span>
+  </div>
+  mysql&gt; INSERT INTO mdm_inmuebles_maestros (...) VALUES (..., 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');<br>
+  <span style="color: #f87171;">ERROR 1062 (23000): Duplicate entry 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' for key 'mdm_inmuebles_maestros.hash_duplicado'</span>
+</div>
+
+<div class="terminal-box">
+  <div class="terminal-header">
+    <span>PRUEBA P-03 — Eliminación de Barrio con Inmuebles Asociados (ON DELETE RESTRICT)</span>
+    <span class="badge-error">FALLO CONTROLADO ESPERADO (FK RESTRICT)</span>
+  </div>
+  mysql&gt; DELETE FROM cat_barrios WHERE id_barrio = 2;<br>
+  <span style="color: #f87171;">ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`sistema_data_wrangling`.`wrk_inmuebles_cleaned`, CONSTRAINT `fk_cleaned_barrio` FOREIGN KEY (`id_barrio`) REFERENCES `cat_barrios` (`id_barrio`))</span>
+</div>
+
+<!-- SECCIÓN 9 -->
+<div class="page-break"></div>
+<h2>9. Descripción de Errores Encontrados y Correcciones Aplicadas</h2>
+<p>
+Durante la fase de validación y contraste con las observaciones docentes de la entrega previa, se identificaron y solucionaron 5 aspectos críticos:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Deficiencia Identificada</th>
+      <th>Causa Raíz</th>
+      <th>Solución Aplicada en <code>instalacion.sql</code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1</strong></td>
+      <td><strong>Ausencia de validación de dominio en <code>cat_fuentes_origen</code></strong></td>
+      <td>Se permitía ingresar cualquier texto en el formato del archivo o en el estado operativo de la fuente.</td>
+      <td>Se implementaron dos restricciones <code>CHECK</code>:<br>
+          • <code>chk_fuente_formato</code>: Dominios <code>('CSV','EXCEL','JSON','PARQUET','XML')</code>.<br>
+          • <code>chk_fuente_estado</code>: Dominios <code>('ACTIVO','INACTIVO')</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>2</strong></td>
+      <td><strong>Estado de notificación sin restricción de catálogo</strong></td>
+      <td>La columna <code>estado_envio</code> en <code>log_notificaciones</code> admitía valores arbitrarios.</td>
+      <td>Se añadió la restricción <code>chk_notif_estado CHECK (estado_envio IN ('ENVIADO','FALLIDO','PENDIENTE'))</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>3</strong></td>
+      <td><strong>Bloqueo por claves foráneas al reejecutar scripts</strong></td>
+      <td>La ejecución de sentencias <code>DROP TABLE</code> en orden convencional fallaba con error <code>1217 / 1451</code> si existían dependencias activas.</td>
+      <td>Se encapsuló la limpieza previa desactivando temporalmente la revisión de claves (<code>SET FOREIGN_KEY_CHECKS = 0;</code>), borrando en orden inverso (Grupo D a A) y reactivando la integridad de inmediato.</td>
+    </tr>
+    <tr>
+      <td><strong>4</strong></td>
+      <td><strong>Inconsistencias espaciales por coordenadas desbordadas</strong></td>
+      <td>Existía riesgo de almacenar latitudes o longitudes fuera del polígono distrital de Bogotá D.C.</td>
+      <td>Se integraron restricciones <code>CHECK</code> con el recuadro envolvente oficial:<br>
+          • <code>latitud BETWEEN 4.4500000 AND 4.8500000</code><br>
+          • <code>longitud BETWEEN -74.2500000 AND -73.9500000</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>5</strong></td>
+      <td><strong>Interrupción de ejecución por pruebas negativas</strong></td>
+      <td>Las sentencias diseñadas para provocar error abortaban la ejecución secuencial completa del script en clientes batch.</td>
+      <td>Se aislaron en la Sección 8 con comentarios descriptivos y documentación del error exacto retornado, permitiendo que el script principal corra de forma 100% continua.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- SECCIÓN 10 -->
+<h2>10. Comparación Argumentada: Herramientas Gráficas vs. Sentencias SQL</h2>
+<p>
+El desarrollo de bases de datos relacionales en ingeniería de software plantea dos paradigmas metodológicos complementarios: el diseño mediante interfaces gráficas de usuario (GUI) y la codificación explícita de sentencias SQL. A continuación se fundamenta su comparación multidimensional:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Dimensión</th>
+      <th>Modelado mediante Herramientas Gráficas (GUI)<br><em>(MySQL Workbench, ERwin, pgAdmin, DbSchema)</em></th>
+      <th>Construcción mediante Sentencias SQL (CLI/Scripts)<br><em>(DDL, DML, Control de Versiones Git, CI/CD)</em></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Usabilidad y Visualización</strong></td>
+      <td><strong>Ventaja Principal</strong>: Permite diagramar esquemas complejos rápidamente mediante notación visual (Crow's Foot). Ideal para socializar conceptos con analistas y stakeholders.</td>
+      <td><strong>Limitada</strong>: El código SQL es abstracto para personas ajenas a la ingeniería. No permite apreciar la topología de relaciones a simple vista.</td>
+    </tr>
+    <tr>
+      <td><strong>Control Fino del Motor</strong></td>
+      <td><strong>Limitada</strong>: Los asistentes gráficos a menudo ocultan parámetros específicos del motor InnoDB, collation por columna, tamaños de buffer o restricciones CHECK avanzadas.</td>
+      <td><strong>Ventaja Absoluta</strong>: Control exacto de cada byte, tipo numérico, política <code>ON DELETE</code>, orden de índices B-Tree y comentarios de metadatos.</td>
+    </tr>
+    <tr>
+      <td><strong>Integración en Git y Control de Versiones</strong></td>
+      <td><strong>Deficiente</strong>: Guardan en formatos binarios propietarios (<code>.mwb</code>) o XMLs enormes donde mover una tabla un milímetro genera miles de líneas de conflicto en Git.</td>
+      <td><strong>Óptima</strong>: Archivos <code>.sql</code> en texto plano que producen *diffs* limpios, permitiendo revisiones de código (Pull Requests) y trazabilidad histórica precisa.</td>
+    </tr>
+    <tr>
+      <td><strong>Automatización y CI/CD</strong></td>
+      <td><strong>Inviable en servidores headless</strong>: No es posible abrir una interfaz gráfica en contenedores Docker de integración continua ni en servidores en la nube.</td>
+      <td><strong>Estándar de la Industria</strong>: Base del paradigma <em>Infrastructure as Code (IaC)</em>. Permite despliegues automáticos desasistidos mediante pipelines.</td>
+    </tr>
+    <tr>
+      <td><strong>Reproducibilidad</strong></td>
+      <td><strong>Media</strong>: El código generado por *Forward Engineering* depende de la versión y configuración particular del software de modelado de cada máquina.</td>
+      <td><strong>Total y Determinística</strong>: Un script probado se ejecuta de manera idéntica en cualquier sistema operativo y servidor compatible.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Conclusión Metodológica:</strong><br>
+  En el marco de la ingeniería de software profesional, ambos enfoques se complementan: la <strong>GUI</strong> se utiliza en la fase de <em>PLAN / Concepción</em> para explorar el modelo conceptual y comunicar ideas, mientras que el <strong>Script SQL estandarizado e idempotente</strong> es el único artefacto válido y mandatorio para la fase de <em>DEVELOPMENT / Operaciones</em> y despliegue en producción.
+</div>
+
+<!-- SECCIÓN 11 -->
+<h2>11. Conclusiones sobre la Reproducibilidad del Script</h2>
+<ol>
+  <li><strong>Idempotencia Demostrada:</strong> El diseño modular de <code>instalacion.sql</code>, articulado mediante sentencias condicionales <code>IF NOT EXISTS</code>, desactivación temporal de claves foráneas y orden topológico estricto, permite su ejecución indefinida sobre entornos limpios o preexistentes sin riesgo de estados intermedios inconsistentes.</li>
+  <li><strong>Portabilidad Multiplataforma:</strong> El script prescinde de rutas locales absolutas, sintaxis propietaria o extensiones de cliente. Es 100% interoperable entre MySQL Server 8.0, 8.4 LTS, MariaDB 10.4+, MySQL Workbench, phpMyAdmin y contenedores Docker en Linux.</li>
+  <li><strong>Cumplimiento de Estándares Internacionales:</strong> La implementación certifica el apego estricto a las normas <strong>ISO/IEC 9075:2016 (SQL)</strong>, <strong>DAMA-DMBOK v2</strong> (gobernanza y master data), <strong>ISO/IEC 25010</strong> (índices y rendimiento) y las directrices de Clean Code e ingeniería de software del <strong>SWEBOK v4</strong>.</li>
+  <li><strong>Validación Ética y Segura:</strong> La inclusión de seed data 100% ficticia pero estructuralmente verosímil permite auditar todas las compuertas de negocio del mercado inmobiliario bogotano con total apego a la privacidad de datos.</li>
+</ol>
+
+</body>
+</html>
