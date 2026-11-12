@@ -1,0 +1,3326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bases de Datos — Sistema Data Wrangling & MDM Inmobiliario Bogotá (BCNF & MySQL)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-surface: #0c1017;
+      --bg-card: rgba(13, 18, 28, 0.88);
+      --bg-card-hover: rgba(18, 25, 38, 0.95);
+      --border-card: rgba(0, 245, 255, 0.16);
+      --border-card-strong: rgba(0, 245, 255, 0.45);
+      --neon-cyan: #00f5ff;
+      --neon-cobalt: #0284c7;
+      --neon-emerald: #10b981;
+      --neon-amber: #d97706;
+      --neon-amber-light: #fbbf24;
+      --neon-violet: #a855f7;
+      --neon-crimson: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(2, 132, 199, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(168, 85, 247, 0.06) 0%, transparent 40%),
+        linear-gradient(rgba(0, 245, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 245, 255, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+    }
+
+    /* TOP HUD BAR */
+    header.hud-top {
+      height: 62px;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-card);
+      background: rgba(7, 9, 14, 0.92);
+      backdrop-filter: blur(14px);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .brand-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0, 245, 255, 0.08);
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      letter-spacing: 0.08em;
+      font-family: var(--font-mono);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--neon-emerald);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--neon-emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .project-header-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project-header-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .project-header-meta {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .project-header-meta strong {
+      color: var(--text-muted);
+    }
+
+    .hud-center-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      background: linear-gradient(90deg, #00f5ff, #38bdf8, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .authors-chip {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      white-space: nowrap;
+    }
+
+    .authors-chip span {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .btn-hud {
+      background: rgba(0, 245, 255, 0.1);
+      border: 1px solid var(--border-card);
+      color: var(--neon-cyan);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-hud:hover {
+      background: rgba(0, 245, 255, 0.22);
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 14px rgba(0, 245, 255, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-pdf {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #4ade80;
+    }
+
+    .btn-pdf:hover {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: #4ade80;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.35);
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      padding: 5px 10px;
+      border-radius: 5px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-card);
+    }
+
+    /* SLIDE STAGE (16:9 VIEWPORT) */
+    main.stage-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 1.5rem;
+      min-width: 0;
+      width: 100vw;
+      box-sizing: border-box;
+    }
+
+    .slide {
+      position: absolute;
+      width: calc(100% - 3rem);
+      height: calc(100% - 2rem);
+      max-width: 1620px;
+      max-height: 910px;
+      aspect-ratio: 16 / 9;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.985) translateY(10px);
+      transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.32s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      pointer-events: none;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1) translateY(0);
+      pointer-events: all;
+    }
+
+    /* SLIDE HEADER & LABELS */
+    .slide-header {
+      margin-bottom: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .slide-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+
+    .slide-eyebrow::before {
+      content: "//";
+      color: var(--neon-cobalt);
+    }
+
+    .slide-title {
+      font-size: 1.95rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+    }
+
+    .slide-title span.accent {
+      color: var(--neon-cyan);
+    }
+
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* CARDS & GRIDS */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.35rem;
+      height: 100%;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.15rem;
+      height: 100%;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.1rem;
+      height: 100%;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 1.15rem;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+      opacity: 0.4;
+    }
+
+    .card:hover {
+      border-color: var(--border-card-strong);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(0, 245, 255, 0.08);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.65rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 0.45rem;
+    }
+
+    .card-title {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-cyan { background: rgba(0, 245, 255, 0.12); color: var(--neon-cyan); border: 1px solid rgba(0, 245, 255, 0.3); }
+    .badge-emerald { background: rgba(16, 185, 129, 0.12); color: var(--neon-emerald); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-amber { background: rgba(245, 158, 11, 0.12); color: var(--neon-amber-light); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-violet { background: rgba(168, 85, 247, 0.12); color: var(--neon-violet); border: 1px solid rgba(168, 85, 247, 0.3); }
+    .badge-crimson { background: rgba(239, 68, 68, 0.12); color: var(--neon-crimson); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    /* SLIDE 01: HERO COVER */
+    .hero-layout {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      height: 100%;
+      position: relative;
+    }
+
+    .academic-meta-badge {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(2, 132, 199, 0.08);
+      border: 1px solid rgba(2, 132, 199, 0.3);
+      padding: 6px 18px;
+      border-radius: 24px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--neon-cyan);
+      letter-spacing: 0.08em;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+      max-width: 1150px;
+      margin-bottom: 1.1rem;
+      background: linear-gradient(180deg, #ffffff 50%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.18rem;
+      color: var(--text-muted);
+      max-width: 880px;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+
+    .hero-subtitle strong {
+      color: var(--neon-cyan);
+    }
+
+    .authors-grid-hero {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1.75rem;
+      width: 100%;
+      max-width: 950px;
+    }
+
+    .author-pill {
+      background: rgba(15, 22, 36, 0.9);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .author-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: rgba(0, 245, 255, 0.12);
+      border: 1px solid var(--border-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--neon-cyan);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .author-name-hero {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .teacher-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      padding: 6px 16px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      font-family: var(--font-mono);
+    }
+
+    .teacher-badge strong {
+      color: #fff;
+    }
+
+    .standards-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.55rem;
+      max-width: 950px;
+    }
+
+    /* SLIDE 02: PIPELINE BPMN */
+    .bpmn-flow-card {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      margin-top: 0.75rem;
+    }
+
+    .bpmn-step-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.4rem;
+      flex: 1;
+    }
+
+    .gateway-rhombus {
+      width: 52px;
+      height: 52px;
+      background: rgba(13, 18, 28, 0.95);
+      border: 2px solid var(--neon-amber-light);
+      transform: rotate(45deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+    }
+
+    .gateway-rhombus span {
+      transform: rotate(-45deg);
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.8rem;
+      color: #fff;
+    }
+
+    .bpmn-step-text {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
+
+    .bullet-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      font-size: 0.84rem;
+      line-height: 1.45;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .bullet-point strong {
+      color: #fff;
+    }
+
+    .bullet-icon {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.85rem;
+      line-height: 1;
+      margin-top: 3px;
+    }
+
+    .icon-fail { color: var(--neon-crimson); }
+    .icon-pass { color: var(--neon-emerald); }
+
+    /* WORKBENCH LOGICAL SCHEMA DIAGRAM (SLIDE 05 - HIGH LEGIBILITY) */
+    .wb-schema-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      position: relative;
+    }
+
+    .wb-header-block {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .wb-header-top {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .wb-toolbar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      background: rgba(10, 16, 28, 0.85);
+      border: 1px solid rgba(0, 245, 255, 0.2);
+      border-radius: 8px;
+      padding: 4px 10px;
+      box-sizing: border-box;
+    }
+
+    .wb-cluster-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .btn-cluster {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid #334155;
+      color: #94a3b8;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-cluster:hover {
+      background: #1e293b;
+      color: var(--neon-cyan);
+      border-color: var(--neon-cyan);
+    }
+
+    .btn-cluster.active {
+      background: var(--neon-cyan);
+      color: #000;
+      font-weight: 800;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+    }
+
+    .wb-zoom-controls {
+      display: flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #334155;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .btn-ctrl {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: var(--text-main);
+      padding: 4px 10px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 5px;
+      transition: all 0.2s;
+    }
+
+    .btn-ctrl:hover {
+      background: #1e293b;
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+    }
+
+    .wb-zoom-controls .btn-ctrl {
+      border: none;
+      border-radius: 0;
+      padding: 4px 9px;
+    }
+
+    .wb-zoom-controls .btn-ctrl:not(:last-child) {
+      border-right: 1px solid #334155;
+    }
+
+    .wb-zoom-label {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--neon-cyan);
+      font-weight: 800;
+      padding: 0 8px;
+      min-width: 46px;
+      text-align: center;
+    }
+
+    .btn-wb-img {
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.4), rgba(0, 245, 255, 0.3));
+      border: 1px solid var(--neon-cyan);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .btn-wb-img:hover {
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.7), rgba(0, 245, 255, 0.5));
+      box-shadow: 0 0 14px rgba(0, 245, 255, 0.5);
+    }
+
+    .wb-schema-viewport {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: #040711;
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      overflow: auto;
+      position: relative;
+      cursor: grab;
+      user-select: none;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.85);
+      scroll-behavior: smooth;
+    }
+
+    .wb-schema-viewport:active {
+      cursor: grabbing;
+    }
+
+    .wb-canvas-scroller {
+      min-width: 100%;
+      min-height: 100%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .wb-canvas-transform {
+      transform-origin: center center;
+      transition: transform 0.25s ease-out;
+      width: 1980px;
+      height: 1350px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .wb-canvas-grid {
+      width: 1980px;
+      height: 1350px;
+      position: relative;
+      background-image: radial-gradient(rgba(56, 189, 248, 0.16) 1.5px, transparent 1.5px);
+      background-size: 32px 32px;
+    }
+
+    .wb-svg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1980px;
+      height: 1350px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .wb-conn-line {
+      stroke: #38bdf8;
+      stroke-width: 3.5px;
+      fill: none;
+      transition: stroke 0.2s, stroke-width 0.2s, filter 0.2s;
+    }
+
+    .wb-conn-line:hover,
+    .wb-conn-line.active {
+      stroke: #00f5ff;
+      stroke-width: 5px;
+      filter: drop-shadow(0 0 10px #00f5ff);
+    }
+
+    .wb-card {
+      position: absolute;
+      border-radius: 8px;
+      background: #0b111e;
+      border: 2px solid #334155;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.85);
+      font-family: var(--font-mono);
+      overflow: hidden;
+      z-index: 20;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .wb-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 30px rgba(0, 245, 255, 0.5), 0 12px 40px rgba(0,0,0,0.9);
+      z-index: 50;
+    }
+
+    .wb-card.cluster-highlight {
+      border-color: #00f5ff !important;
+      box-shadow: 0 0 35px rgba(0, 245, 255, 0.75), 0 12px 40px rgba(0,0,0,0.95) !important;
+      transform: scale(1.02);
+      z-index: 45;
+    }
+
+    .wb-card-header {
+      background: linear-gradient(180deg, #fef08a 0%, #fde047 100%);
+      color: #3b1702;
+      font-weight: 900;
+      font-size: 0.86rem;
+      padding: 7px 12px;
+      border-bottom: 2px solid #ca8a04;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-transform: uppercase;
+    }
+
+    .wb-card-body {
+      background: #080d18;
+      padding: 7px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .wb-card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+
+    .wb-card-row:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .wb-row-left {
+      display: flex;
+      align-items: center;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+
+    .wb-row-type {
+      color: #38bdf8;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .wb-badge {
+      font-size: 0.64rem;
+      font-weight: 900;
+      padding: 2px 5px;
+      border-radius: 3px;
+      line-height: 1;
+      margin-right: 6px;
+    }
+
+    .wb-badge.wb-pk { background: #f59e0b; color: #000; }
+    .wb-badge.wb-fk { background: #38bdf8; color: #000; }
+    .wb-badge.wb-uq { background: #10b981; color: #000; }
+    .wb-badge.wb-nn { background: #6366f1; color: #fff; font-size: 0.64rem; }
+
+    .wb-rel-badge-bg {
+      fill: #060913;
+      stroke: #00f5ff;
+      stroke-width: 2px;
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,0.9));
+    }
+
+    .wb-rel-badge-text {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 800;
+      fill: #00f5ff;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    /* TABS SELECTORAS DE VISTA (VECTORIAL HD VS PNG WORKBENCH) */
+    .wb-view-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #334155;
+      padding: 3px;
+      border-radius: 8px;
+    }
+
+    .btn-view-tab {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-view-tab:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-view-tab.active {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 0 12px rgba(14, 165, 233, 0.5);
+    }
+
+    /* VISTA DE IMAGEN DIRECTA DENTRO DEL SLIDE */
+    .wb-image-viewport {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: #040711;
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      overflow: auto;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .wb-image-viewport img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.85);
+      transition: transform 0.2s;
+    }
+
+    /* EER CONCEPTUAL DIAGRAM (SLIDE 03) */
+    .eer-viewport {
+      width: 100%;
+      height: 100%;
+      background: #05070c;
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .eer-category-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .eer-card {
+      background: rgba(15, 22, 36, 0.95);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+
+    .eer-card-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+    }
+
+    .eer-card-attr {
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      line-height: 1.4;
+    }
+
+    .cardinality-badge {
+      font-size: 0.6rem;
+      color: var(--neon-cyan);
+      background: rgba(0, 245, 255, 0.1);
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 245, 255, 0.2);
+    }
+
+    /* STEPPER & MATH */
+    .math-formula {
+      font-family: var(--font-mono);
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: var(--neon-cyan);
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+
+    .stepper {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.9rem;
+      margin-top: 0.75rem;
+    }
+
+    .step-box {
+      flex: 1;
+      background: rgba(13, 18, 28, 0.85);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 0.85rem;
+    }
+
+    .step-box.bcnf {
+      border-color: var(--neon-emerald);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.18);
+    }
+
+    .step-number {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--neon-cyan);
+      margin-bottom: 0.2rem;
+    }
+
+    .step-box.bcnf .step-number {
+      color: var(--neon-emerald);
+    }
+
+    /* DATA TABLE */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.74rem;
+      text-align: left;
+    }
+
+    .data-table th {
+      background: rgba(0, 245, 255, 0.08);
+      color: var(--neon-cyan);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border-card);
+      text-transform: uppercase;
+      font-size: 0.68rem;
+    }
+
+    .data-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+    }
+
+    .code-chip {
+      font-family: var(--font-mono);
+      background: rgba(0, 0, 0, 0.45);
+      padding: 2px 5px;
+      border-radius: 3px;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.72rem;
+    }
+
+    /* TERMINAL */
+    .terminal-window {
+      background: #04060a;
+      border: 1px solid rgba(0, 245, 255, 0.25);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font-mono);
+    }
+
+    .terminal-bar {
+      height: 30px;
+      background: #080c14;
+      border-bottom: 1px solid rgba(0, 245, 255, 0.15);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      gap: 6px;
+      justify-content: space-between;
+    }
+
+    .terminal-dots { display: flex; gap: 5px; }
+    .terminal-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .td-red { background-color: #ef4444; }
+    .td-yellow { background-color: #f59e0b; }
+    .td-green { background-color: #10b981; }
+
+    .terminal-body {
+      padding: 0.9rem;
+      flex: 1;
+      overflow-y: auto;
+      font-size: 0.74rem;
+      line-height: 1.55;
+      color: #cbd5e1;
+    }
+
+    .t-prompt { color: var(--neon-cyan); }
+    .t-cmd { color: #fff; font-weight: 700; }
+    .t-err { color: #f87171; }
+    .t-ok { color: #4ade80; font-weight: 700; }
+    .t-comment { color: #64748b; font-style: italic; }
+
+    /* FOOTER HUD */
+    footer.hud-bottom {
+      height: 48px;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border-card);
+      background: rgba(7, 9, 14, 0.92);
+      backdrop-filter: blur(14px);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .dots-nav {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .dot-step {
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .dot-step:hover {
+      background: rgba(0, 245, 255, 0.15);
+      color: var(--neon-cyan);
+    }
+
+    .dot-step.active {
+      background: var(--neon-cyan);
+      color: #000;
+      font-weight: 800;
+      box-shadow: 0 0 10px var(--neon-cyan);
+      border-color: var(--neon-cyan);
+    }
+
+    .keyboard-hints {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      display: flex;
+      gap: 1rem;
+    }
+
+    .keyboard-hints kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: var(--text-muted);
+    }
+
+    .progress-bar-container {
+      position: fixed;
+      top: 62px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 101;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 9%;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-cobalt), var(--neon-violet));
+      box-shadow: 0 0 8px var(--neon-cyan);
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* MODAL PDF INSTRUCTIONS */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-card {
+      background: #0d121c;
+      border: 1px solid var(--border-card-strong);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 540px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .modal-step strong {
+      color: #fff;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    /* PRINT ENGINE (@media print) */
+    @media print {
+      @page {
+        size: 16in 9in;
+        margin: 0;
+      }
+
+      body {
+        width: 16in !important;
+        height: 9in !important;
+        overflow: visible !important;
+        background: #07090e !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      header.hud-top, footer.hud-bottom, .progress-bar-container, .modal-overlay {
+        display: none !important;
+      }
+
+      main.stage-container {
+        padding: 0 !important;
+        display: block !important;
+      }
+
+      .slide {
+        display: flex !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        width: 16in !important;
+        height: 9in !important;
+        max-width: 16in !important;
+        max-height: 9in !important;
+        padding: 0.65in !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        position: relative !important;
+        box-sizing: border-box !important;
+      }
+
+      .wb-controls-bar {
+        display: none !important;
+      }
+
+      .wb-schema-viewport {
+        overflow: visible !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      .wb-canvas-transform {
+        transform: scale(0.68) !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="progressBar"></div>
+  </div>
+
+  <!-- HUD TOP BAR -->
+  <header class="hud-top">
+    <div class="brand-group">
+      <div class="brand-badge">
+        <div class="pulse-dot"></div>
+        <span>UNISALLE // BD</span>
+      </div>
+      <div class="project-header-info">
+        <div class="project-header-title">Materia: <strong>Bases de datos</strong></div>
+        <div class="project-header-meta">Docente: <strong>Prof. Celso Javier Rodriguez Pizza</strong></div>
+      </div>
+    </div>
+
+    <div class="hud-center-title" id="hudSlideCategory">
+      01 // PORTADA ACADÉMICA
+    </div>
+
+    <div class="hud-actions">
+      <div class="authors-chip">
+        ESTUDIANTES: <span>A. Sánchez · J. Marles · A. Pineda</span>
+      </div>
+      <button class="btn-hud" onclick="toggleFullScreen()" title="Pantalla Completa (F)">
+        <span>⛶</span> PANTALLA COMPLETA
+      </button>
+      <button class="btn-hud btn-pdf" onclick="openPdfModal()" title="Exportar a PDF (P)">
+        <span>📄</span> EXPORTAR A PDF
+      </button>
+      <div class="slide-counter" id="slideCounter">01 / 11</div>
+    </div>
+  </header>
+
+  <!-- MAIN SLIDE STAGE (11 SLIDES) -->
+  <main class="stage-container">
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 01: HERO COVER -->
+    <!-- ============================================================ -->
+    <section class="slide active" data-index="1" data-category="01 // PORTADA ACADÉMICA">
+      <div class="hero-layout">
+        <div class="academic-meta-badge">
+          <span>UNIVERSIDAD DE LA SALLE</span> · FACULTAD DE INGENIERÍA · BASES DE DATOS
+        </div>
+
+        <h1 class="hero-title">
+          Sistema Data Wrangling & MDM Inmobiliario Bogotá
+        </h1>
+
+        <p class="hero-subtitle">
+          Actividad 2: Del Modelo Conceptual Entidad-Relación al <strong>Modelo Relacional Normalizado (BCNF)</strong> sobre <strong>MySQL Server</strong>.
+        </p>
+
+        <div class="authors-grid-hero">
+          <div class="author-pill">
+            <div class="author-icon">AS</div>
+            <div class="author-name-hero">Adán Yesid Sánchez Cubillos</div>
+          </div>
+
+          <div class="author-pill">
+            <div class="author-icon">JM</div>
+            <div class="author-name-hero">Juan Sebastián Marles Montes</div>
+          </div>
+
+          <div class="author-pill">
+            <div class="author-icon">AP</div>
+            <div class="author-name-hero">Andrés Felipe Pineda Pardo</div>
+          </div>
+        </div>
+
+        <div class="teacher-badge">
+          Docente Titular: <strong>Prof. Celso Javier Rodriguez Pizza</strong>
+        </div>
+
+        <div class="standards-chips">
+          <span class="badge badge-cyan">SGBD: MySQL Server 8.0+ / 8.4+ LTS</span>
+          <span class="badge badge-emerald">Forma Normal BCNF Certificada</span>
+          <span class="badge badge-violet">DAMA-DMBOK v2 (MDM & Metadatos)</span>
+          <span class="badge badge-amber">ISO/IEC 9075:2016 SQL DDL</span>
+          <span class="badge badge-cyan">ISO/IEC 11179 Metadatos</span>
+          <span class="badge badge-emerald">ISO/IEC 25012 Calidad de Datos</span>
+          <span class="badge badge-amber">SWEBOK v4 Software Design</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 02: PROBLEMÁTICA & BPMN 2.0 -->
+    <!-- ============================================================ -->
+    <section class="slide" data-index="2" data-category="02 // PROBLEMÁTICA & PIPELINE BPMN">
+      <div class="slide-header">
+        <div class="slide-eyebrow">DIAGNÓSTICO INMOBILIARIO & WORKFLOW DE INGENIERÍA</div>
+        <h2 class="slide-title">Patologías en Datos de Bogotá y <span class="accent">Pipeline BPMN 2.0</span></h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-2">
+          <!-- Diagnóstico -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🚨 Patologías en Portales Inmobiliarios</span>
+              <span class="badge badge-crimson">FUENTES CRUDAS</span>
+            </div>
+            <div class="compare-side">
+              <div class="bullet-point">
+                <span class="bullet-icon icon-fail">✕</span>
+                <div><strong>Inconsistencia Geográfica (Violación RB-001):</strong> Portales publican inmuebles de Chía, Soacha o Funza catalogados erróneamente como Bogotá.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-fail">✕</span>
+                <div><strong>Estratos Inválidos (Violación RB-002):</strong> Registros con estrato socioeconómico menor a 1, mayor a 6 o nulos.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-fail">✕</span>
+                <div><strong>Duplicación Masiva (Violación RB-003):</strong> Un mismo apartamento publicado repetidamente en MetroCuadrado y FincaRaíz con variaciones de texto.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-fail">✕</span>
+                <div><strong>Precios y Áreas Corruptas (Violación RB-005):</strong> Valores monetarios almacenados como cadenas de texto con símbolos y áreas irreales.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pipeline BPMN -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">⚙️ Pipeline BPMN 2.0 de Calidad</span>
+              <span class="badge badge-emerald">4 GATEWAYS XOR</span>
+            </div>
+            
+            <div class="bpmn-flow-card">
+              <div class="bpmn-step-node">
+                <div class="gateway-rhombus"><span>G1</span></div>
+                <div class="bpmn-step-text">Extracción Raw<br><small>Archivo íntegro</small></div>
+              </div>
+              <div style="color: var(--neon-cyan); font-size: 1.1rem;">→</div>
+              <div class="bpmn-step-node">
+                <div class="gateway-rhombus"><span>G2</span></div>
+                <div class="bpmn-step-text">Estructura<br><small>RB-004 Formato</small></div>
+              </div>
+              <div style="color: var(--neon-cyan); font-size: 1.1rem;">→</div>
+              <div class="bpmn-step-node">
+                <div class="gateway-rhombus"><span>G3</span></div>
+                <div class="bpmn-step-text">Dominio<br><small>RB-001 / RB-002</small></div>
+              </div>
+              <div style="color: var(--neon-cyan); font-size: 1.1rem;">→</div>
+              <div class="bpmn-step-node">
+                <div class="gateway-rhombus" style="border-color: var(--neon-emerald);"><span>G4</span></div>
+                <div class="bpmn-step-text">Semántica<br><small>RB-003 MDM</small></div>
+              </div>
+            </div>
+
+            <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.3); padding: 9px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+              <span class="badge badge-cyan">AUDITORÍA FORENSE</span> Registros descartados se aíslan en <code class="code-chip">log_rechazos_calidad</code> con payload JSON intacto y compuerta exacta de fallo.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 03: DIAGRAMA CONCEPTUAL EER -->
+    <!-- ============================================================ -->
+    <section class="slide" data-index="3" data-category="03 // DIAGRAMA CONCEPTUAL EER">
+      <div class="slide-header">
+        <div class="slide-eyebrow">MODELADO CONCEPTUAL DAMA-DMBOK v2</div>
+        <h2 class="slide-title">Diagrama Conceptual Extendido <span class="accent">(EER)</span></h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="eer-viewport">
+          <!-- Columna 1: Reference Data -->
+          <div class="eer-category-col">
+            <span class="badge badge-cyan" style="width: 100%; text-align: center;">1. DATOS DE REFERENCIA</span>
+            
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>LOCALIDAD</span>
+                <span class="cardinality-badge">1:N Barrio</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_localidad (PK)</strong><br>
+                codigo_dane (UK)<br>
+                nombre, zona_bogota
+              </div>
+            </div>
+
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>BARRIO</span>
+                <span class="cardinality-badge">1:N Inmueble</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_barrio (PK)</strong><br>
+                id_localidad (FK)<br>
+                estrato_moda (1..6)<br>
+                lat/long centroide WGS84
+              </div>
+            </div>
+
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>TIPO_INMUEBLE</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_tipo (PK)</strong>, codigo (UK), descripcion
+              </div>
+            </div>
+
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>FUENTE_ORIGEN</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_fuente (PK)</strong>, nombre_fuente (UK), formato
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna 2: Pipeline ETL -->
+          <div class="eer-category-col">
+            <span class="badge badge-amber" style="width: 100%; text-align: center;">2. PIPELINE & STAGING</span>
+
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>DATASET_INGESTA</span>
+                <span class="cardinality-badge">1:N Raw</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_dataset (PK / UUID)</strong><br>
+                id_fuente (FK), hash_sha256<br>
+                usuario_email, estado_pipeline
+              </div>
+            </div>
+
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>INMUEBLE_RAW</span>
+                <span class="cardinality-badge">1:1 Cleaned</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_raw (PK)</strong>, id_dataset (FK)<br>
+                ubicacion_raw, tamano_raw<br>
+                precio_raw, fecha_raw (Inmutable)
+              </div>
+            </div>
+
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>INMUEBLE_CLEANED</span>
+                <span class="cardinality-badge">N:1 Maestro</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_cleaned (PK)</strong>, id_raw (FK)<br>
+                tamano_m2, estrato, precio_cop<br>
+                habitaciones, banos, anio_reg
+              </div>
+            </div>
+
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>FEATURE_ANALITICA</span>
+                <span class="cardinality-badge">1:1 Cleaned</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_feature (PK)</strong>, id_cleaned (FK)<br>
+                precio_unitario_m2, ratio_banos<br>
+                densidad_comercial, factor_escala
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna 3: Master Data -->
+          <div class="eer-category-col">
+            <span class="badge badge-emerald" style="width: 100%; text-align: center;">3. MASTER DATA (MDM)</span>
+
+            <div class="eer-card" style="border-color: var(--neon-emerald); background: rgba(16, 185, 129, 0.08);">
+              <div class="eer-card-title" style="color: var(--neon-emerald);">
+                <span>INMUEBLE_MAESTRO</span>
+                <span class="cardinality-badge" style="color: var(--neon-emerald); border-color: var(--neon-emerald);">GOLDEN RECORD</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_maestro (PK / UUIDv4)</strong><br>
+                id_barrio (FK), id_tipo (FK)<br>
+                direccion_normalizada<br>
+                tamano_m2, habitaciones, banos<br>
+                precio_ultimo_cop, precio_m2<br>
+                <strong>hash_duplicado (UK / SHA-256)</strong><br>
+                latitud/longitud_corregida<br>
+                fecha_consolidacion
+              </div>
+            </div>
+
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>ENTORNO_URBANO</span>
+                <span class="cardinality-badge">1:1 Maestro</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_entorno (PK)</strong><br>
+                id_maestro (FK / UK)<br>
+                parques_cercanos, vias_principales<br>
+                area_riesgo_m2, colegios, hospitales
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna 4: Auditoría -->
+          <div class="eer-category-col">
+            <span class="badge badge-violet" style="width: 100%; text-align: center;">4. AUDITORÍA & REPORTES</span>
+
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>LOG_RECHAZO</span>
+                <span class="cardinality-badge">N:1 Lote</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_rechazo (PK)</strong>, id_dataset (FK)<br>
+                compuerta_bpmn (G1..G4)<br>
+                codigo_regla (RB-001..RB-005)<br>
+                motivo_error, payload_registro (JSON)
+              </div>
+            </div>
+
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>REPORTE_LIMPIEZA</span>
+                <span class="cardinality-badge">1:1 Lote</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_reporte (PK)</strong>, id_dataset (FK)<br>
+                total_raw, total_limpios<br>
+                total_rechazados, duplicados_supr<br>
+                tiempo_ejecucion_seg
+              </div>
+            </div>
+
+            <div class="eer-card">
+              <div class="eer-card-title">
+                <span>NOTIFICACION_LOG</span>
+                <span class="cardinality-badge">N:1 Lote</span>
+              </div>
+              <div class="eer-card-attr">
+                <strong>id_notificacion (PK)</strong><br>
+                id_dataset (FK), email_destinatario<br>
+                asunto, estado_envio, fecha_envio
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 04: ABSTRACCIÓN vs GOD TABLE -->
+    <!-- ============================================================ -->
+    <section class="slide" data-index="4" data-category="04 // ABSTRACCIÓN & ANTIPATRONES">
+      <div class="slide-header">
+        <div class="slide-eyebrow">DECISIONES CRÍTICAS DE DISEÑO DE SOFTWARE</div>
+        <h2 class="slide-title">Proceso de Abstracción vs. <span class="accent">Antipatrón "God Table"</span></h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-2">
+          <!-- Antipatrón -->
+          <div class="card" style="border-color: rgba(239, 68, 68, 0.35);">
+            <div class="card-header">
+              <span class="card-title" style="color: #f87171;">❌ El Antipatrón: La Tabla Plana Única (God Table)</span>
+              <span class="badge badge-crimson">25+ CAMPOS ACOPLADOS</span>
+            </div>
+            <div class="compare-side">
+              <div class="bullet-point">
+                <span class="bullet-icon icon-fail">✕</span>
+                <div><strong>Anomalías de Actualización Masivas:</strong> Nombres de barrios y localidades duplicados millones de veces. Modificar una nomenclatura exige bloqueos destructivos de tabla.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-fail">✕</span>
+                <div><strong>Destrucción del Linaje Crudo (Violación ISO 8000):</strong> Sobrescribir datos crudos anula la capacidad de auditar qué entregó la fuente original ante inconsistencias legales o analíticas.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-fail">✕</span>
+                <div><strong>Violación del Principio SOLID SRP:</strong> Acoplamiento en una sola estructura de metadatos de archivo, datos del bien raíz, auditoría de compuertas y variables de ML.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-fail">✕</span>
+                <div><strong>Incompatibilidad Multiusuario / Batch:</strong> Imposible orquestar cargas concurrentes de múltiples datasets sin colisión de identificadores.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Abstracción Correcta -->
+          <div class="card" style="border-color: rgba(16, 185, 129, 0.35);">
+            <div class="card-header">
+              <span class="card-title" style="color: #4ade80;">✅ Solución: Cuadrantes Semánticos DAMA</span>
+              <span class="badge badge-emerald">BCNF & INMUTABILIDAD</span>
+            </div>
+            <div class="compare-side">
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Inmutabilidad Estricta en Staging:</strong> <code class="code-chip">stg_inmuebles_raw</code> es una estructura append-only; el dato original jamás se sobrescribe.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Normalización Territorial 1NF→3NF:</strong> Catálogos discretos de localidades y barrios con centroides calibrados para rechazar ubicaciones ajenas a Bogotá.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Aislamiento de Feature Store:</strong> Las variables derivadas para modelos predictivos residen en <code class="code-chip">fct_features_analiticas</code>, respetando SRP.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Auditoría Granular de Compuertas BPMN:</strong> Registro forense de rechazos sin degradar las tablas maestras consolidadas.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+            <!-- ============================================================ -->
+    <!-- SLIDE 05: DIAGRAMA LÓGICO RELACIONAL -->
+    <!-- ============================================================ -->
+    <section class="slide" data-index="5" data-category="05 // DIAGRAMA LÓGICO RELACIONAL">
+      <div class="slide-header" style="margin-bottom: 0.35rem;">
+        <div class="wb-header-block">
+          <div class="wb-header-top">
+            <div>
+              <div class="slide-eyebrow">ESQUEMA RELACIONAL EN FORMA NORMAL DE BOYCE-CODD (BCNF) — 13 TABLAS EN MYSQL</div>
+              <h2 class="slide-title" style="font-size: 1.4rem; margin: 0; line-height: 1.2;">Diagrama Lógico Relacional: <span class="accent">13 Tablas y Conexiones MySQL Workbench</span></h2>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <div class="wb-view-tabs">
+                <button class="btn-view-tab active" id="tabWbVector" onclick="switchWbTab('vector')" title="Vista Vectorial Dinámica con Zoom y Clusters">
+                  <span>⚡</span> Vector HD
+                </button>
+                <button class="btn-view-tab" id="tabWbImage" onclick="switchWbTab('image')" title="Ver Captura Oficial de MySQL Workbench">
+                  <span>🖼️</span> Esquema PNG
+                </button>
+              </div>
+              <button class="btn-ctrl btn-wb-img" onclick="openWbImageModal()" title="Ver Captura Original en Pantalla Completa">
+                <span>⛶</span> Modal HD
+              </button>
+            </div>
+          </div>
+
+          <div class="wb-toolbar" id="wbToolbar">
+            <!-- Botones de Enfoque por Clusters Temáticos -->
+            <div class="wb-cluster-bar" id="wbClusterBar">
+              <button class="btn-cluster active" id="btnClustAll" onclick="focusCluster('all')">🌐 Todo el Modelo</button>
+              <button class="btn-cluster" id="btnClustTerr" onclick="focusCluster('territorial')">🏛️ 1. Territorial</button>
+              <button class="btn-cluster" id="btnClustStg" onclick="focusCluster('staging')">⚡ 2. Ingesta</button>
+              <button class="btn-cluster" id="btnClustMdm" onclick="focusCluster('mdm')">👑 3. Master MDM</button>
+              <button class="btn-cluster" id="btnClustAudit" onclick="focusCluster('audit')">🛡️ 4. Auditoría</button>
+            </div>
+
+            <!-- Controles de Zoom Rápido y Legibilidad -->
+            <div class="wb-zoom-controls">
+              <button class="btn-ctrl" onclick="zoomWbOut()" title="Alejar (-)">−</button>
+              <span class="wb-zoom-label" id="wbZoomLabel">72%</span>
+              <button class="btn-ctrl" onclick="zoomWbIn()" title="Acercar (+)">+</button>
+              <button class="btn-ctrl" onclick="setWbZoom(0.72)" title="Ajustar Todo (72%)">↺ Ajustar</button>
+              <button class="btn-ctrl" onclick="setWbZoom(1.00)" title="Vista 100% (Texto Grande)">100%</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-content" style="flex: 1; height: auto; min-height: 0; padding: 0;">
+        
+        <!-- VISTA 1: CANVAS VECTORIAL ULTRA ESPACIOSO (1980 x 1350) CENTRADO -->
+        <div class="wb-schema-viewport" id="wbViewport">
+          <div class="wb-canvas-scroller">
+            <div class="wb-canvas-transform" id="wbCanvasTransform" style="transform: scale(0.72);">
+              <div class="wb-canvas-grid">
+                
+                <!-- CAPA VECTORIAL SVG: 13 LÍNEAS ORTOGONALES CON ESPACIO GENEROSO -->
+                <svg class="wb-svg-overlay" viewBox="0 0 1980 1350" width="1980" height="1350">
+                  <defs>
+                    <!-- Marcador Crow's Foot (Lado Muchos / N) -->
+                    <marker id="marker-crowsfoot" viewBox="0 0 20 20" refX="17" refY="10" markerWidth="14" markerHeight="14" orient="auto-start-reverse">
+                      <path d="M 0 3 L 17 10 L 0 17 M 0 10 L 17 10 M 12 3 L 12 17" stroke="#38bdf8" stroke-width="2.2" fill="none" stroke-linecap="round" />
+                    </marker>
+                    <!-- Marcador Doble Barra (Lado Uno / 1 Obligatorio) -->
+                    <marker id="marker-one" viewBox="0 0 20 20" refX="4" refY="10" markerWidth="14" markerHeight="14" orient="auto-start-reverse">
+                      <line x1="6" y1="3" x2="6" y2="17" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" />
+                      <line x1="12" y1="3" x2="12" y2="17" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" />
+                    </marker>
+                  </defs>
+
+                  <!-- 1. CAT_FUENTES_ORIGEN -> WRK_DATASETS_INGESTA (originates) -->
+                  <path d="M 1200 210 L 1200 290" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-crowsfoot)" />
+                  <g class="wb-rel-badge" transform="translate(1200, 250)">
+                    <rect x="-44" y="-11" width="88" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">originates</text>
+                  </g>
+
+                  <!-- 2. WRK_DATASETS_INGESTA -> LOG_NOTIFICACIONES (sends_notifications) -->
+                  <path d="M 1380 360 L 1445 360 L 1445 160 L 1510 160" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-crowsfoot)" />
+                  <g class="wb-rel-badge" transform="translate(1445, 260)">
+                    <rect x="-68" y="-11" width="136" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">sends_notifications</text>
+                  </g>
+
+                  <!-- 3. WRK_DATASETS_INGESTA -> STG_INMUEBLES_RAW (ingests) -->
+                  <path d="M 1200 525 L 1200 610" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-crowsfoot)" />
+                  <g class="wb-rel-badge" transform="translate(1200, 567)">
+                    <rect x="-34" y="-11" width="68" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">ingests</text>
+                  </g>
+
+                  <!-- 4. WRK_DATASETS_INGESTA -> LOG_RECHAZOS_CALIDAD (logs_rejections) -->
+                  <path d="M 1380 440 L 1510 440" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-crowsfoot)" />
+                  <g class="wb-rel-badge" transform="translate(1445, 440)">
+                    <rect x="-58" y="-11" width="116" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">logs_rejections</text>
+                  </g>
+
+                  <!-- 5. WRK_DATASETS_INGESTA -> RPT_LIMPIEZA_EJECUCION (generates_reports) -->
+                  <path d="M 1380 490 L 1445 490 L 1445 740 L 1510 740" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-crowsfoot)" />
+                  <g class="wb-rel-badge" transform="translate(1445, 615)">
+                    <rect x="-68" y="-11" width="136" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">generates_reports</text>
+                  </g>
+
+                  <!-- 6. STG_INMUEBLES_RAW -> WRK_INMUEBLES_CLEANED (cleans) -->
+                  <path d="M 1020 740 L 890 740" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-crowsfoot)" />
+                  <g class="wb-rel-badge" transform="translate(955, 740)">
+                    <rect x="-30" y="-11" width="60" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">cleans</text>
+                  </g>
+
+                  <!-- 7. CAT_LOCALIDADES -> CAT_BARRIOS (contains) -->
+                  <path d="M 230 190 L 230 290" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-crowsfoot)" />
+                  <g class="wb-rel-badge" transform="translate(230, 240)">
+                    <rect x="-36" y="-11" width="72" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">contains</text>
+                  </g>
+
+                  <!-- 8. CAT_BARRIOS -> MDM_INMUEBLES_MAESTROS (defines_master_record) -->
+                  <path d="M 170 485 L 170 610" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-crowsfoot)" />
+                  <g class="wb-rel-badge" transform="translate(170, 547)">
+                    <rect x="-78" y="-11" width="156" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">defines_master_record</text>
+                  </g>
+
+                  <!-- 9. CAT_BARRIOS -> WRK_INMUEBLES_CLEANED (references_barrio) -->
+                  <path d="M 410 400 L 470 400 L 470 560 L 610 560 L 610 610" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-crowsfoot)" />
+                  <g class="wb-rel-badge" transform="translate(470, 480)">
+                    <rect x="-65" y="-11" width="130" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">references_barrio</text>
+                  </g>
+
+                  <!-- 10. CAT_TIPOS_INMUEBLE -> MDM_INMUEBLES_MAESTROS (defines_master_type) -->
+                  <path d="M 530 370 L 470 370 L 470 560 L 330 560 L 330 610" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-crowsfoot)" />
+                  <g class="wb-rel-badge" transform="translate(400, 560)">
+                    <rect x="-68" y="-11" width="136" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">defines_master_type</text>
+                  </g>
+
+                  <!-- 11. CAT_TIPOS_INMUEBLE -> WRK_INMUEBLES_CLEANED (classifies) -->
+                  <path d="M 710 440 L 710 610" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-crowsfoot)" />
+                  <g class="wb-rel-badge" transform="translate(710, 525)">
+                    <rect x="-36" y="-11" width="72" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">classifies</text>
+                  </g>
+
+                  <!-- 12. WRK_INMUEBLES_CLEANED -> FCT_FEATURES_ANALITICAS (produces_features - 1:1) -->
+                  <path d="M 710 930 L 710 1040" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-one)" />
+                  <g class="wb-rel-badge" transform="translate(710, 985)">
+                    <rect x="-64" y="-11" width="128" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">produces_features</text>
+                  </g>
+
+                  <!-- 13. MDM_INMUEBLES_MAESTROS -> DIM_ENTORNO_URBANO (enriches_urban_context - 1:1) -->
+                  <path d="M 230 910 L 230 1040" class="wb-conn-line" marker-start="url(#marker-one)" marker-end="url(#marker-one)" />
+                  <g class="wb-rel-badge" transform="translate(230, 975)">
+                    <rect x="-78" y="-11" width="156" height="22" rx="5" ry="5" class="wb-rel-badge-bg" />
+                    <text x="0" y="2" class="wb-rel-badge-text">enriches_urban_context</text>
+                  </g>
+                </svg>
+
+                <!-- 13 TABLAS RELACIONALES CON GENEROSA SEPARACIÓN (4 COLUMNAS) -->
+
+                <!-- COLUMNA 1: TERRITORIAL & MASTER MDM (left: 50px, width: 360px) -->
+
+                <!-- 1. CAT_LOCALIDADES -->
+                <div class="wb-card" id="tbl-cat_localidades" data-cluster="territorial" style="left: 50px; top: 40px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>CAT_LOCALIDADES</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">REF</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_localidad</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-uq">UQ</span><span class="wb-badge wb-nn">NN</span> codigo_dane</span>
+                      <span class="wb-row-type">Varchar(10)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> nombre_localidad</span>
+                      <span class="wb-row-type">Varchar(60)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> zona_bogota</span>
+                      <span class="wb-row-type">Varchar(30)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">activo</span>
+                      <span class="wb-row-type">Tinyint(1)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. CAT_BARRIOS -->
+                <div class="wb-card" id="tbl-cat_barrios" data-cluster="territorial" style="left: 50px; top: 290px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>CAT_BARRIOS</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">REF</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_barrio</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span> id_localidad</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> nombre_barrio</span>
+                      <span class="wb-row-type">Varchar(100)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> estrato_moda</span>
+                      <span class="wb-row-type">Tinyint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">latitud</span>
+                      <span class="wb-row-type">Decimal(10,8)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">longitud</span>
+                      <span class="wb-row-type">Decimal(11,8)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">codigo_sector_catastral</span>
+                      <span class="wb-row-type">Varchar(20)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. MDM_INMUEBLES_MAESTROS (Golden Master Record) -->
+                <div class="wb-card" id="tbl-mdm_inmuebles_maestros" data-cluster="mdm" style="left: 50px; top: 610px; width: 360px;">
+                  <div class="wb-card-header" style="background: linear-gradient(180deg, #fde047 0%, #ca8a04 100%);">
+                    <span>MDM_INMUEBLES_MAESTROS</span>
+                    <span style="font-size: 0.65rem; color: #451a03; font-weight: 900;">GOLDEN</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_maestro</span>
+                      <span class="wb-row-type">Uuid</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span> id_barrio</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span> id_tipo</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-uq">UQ</span><span class="wb-badge wb-nn">NN</span> hash_unicidad_inmueble</span>
+                      <span class="wb-row-type">Char(64)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> direccion_norm</span>
+                      <span class="wb-row-type">Varchar(200)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> tamano_m2</span>
+                      <span class="wb-row-type">Decimal(8,2)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> habitaciones</span>
+                      <span class="wb-row-type">Tinyint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> banos</span>
+                      <span class="wb-row-type">Tinyint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> estrato</span>
+                      <span class="wb-row-type">Tinyint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> precio_vigente</span>
+                      <span class="wb-row-type">Decimal(14,2)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">es_registro_dorado</span>
+                      <span class="wb-row-type">Tinyint(1)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> fecha_consolidacion</span>
+                      <span class="wb-row-type">Datetime</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4. DIM_ENTORNO_URBANO -->
+                <div class="wb-card" id="tbl-dim_entorno_urbano" data-cluster="territorial" style="left: 50px; top: 1040px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>DIM_ENTORNO_URBANO</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">DIM</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_entorno</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span><span class="wb-badge wb-uq">UQ</span> id_maestro</span>
+                      <span class="wb-row-type">Uuid</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">parques_cercanos</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">vias_principales</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">area_servicios_mixta_m2</span>
+                      <span class="wb-row-type">Decimal(14,2)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">grandes_superficies</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">colegios_cercanos</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">hospitales_cercanos</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">puntaje_amenidades</span>
+                      <span class="wb-row-type">Decimal(10,4)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- COLUMNA 2: TIPOS, LIMPIEZA & FEATURE STORE (left: 530px, width: 360px) -->
+
+                <!-- 5. CAT_TIPOS_INMUEBLE -->
+                <div class="wb-card" id="tbl-cat_tipos_inmueble" data-cluster="territorial" style="left: 530px; top: 290px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>CAT_TIPOS_INMUEBLE</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">REF</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_tipo</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-uq">UQ</span><span class="wb-badge wb-nn">NN</span> codigo_tipo</span>
+                      <span class="wb-row-type">Varchar(20)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> nombre_tipo</span>
+                      <span class="wb-row-type">Varchar(50)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">categoria_inmueble</span>
+                      <span class="wb-row-type">Varchar(30)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">activo</span>
+                      <span class="wb-row-type">Tinyint(1)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 6. WRK_INMUEBLES_CLEANED -->
+                <div class="wb-card" id="tbl-wrk_inmuebles_cleaned" data-cluster="mdm" style="left: 530px; top: 610px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>WRK_INMUEBLES_CLEANED</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">WRK</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_inmueble_clean</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span> id_raw</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span> id_barrio</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span> id_tipo</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> hash_unicidad_clean</span>
+                      <span class="wb-row-type">Char(64)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> direccion_limpia</span>
+                      <span class="wb-row-type">Varchar(200)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> tamano_m2_num</span>
+                      <span class="wb-row-type">Decimal(8,2)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> habitaciones_num</span>
+                      <span class="wb-row-type">Tinyint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> banos_num</span>
+                      <span class="wb-row-type">Tinyint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> estrato_num</span>
+                      <span class="wb-row-type">Tinyint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> precio_cop</span>
+                      <span class="wb-row-type">Decimal(14,2)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">es_outlier_precio</span>
+                      <span class="wb-row-type">Tinyint(1)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> fecha_proceso</span>
+                      <span class="wb-row-type">Datetime</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 7. FCT_FEATURES_ANALITICAS -->
+                <div class="wb-card" id="tbl-fct_features_analiticas" data-cluster="mdm" style="left: 530px; top: 1040px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>FCT_FEATURES_ANALITICAS</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">FCT</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_feature</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span><span class="wb-badge wb-uq">UQ</span> id_inmueble_clean</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> precio_m2</span>
+                      <span class="wb-row-type">Decimal(14,2)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">relacion_habitacion_bano</span>
+                      <span class="wb-row-type">Decimal(6,2)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">distancia_centro_km</span>
+                      <span class="wb-row-type">Decimal(8,3)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">desviacion_precio_barrio</span>
+                      <span class="wb-row-type">Decimal(10,4)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">antiguedad_estimada_anos</span>
+                      <span class="wb-row-type">Smallint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> fecha_calculo</span>
+                      <span class="wb-row-type">Datetime</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- COLUMNA 3: INGESTA & STAGING (left: 1020px, width: 360px) -->
+
+                <!-- 8. CAT_FUENTES_ORIGEN -->
+                <div class="wb-card" id="tbl-cat_fuentes_origen" data-cluster="staging" style="left: 1020px; top: 40px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>CAT_FUENTES_ORIGEN</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">REF</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_fuente</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-uq">UQ</span><span class="wb-badge wb-nn">NN</span> nombre_fuente</span>
+                      <span class="wb-row-type">Varchar(60)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> tipo_fuente</span>
+                      <span class="wb-row-type">Varchar(30)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> formato_archivo</span>
+                      <span class="wb-row-type">Varchar(15)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">frecuencia_ingesta</span>
+                      <span class="wb-row-type">Varchar(25)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">activo</span>
+                      <span class="wb-row-type">Tinyint(1)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 9. WRK_DATASETS_INGESTA -->
+                <div class="wb-card" id="tbl-wrk_datasets_ingesta" data-cluster="staging" style="left: 1020px; top: 290px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>WRK_DATASETS_INGESTA</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">WRK</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_dataset</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span> id_fuente</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> nombre_archivo_origen</span>
+                      <span class="wb-row-type">Varchar(255)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> hash_sha256_archivo</span>
+                      <span class="wb-row-type">Char(64)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> total_filas_leidas</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> total_filas_rechazadas</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> total_filas_validas</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> estado_pipeline</span>
+                      <span class="wb-row-type">Varchar(25)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> fecha_ingesta</span>
+                      <span class="wb-row-type">Datetime</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 10. STG_INMUEBLES_RAW -->
+                <div class="wb-card" id="tbl-stg_inmuebles_raw" data-cluster="staging" style="left: 1020px; top: 610px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>STG_INMUEBLES_RAW</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">STG</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_raw</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span> id_dataset</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">titulo_anuncio</span>
+                      <span class="wb-row-type">Varchar(255)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">tipo_inmueble_raw</span>
+                      <span class="wb-row-type">Varchar(80)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">barrio_vereda_raw</span>
+                      <span class="wb-row-type">Varchar(120)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">tamano_m2_raw</span>
+                      <span class="wb-row-type">Varchar(50)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">habitaciones_raw</span>
+                      <span class="wb-row-type">Varchar(20)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">banos_raw</span>
+                      <span class="wb-row-type">Varchar(20)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">estrato_raw</span>
+                      <span class="wb-row-type">Varchar(20)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">precio_raw</span>
+                      <span class="wb-row-type">Varchar(60)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">direccion_raw</span>
+                      <span class="wb-row-type">Varchar(255)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> fecha_captura</span>
+                      <span class="wb-row-type">Datetime</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- COLUMNA 4: AUDITORÍA, RECHAZOS Y NOTIFICACIONES (left: 1510px, width: 360px) -->
+
+                <!-- 11. LOG_NOTIFICACIONES -->
+                <div class="wb-card" id="tbl-log_notificaciones" data-cluster="audit" style="left: 1510px; top: 50px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>LOG_NOTIFICACIONES</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">LOG</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_notificacion</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span> id_dataset</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> canal_envio</span>
+                      <span class="wb-row-type">Varchar(30)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> destinatario</span>
+                      <span class="wb-row-type">Varchar(150)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> asunto</span>
+                      <span class="wb-row-type">Varchar(200)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> cuerpo_mensaje</span>
+                      <span class="wb-row-type">Text</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> estado_envio</span>
+                      <span class="wb-row-type">Varchar(20)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> fecha_envio</span>
+                      <span class="wb-row-type">Datetime</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 12. LOG_RECHAZOS_CALIDAD -->
+                <div class="wb-card" id="tbl-log_rechazos_calidad" data-cluster="audit" style="left: 1510px; top: 360px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>LOG_RECHAZOS_CALIDAD</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">LOG</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_rechazo</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span> id_dataset</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">fila_numero_archivo</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> codigo_regla_violada</span>
+                      <span class="wb-row-type">Varchar(20)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> motivo_rechazo</span>
+                      <span class="wb-row-type">Varchar(255)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">campo_erroneo</span>
+                      <span class="wb-row-type">Varchar(60)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left">valor_erroneo</span>
+                      <span class="wb-row-type">Text</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> fecha_rechazo</span>
+                      <span class="wb-row-type">Datetime</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 13. RPT_LIMPIEZA_EJECUCION -->
+                <div class="wb-card" id="tbl-rpt_limpieza_ejecucion" data-cluster="audit" style="left: 1510px; top: 670px; width: 360px;">
+                  <div class="wb-card-header">
+                    <span>RPT_LIMPIEZA_EJECUCION</span>
+                    <span style="font-size: 0.65rem; color: #78350f;">RPT</span>
+                  </div>
+                  <div class="wb-card-body">
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-pk">PK</span> id_reporte</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-fk">FK</span><span class="wb-badge wb-uq">UQ</span> id_dataset</span>
+                      <span class="wb-row-type">Bigint</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> tiempo_ejecucion_seg</span>
+                      <span class="wb-row-type">Decimal(8,2)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> tasa_duplicidad_pct</span>
+                      <span class="wb-row-type">Decimal(5,2)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> tasa_rechazo_calidad_pct</span>
+                      <span class="wb-row-type">Decimal(5,2)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> total_dorados_creados</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> total_dorados_actualizados</span>
+                      <span class="wb-row-type">Int</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> usuario_ejecutor</span>
+                      <span class="wb-row-type">Varchar(50)</span>
+                    </div>
+                    <div class="wb-card-row">
+                      <span class="wb-row-left"><span class="wb-badge wb-nn">NN</span> fecha_reporte</span>
+                      <span class="wb-row-type">Datetime</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA 2: CAPTURA OFICIAL MYSQL WORKBENCH (PNG DIRECTO DENTRO DEL SLIDE) -->
+        <div class="wb-image-viewport" id="wbImageViewport">
+          <div style="position: absolute; top: 1rem; right: 1.5rem; z-index: 10; display: flex; gap: 0.5rem; background: rgba(7,10,18,0.9); padding: 6px 12px; border-radius: 8px; border: 1px solid #334155;">
+            <button class="btn-ctrl" onclick="zoomWbImg(0.8)">−</button>
+            <span class="wb-zoom-label" id="wbImgZoomLabel">100%</span>
+            <button class="btn-ctrl" onclick="zoomWbImg(1.2)">+</button>
+            <button class="btn-ctrl" onclick="resetWbImgZoom()">100%</button>
+            <button class="btn-ctrl" onclick="openWbImageModal()">⛶ Modal HD</button>
+          </div>
+          <img id="wbImgElement" src="workbench_schema.png" alt="Esquema Lógico Relacional Oficial MySQL Workbench" style="transform: scale(1.0); cursor: grab;" />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 06: NORMALIZACIÓN & BCNF -->
+    <!-- ============================================================ -->
+    <section class="slide" data-index="6" data-category="06 // DEMOSTRACIÓN BCNF">
+      <div class="slide-header">
+        <div class="slide-eyebrow">RIGOR MATEMÁTICO RELACIONAL</div>
+        <h2 class="slide-title">Demostración Matemática: <span class="accent">1NF → 2NF → 3NF → BCNF</span></h2>
+      </div>
+
+      <div class="slide-content">
+        <!-- Fórmulas Canónicas -->
+        <div class="math-formula">
+          <strong>Dependencias Funcionales Canónicas del Dominio (F):</strong><br>
+          DF₁: {id_maestro} → {direccion_norm, tamano_m2, habitaciones, banos, estrato, precio, id_barrio}<br>
+          DF₂: {direccion_norm, tamano_m2, id_barrio} → {id_maestro} <span style="color: var(--neon-emerald);">[Clave Candidata / Hash Unicidad RB-003]</span><br>
+          DF₃: {id_barrio} → {nombre_barrio, estrato_moda, latitud, longitud, id_localidad}<br>
+          DF₄: {id_localidad} → {codigo_dane, nombre_localidad, zona_bogota}
+        </div>
+
+        <!-- Stepper 1NF -> BCNF -->
+        <div class="stepper">
+          <div class="step-box">
+            <div class="step-number">1NF</div>
+            <strong style="color: #fff; font-size: 0.85rem;">Atomicidad Escalar</strong>
+            <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 4px;">Descomposición de la cadena ubicación en componentes escalares indivisibles: localidad, barrio y dirección normalizada.</p>
+          </div>
+
+          <div class="step-box">
+            <div class="step-number">2NF</div>
+            <strong style="color: #fff; font-size: 0.85rem;">Cero Dep. Parciales</strong>
+            <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 4px;">Uso de claves primarias subrogadas sintéticas (INT / BIGINT / UUIDv4). Todo atributo no-primo depende de toda la clave.</p>
+          </div>
+
+          <div class="step-box">
+            <div class="step-number">3NF</div>
+            <strong style="color: #fff; font-size: 0.85rem;">Cero Transitividad</strong>
+            <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 4px;">Eliminación de la transitividad territorial: el inmueble referencia a barrio, y el barrio a su localidad.</p>
+          </div>
+
+          <div class="step-box bcnf">
+            <div class="step-number">BCNF</div>
+            <strong style="color: var(--neon-emerald); font-size: 0.85rem;">Superclave Estricta</strong>
+            <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 4px;">Para toda DF X → Y en el esquema, X es Superclave. Descomposición con reunión sin pérdida garantizada.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 07: DICCIONARIO METADATOS ISO 11179 -->
+    <!-- ============================================================ -->
+    <section class="slide" data-index="7" data-category="07 // DICCIONARIO METADATOS ISO 11179">
+      <div class="slide-header">
+        <div class="slide-eyebrow">ESTÁNDAR INTERNACIONAL ISO/IEC 11179-5</div>
+        <h2 class="slide-title">Diccionario de Metadatos y <span class="accent">Tipado Nativo en MySQL</span></h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="card" style="padding: 0.75rem;">
+          <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.4rem;">
+            <span class="card-title">Tríada ISO 11179: Objeto de Negocio + Término de Propiedad + Término de Representación</span>
+            <span class="badge badge-cyan">MYSQL DATATYPES</span>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Tabla</th>
+                <th>Atributo</th>
+                <th>Tipo SQL (MySQL)</th>
+                <th>Clave</th>
+                <th>Nulable</th>
+                <th>Restricción / Dominio</th>
+                <th>Regla Asociada</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code class="code-chip">cat_localidades</code></td>
+                <td><strong>id_localidad</strong></td>
+                <td>INT AUTO_INCREMENT</td>
+                <td><span class="badge badge-cyan">PK</span></td>
+                <td>NO</td>
+                <td>&gt; 0</td>
+                <td>DANE Bogotá</td>
+              </tr>
+              <tr>
+                <td><code class="code-chip">cat_barrios</code></td>
+                <td><strong>latitud_centroide</strong></td>
+                <td>DECIMAL(10, 7)</td>
+                <td>-</td>
+                <td>NO</td>
+                <td>CHECK (4.4500000 AND 4.8500000)</td>
+                <td>RB-001 (Bogotá)</td>
+              </tr>
+              <tr>
+                <td><code class="code-chip">wrk_datasets_ingesta</code></td>
+                <td><strong>id_dataset</strong></td>
+                <td>VARCHAR(36)</td>
+                <td><span class="badge badge-cyan">PK</span></td>
+                <td>NO</td>
+                <td>UUIDv4 Formato Canónico</td>
+                <td>ISO 11179</td>
+              </tr>
+              <tr>
+                <td><code class="code-chip">wrk_inmuebles_cleaned</code></td>
+                <td><strong>estrato</strong></td>
+                <td>SMALLINT</td>
+                <td>-</td>
+                <td>NO</td>
+                <td>CHECK (estrato BETWEEN 1 AND 6)</td>
+                <td>RB-002 (Estrato)</td>
+              </tr>
+              <tr>
+                <td><code class="code-chip">wrk_inmuebles_cleaned</code></td>
+                <td><strong>precio_cop</strong></td>
+                <td>DECIMAL(14, 2)</td>
+                <td>-</td>
+                <td>NO</td>
+                <td>CHECK (precio_cop &gt; 0 AND &le; 50B)</td>
+                <td>RB-005 (Física)</td>
+              </tr>
+              <tr>
+                <td><code class="code-chip">mdm_inmuebles_maestros</code></td>
+                <td><strong>hash_duplicado</strong></td>
+                <td>CHAR(64)</td>
+                <td><span class="badge badge-emerald">UK</span></td>
+                <td>NO</td>
+                <td>SHA256(dir_norm + tamano + barrio)</td>
+                <td>RB-003 (Deduplicación)</td>
+              </tr>
+              <tr>
+                <td><code class="code-chip">log_rechazos_calidad</code></td>
+                <td><strong>payload_registro</strong></td>
+                <td>JSON</td>
+                <td>-</td>
+                <td>SÍ</td>
+                <td>JSON Nativo Estructurado</td>
+                <td>BPMN 2.0 (G1-G4)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 08: IMPLEMENTACIÓN EN MYSQL -->
+    <!-- ============================================================ -->
+    <section class="slide" data-index="8" data-category="08 // IMPLEMENTACIÓN FÍSICA MYSQL">
+      <div class="slide-header">
+        <div class="slide-eyebrow">INGENIERÍA DE SGBD & PERSISTENCIA</div>
+        <h2 class="slide-title">Implementación Física en <span class="accent">MySQL Server</span></h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-3">
+          <!-- Columna 1: Configuración -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">⚙️ Motor & Charset</span>
+              <span class="badge badge-cyan">CONFIG</span>
+            </div>
+            <div class="compare-side">
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>SGBD Certificado:</strong> MySQL Server 8.0+ / 8.4+ LTS administrado vía MySQL Workbench o phpMyAdmin.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Charset & Collation:</strong> <code class="code-chip">utf8mb4</code> con <code class="code-chip">utf8mb4_unicode_ci</code> para soporte total de caracteres en español y nomenclaturas bogotanas.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Propiedades ACID:</strong> Soporte transaccional pleno con aislamiento y consistencia estricta.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna 2: Constraints -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🛡️ Integridad Activa</span>
+              <span class="badge badge-amber">CONSTRAINTS</span>
+            </div>
+            <div class="compare-side">
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>CHECK Nativo Forzado:</strong> Restricciones declarativas validadas por motor en tiempo de inserción (desde MySQL 8.0.16).</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>ON DELETE RESTRICT:</strong> Catálogos protegidos contra borrado involuntario (<code class="code-chip">cat_localidades</code>, <code class="code-chip">cat_barrios</code>).</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>ON DELETE CASCADE:</strong> Purga limpia de lotes de ingesta temporales sin registros huérfanos.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna 3: Índices -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">⚡ Índices & Performance</span>
+              <span class="badge badge-emerald">B-TREE</span>
+            </div>
+            <div class="compare-side">
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Clustered PK:</strong> Claves primarias auto-incrementales ordenadas físicamente para inserción secuencial óptima.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Índices Secundarios Compuestos:</strong> Optimizados para filtros de lote y analítica (<code class="code-chip">idx_cleaned_dataset</code>, <code class="code-chip">idx_cleaned_barrio</code>).</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Latencia P95 &lt; 20ms:</strong> Cumplimiento de la norma ISO/IEC 25010 en tiempo de respuesta.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 09: EVIDENCIAS DE PRUEBAS (TERMINAL) -->
+    <!-- ============================================================ -->
+    <section class="slide" data-index="9" data-category="09 // PRUEBAS DE INTEGRIDAD">
+      <div class="slide-header">
+        <div class="slide-eyebrow">VERIFICACIÓN Y VALIDACIÓN CON DATOS SINTÉTICOS</div>
+        <h2 class="slide-title">Evidencias de <span class="accent">Pruebas de Integridad</span> en MySQL</h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-2">
+          <!-- Terminal Output -->
+          <div class="terminal-window">
+            <div class="terminal-bar">
+              <div class="terminal-dots">
+                <div class="terminal-dot td-red"></div>
+                <div class="terminal-dot td-yellow"></div>
+                <div class="terminal-dot td-green"></div>
+              </div>
+              <div class="terminal-title">mysql -u wrangling_admin -p sistema_data_wrangling</div>
+              <span class="badge badge-emerald">PASSED</span>
+            </div>
+            <div class="terminal-body">
+              <div class="t-comment">-- TEST 1: Unicidad de Clave Alterna Hash (RB-003 Deduplicación)</div>
+              <div><span class="t-prompt">mysql&gt;</span> <span class="t-cmd">INSERT INTO mdm_inmuebles_maestros (...) VALUES (..., 'e3b0c442...');</span></div>
+              <div class="t-ok">Query OK, 1 row affected (0.01 sec)</div>
+              <div><span class="t-prompt">mysql&gt;</span> <span class="t-cmd">INSERT INTO mdm_inmuebles_maestros (...) VALUES (..., 'e3b0c442...');</span></div>
+              <div class="t-err">ERROR 1062 (23000): Duplicate entry 'e3b0c442...' for key 'mdm_inmuebles_maestros.hash_duplicado'</div>
+              <br>
+              <div class="t-comment">-- TEST 2: Restricción de Dominio CHECK (RB-002 Estrato Fuera de Rango)</div>
+              <div><span class="t-prompt">mysql&gt;</span> <span class="t-cmd">INSERT INTO wrk_inmuebles_cleaned (..., estrato) VALUES (..., 7);</span></div>
+              <div class="t-err">ERROR 3819 (HY000): Check constraint 'chk_cleaned_estrato' is violated.</div>
+              <br>
+              <div class="t-comment">-- TEST 3: Protección Referencial (ON DELETE RESTRICT)</div>
+              <div><span class="t-prompt">mysql&gt;</span> <span class="t-cmd">DELETE FROM cat_localidades WHERE id_localidad = 1;</span></div>
+              <div class="t-err">ERROR 1451 (23000): Cannot delete parent row: a foreign key constraint fails (`cat_barrios`)</div>
+            </div>
+          </div>
+
+          <!-- Tarjeta Explicativa -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🔒 Garantía Ética & Rigor de Pruebas</span>
+              <span class="badge badge-emerald">100% SINTÉTICO</span>
+            </div>
+            <div class="compare-side">
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Protección de Privacidad:</strong> Pruebas ejecutadas con datos 100% ficticios generados sintéticamente. Cero datos sensibles o privados.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Error 1062 Capturado:</strong> El motor relacional rechaza de manera matemática cualquier intento de duplicar un inmueble idéntico.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Error 3819 Forzado:</strong> La restricción <code class="code-chip">chk_cleaned_estrato</code> blinda la base de datos contra registros corruptos antes de llegar al MDM.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Error 1451 Validado:</strong> Imposible desestructurar la integridad referencial de los 20 catálogos de Bogotá.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 10: DESACOPLAMIENTO, DIP & SEGURIDAD -->
+    <!-- ============================================================ -->
+    <section class="slide" data-index="10" data-category="10 // ARQUITECTURA DIP & SEGURIDAD">
+      <div class="slide-header">
+        <div class="slide-eyebrow">SWEBOK v4 SOFTWARE DESIGN & SEGURIDAD</div>
+        <h2 class="slide-title">Persistencia Desacoplada <span class="accent">(SOLID DIP)</span> & Seguridad</h2>
+      </div>
+
+      <div class="slide-content">
+        <div class="grid-2">
+          <!-- Repository Pattern -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🧩 Repository Pattern (SOLID-DIP)</span>
+              <span class="badge badge-cyan">ARQUITECTURA</span>
+            </div>
+            <div class="compare-side">
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Inversión de Dependencias:</strong> El dominio de negocio depende de la abstracción <code class="code-chip">IDataRepository</code>, no del motor concreto.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Adaptador MySQL:</strong> Implementación aislada en <code class="code-chip">infrastructure/repositories/mysql_repository.py</code> con pool de conexiones.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Alta Testabilidad:</strong> Permite probar la lógica de las compuertas BPMN con dobles de prueba (Mocks) sin requerir base de datos activa.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seguridad y PoLP -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🛡️ Seguridad & Protección de Datos</span>
+              <span class="badge badge-emerald">PoLP / ISO 8000</span>
+            </div>
+            <div class="compare-side">
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Principio de Mínimo Privilegio (PoLP):</strong> El usuario de aplicación solo tiene privilegios DML (<code class="code-chip">SELECT, INSERT, UPDATE, DELETE</code>), sin facultades DDL ni de administración.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Hashing Criptográfico SHA-256:</strong> Verificación de integridad de archivos de entrada (ISO 8000) y clave de deduplicación.</div>
+              </div>
+              <div class="bullet-point">
+                <span class="bullet-icon icon-pass">✓</span>
+                <div><strong>Blindaje contra SQL Injection:</strong> Todas las transacciones se ejecutan mediante sentencias preparadas y parámetros tipados.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 11: CONCLUSIONES & ROADMAP -->
+    <!-- ============================================================ -->
+    <section class="slide" data-index="11" data-category="11 // CONCLUSIONES & ROADMAP">
+      <div class="hero-layout">
+        <div class="slide-eyebrow" style="margin-bottom: 0.4rem;">CUMPLIMIENTO DE OBJETIVOS ACADÉMICOS Y PROFESIONALES</div>
+        <h2 class="slide-title" style="margin-bottom: 1.4rem;">Conclusiones y <span class="accent">Roadmap de Ingeniería</span></h2>
+
+        <div class="grid-3" style="max-width: 1250px; width: 100%; margin-bottom: 1.5rem;">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🏆 Logro Principal</span>
+              <span class="badge badge-emerald">BCNF</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">Transición exitosa de datos crudos heterogéneos y sucios a un modelo relacional BCNF formalizado, libre de anomalías y con soporte analítico MDM en MySQL.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📜 Estándares Cumplidos</span>
+              <span class="badge badge-cyan">7 NORMAS</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">Alineación completa con SWEBOK v4, DAMA-DMBOK v2, ISO 9075, ISO 11179, ISO 25012, ISO 8000 e ISO 25010.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🚀 Próximos Pasos SDLC</span>
+              <span class="badge badge-violet">DEV & TEST</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">Construcción de <code class="code-chip">mysql_repository.py</code> y suite de pruebas unitarias automatizadas con cobertura &gt; 80% (Skill 04).</p>
+          </div>
+        </div>
+
+        <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-dim);">
+          Universidad de La Salle — Facultad de Ingeniería · Materia: Bases de datos · Prof. Celso Javier Rodriguez Pizza
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- HUD BOTTOM BAR -->
+  <footer class="hud-bottom">
+    <div class="dots-nav" id="dotsNav">
+      <!-- Generated via JS -->
+    </div>
+
+    <div class="keyboard-hints">
+      <span><kbd>←</kbd> <kbd>→</kbd> <kbd>Espacio</kbd> Navegar</span>
+      <span><kbd>F</kbd> Pantalla Completa</span>
+      <span><kbd>P</kbd> Exportar a PDF</span>
+    </div>
+  </footer>
+
+  <!-- MODAL PDF INSTRUCTIONS -->
+  <div class="modal-overlay" id="pdfModal">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span>📄</span> Asistente de Exportación a PDF (16:9 Vectorial)
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-dim);">
+        Para asegurar que las 11 diapositivas se generen exactamente en 16:9 continuo y con gráficos vectoriales nítidos, verifica los siguientes parámetros en la ventana de impresión del navegador:
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div class="modal-step">
+          <span style="color: var(--neon-cyan); font-weight: 800;">1.</span>
+          <div><strong>Destino:</strong> Selecciona <em>"Guardar como PDF"</em> (Save as PDF).</div>
+        </div>
+        <div class="modal-step">
+          <span style="color: var(--neon-cyan); font-weight: 800;">2.</span>
+          <div><strong>Diseño / Orientación:</strong> Selecciona <em>"Horizontal"</em> (Landscape).</div>
+        </div>
+        <div class="modal-step">
+          <span style="color: var(--neon-cyan); font-weight: 800;">3.</span>
+          <div><strong>Márgenes:</strong> Selecciona <em>"Ninguno"</em> (None) para respetar el ratio 16:9.</div>
+        </div>
+        <div class="modal-step">
+          <span style="color: var(--neon-emerald); font-weight: 800;">4.</span>
+          <div><strong>Opciones:</strong> Activa obligatoriamente <em>"Gráficos de fondo"</em> (Background graphics).</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-hud" onclick="closePdfModal()">Cancelar</button>
+        <button class="btn-hud btn-pdf" onclick="triggerPrint()">Imprimir / Guardar PDF Ahora</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL LIGHTBOX WORKBENCH PNG -->
+  <div class="modal-overlay" id="wbImageLightboxModal" style="display: none;">
+    <div class="modal-card" style="max-width: 95vw; width: 1400px; height: 90vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 0.75rem;">
+        <div style="font-weight: 800; color: var(--neon-cyan); display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
+          <span>🖼️</span> Esquema Relacional Original — MySQL Workbench
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <a href="workbench_schema.png" target="_blank" download="workbench_schema.png" class="btn-hud" style="text-decoration: none;">⬇ Descargar Imagen</a>
+          <button class="btn-hud" onclick="closeWbImageModal()">✕ Cerrar</button>
+        </div>
+      </div>
+      <div style="flex: 1; overflow: auto; background: #05070f; border-radius: 8px; padding: 1rem; display: flex; justify-content: center; align-items: center; margin-top: 0.75rem;">
+        <img src="workbench_schema.png" alt="Esquema Lógico Relacional MySQL Workbench" style="max-width: 100%; height: auto; border: 1px solid #334155; border-radius: 6px; box-shadow: 0 4px 25px rgba(0,0,0,0.85);" />
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTROLLER SCRIPT -->
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlideIndex = 0;
+
+    const slideCounter = document.getElementById('slideCounter');
+    const hudSlideCategory = document.getElementById('hudSlideCategory');
+    const progressBar = document.getElementById('progressBar');
+    const dotsNav = document.getElementById('dotsNav');
+    const pdfModal = document.getElementById('pdfModal');
+    const wbImageLightboxModal = document.getElementById('wbImageLightboxModal');
+
+    // Initialize navigation dots
+    slides.forEach((slide, index) => {
+      const dot = document.createElement('div');
+      dot.className = `dot-step ${index === 0 ? 'active' : ''}`;
+      dot.innerText = String(index + 1).padStart(2, '0');
+      dot.onclick = () => goToSlide(index);
+      dotsNav.appendChild(dot);
+    });
+
+    const dotSteps = document.querySelectorAll('.dot-step');
+
+    function updateSlide() {
+      slides.forEach((slide, index) => {
+        slide.classList.toggle('active', index === currentSlideIndex);
+      });
+
+      dotSteps.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentSlideIndex);
+      });
+
+      const currentSlide = slides[currentSlideIndex];
+      const category = currentSlide.getAttribute('data-category') || `SLIDE ${currentSlideIndex + 1}`;
+      
+      hudSlideCategory.innerText = category;
+      slideCounter.innerText = `${String(currentSlideIndex + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+      
+      const progressPercent = ((currentSlideIndex + 1) / totalSlides) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+    }
+
+    function nextSlide() {
+      if (currentSlideIndex < totalSlides - 1) {
+        currentSlideIndex++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlideIndex > 0) {
+        currentSlideIndex--;
+        updateSlide();
+      }
+    }
+
+    function goToSlide(index) {
+      if (index >= 0 && index < totalSlides) {
+        currentSlideIndex = index;
+        updateSlide();
+      }
+    }
+
+    // Fullscreen toggle
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn('Fullscreen error:', err);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // PDF modal & trigger
+    function openPdfModal() {
+      pdfModal.style.display = 'flex';
+    }
+
+    function closePdfModal() {
+      pdfModal.style.display = 'none';
+    }
+
+    function triggerPrint() {
+      closePdfModal();
+      setTimeout(() => {
+        window.print();
+      }, 250);
+    }
+
+    // Modal Workbench Image Lightbox
+    function openWbImageModal() {
+      if (wbImageLightboxModal) wbImageLightboxModal.style.display = 'flex';
+    }
+
+    function closeWbImageModal() {
+      if (wbImageLightboxModal) wbImageLightboxModal.style.display = 'none';
+    }
+
+    // Workbench Schema Zoom, Pan & Cluster Navigation
+    let wbZoomLevel = 0.72;
+    const wbCanvasTransform = document.getElementById('wbCanvasTransform');
+    const wbZoomLabel = document.getElementById('wbZoomLabel');
+    const wbViewport = document.getElementById('wbViewport');
+    const wbImageViewport = document.getElementById('wbImageViewport');
+    const tabWbVector = document.getElementById('tabWbVector');
+    const tabWbImage = document.getElementById('tabWbImage');
+    const wbClusterBar = document.getElementById('wbClusterBar');
+
+    function setWbZoom(level) {
+      wbZoomLevel = Math.max(0.4, Math.min(1.8, Math.round(level * 100) / 100));
+      applyWbZoom();
+    }
+
+    function zoomWbIn() {
+      setWbZoom(wbZoomLevel + 0.15);
+    }
+
+    function zoomWbOut() {
+      setWbZoom(wbZoomLevel - 0.15);
+    }
+
+    function zoomWbReset() {
+      setWbZoom(0.72);
+      if (wbViewport) {
+        wbViewport.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function zoomWbFit() {
+      setWbZoom(1.0);
+    }
+
+    function applyWbZoom() {
+      if (wbCanvasTransform) {
+        wbCanvasTransform.style.transform = `scale(${wbZoomLevel})`;
+      }
+      if (wbZoomLabel) {
+        wbZoomLabel.innerText = `${Math.round(wbZoomLevel * 100)}%`;
+      }
+    }
+
+    // Switch between Vectorial HD and Workbench PNG View
+    function switchWbTab(mode) {
+      if (mode === 'vector') {
+        if (wbViewport) wbViewport.style.display = 'block';
+        if (wbImageViewport) wbImageViewport.style.display = 'none';
+        if (tabWbVector) tabWbVector.classList.add('active');
+        if (tabWbImage) tabWbImage.classList.remove('active');
+        if (wbClusterBar) wbClusterBar.style.display = 'flex';
+      } else {
+        if (wbViewport) wbViewport.style.display = 'none';
+        if (wbImageViewport) wbImageViewport.style.display = 'flex';
+        if (tabWbVector) tabWbVector.classList.remove('active');
+        if (tabWbImage) tabWbImage.classList.add('active');
+        if (wbClusterBar) wbClusterBar.style.display = 'none';
+      }
+    }
+
+    // Focus on specific thematic clusters
+    function focusCluster(cluster) {
+      // Update cluster button active states
+      const clusterBtns = document.querySelectorAll('.btn-cluster');
+      clusterBtns.forEach(b => b.classList.remove('active'));
+
+      // Remove previous card highlights
+      const cards = document.querySelectorAll('.wb-card');
+      cards.forEach(c => c.classList.remove('cluster-highlight'));
+
+      if (cluster === 'all') {
+        const btn = document.getElementById('btnClustAll');
+        if (btn) btn.classList.add('active');
+        setWbZoom(0.72);
+        if (wbViewport) wbViewport.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      if (cluster === 'territorial') {
+        const btn = document.getElementById('btnClustTerr');
+        if (btn) btn.classList.add('active');
+        ['tbl-cat_localidades', 'tbl-cat_barrios', 'tbl-cat_tipos_inmueble', 'tbl-mdm_inmuebles_maestros', 'tbl-dim_entorno_urbano'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('cluster-highlight');
+        });
+        setWbZoom(0.95);
+        if (wbViewport) wbViewport.scrollTo({ left: 0, top: 150, behavior: 'smooth' });
+      } else if (cluster === 'staging') {
+        const btn = document.getElementById('btnClustStg');
+        if (btn) btn.classList.add('active');
+        ['tbl-cat_fuentes_origen', 'tbl-wrk_datasets_ingesta', 'tbl-stg_inmuebles_raw'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('cluster-highlight');
+        });
+        setWbZoom(0.95);
+        if (wbViewport) wbViewport.scrollTo({ left: 600, top: 50, behavior: 'smooth' });
+      } else if (cluster === 'mdm') {
+        const btn = document.getElementById('btnClustMdm');
+        if (btn) btn.classList.add('active');
+        ['tbl-mdm_inmuebles_maestros', 'tbl-wrk_inmuebles_cleaned', 'tbl-fct_features_analiticas', 'tbl-cat_tipos_inmueble'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('cluster-highlight');
+        });
+        setWbZoom(0.95);
+        if (wbViewport) wbViewport.scrollTo({ left: 100, top: 450, behavior: 'smooth' });
+      } else if (cluster === 'audit') {
+        const btn = document.getElementById('btnClustAudit');
+        if (btn) btn.classList.add('active');
+        ['tbl-log_notificaciones', 'tbl-log_rechazos_calidad', 'tbl-rpt_limpieza_ejecucion', 'tbl-wrk_datasets_ingesta'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('cluster-highlight');
+        });
+        setWbZoom(0.95);
+        if (wbViewport) wbViewport.scrollTo({ left: 950, top: 150, behavior: 'smooth' });
+      }
+    }
+
+    // Direct Image Viewport Controls
+    let wbImgScale = 1.0;
+    const wbImgElement = document.getElementById('wbImgElement');
+    const wbImgZoomLabel = document.getElementById('wbImgZoomLabel');
+
+    function zoomWbImg(factor) {
+      wbImgScale = Math.max(0.6, Math.min(2.5, Math.round(wbImgScale * factor * 100) / 100));
+      if (wbImgElement) wbImgElement.style.transform = `scale(${wbImgScale})`;
+      if (wbImgZoomLabel) wbImgZoomLabel.innerText = `${Math.round(wbImgScale * 100)}%`;
+    }
+
+    function resetWbImgZoom() {
+      wbImgScale = 1.0;
+      if (wbImgElement) wbImgElement.style.transform = `scale(1.0)`;
+      if (wbImgZoomLabel) wbImgZoomLabel.innerText = `100%`;
+    }
+
+    // Drag-to-pan in Workbench Viewport
+    if (wbViewport) {
+      let isWbDragging = false;
+      let startX, startY, scrollLeftStart, scrollTopStart;
+
+      wbViewport.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.wb-card') || e.target.closest('button') || e.target.closest('a')) return;
+        isWbDragging = true;
+        wbViewport.style.cursor = 'grabbing';
+        startX = e.pageX - wbViewport.offsetLeft;
+        startY = e.pageY - wbViewport.offsetTop;
+        scrollLeftStart = wbViewport.scrollLeft;
+        scrollTopStart = wbViewport.scrollTop;
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isWbDragging) {
+          isWbDragging = false;
+          if (wbViewport) wbViewport.style.cursor = 'grab';
+        }
+      });
+
+      wbViewport.addEventListener('mousemove', (e) => {
+        if (!isWbDragging) return;
+        e.preventDefault();
+        const x = e.pageX - wbViewport.offsetLeft;
+        const y = e.pageY - wbViewport.offsetTop;
+        const walkX = (x - startX) * 1.4;
+        const walkY = (y - startY) * 1.4;
+        wbViewport.scrollLeft = scrollLeftStart - walkX;
+        wbViewport.scrollTop = scrollTopStart - walkY;
+      });
+
+      wbViewport.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) {
+          e.preventDefault();
+          if (e.deltaY < 0) {
+            zoomWbIn();
+          } else {
+            zoomWbOut();
+          }
+        }
+      }, { passive: false });
+    }
+
+    // Drag-to-pan in Image Viewport
+    if (wbImageViewport && wbImgElement) {
+      let isImgDragging = false;
+      let imgStartX, imgStartY, imgScrollLeft, imgScrollTop;
+
+      wbImageViewport.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button')) return;
+        isImgDragging = true;
+        wbImageViewport.style.cursor = 'grabbing';
+        imgStartX = e.pageX - wbImageViewport.offsetLeft;
+        imgStartY = e.pageY - wbImageViewport.offsetTop;
+        imgScrollLeft = wbImageViewport.scrollLeft;
+        imgScrollTop = wbImageViewport.scrollTop;
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isImgDragging) {
+          isImgDragging = false;
+          if (wbImageViewport) wbImageViewport.style.cursor = 'grab';
+        }
+      });
+
+      wbImageViewport.addEventListener('mousemove', (e) => {
+        if (!isImgDragging) return;
+        e.preventDefault();
+        const x = e.pageX - wbImageViewport.offsetLeft;
+        const y = e.pageY - wbImageViewport.offsetTop;
+        wbImageViewport.scrollLeft = imgScrollLeft - (x - imgStartX);
+        wbImageViewport.scrollTop = imgScrollTop - (y - imgStartY);
+      });
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (pdfModal.style.display === 'flex') {
+          closePdfModal();
+          return;
+        }
+        if (wbImageLightboxModal && wbImageLightboxModal.style.display === 'flex') {
+          closeWbImageModal();
+          return;
+        }
+      }
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key.toLowerCase() === 'f') {
+        toggleFullScreen();
+      } else if (e.key.toLowerCase() === 'p') {
+        openPdfModal();
+      } else if (e.key >= '1' && e.key <= '9') {
+        const target = parseInt(e.key) - 1;
+        if (target < totalSlides) goToSlide(target);
+      } else if (e.key === '0') {
+        if (totalSlides >= 10) goToSlide(9);
+      }
+    });
+
+    // Touch swipe support
+    let touchStartX = 0;
+    window.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+    window.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) nextSlide();
+      if (touchEndX - touchStartX > 50) prevSlide();
+    });
+
+    // Initial call
+    updateSlide();
+  </script>
+</body>
+</html>

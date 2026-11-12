@@ -1,0 +1,32 @@
+{
+  "project": "SistemaDataWranglingBogota",
+  "version": "1.0.0",
+  "pdco_phase": "PLAN -> DEVELOPMENT",
+  "active_skill": "02-architecture",
+  "sdlc_stage": "design",
+  "standards": [
+    "SWEBOK v4",
+    "DAMA-DMBOK v2",
+    "ISO/IEC 9075",
+    "ISO/IEC 11179",
+    "ISO/IEC 25012",
+    "ISO 8000",
+    "ISO/IEC 25010",
+    "IEEE 830 / ISO 29148",
+    "MySQL 8.0+ / 8.4+ LTS"
+  ],
+  "last_updated": "2026-09-05",
+  "artifacts": [
+    "docs/database/00_plan_maestro_base_datos.md",
+    "docs/database/01_diagrama_conceptual_er.md",
+    "docs/database/02_diagrama_logico_relacional.md",
+    "docs/database/03_diccionario_datos_iso11179.md",
+    "docs/database/04_esquema_ddl_iso9075.sql",
+    "docs/database/05_protocolo_dama_mdm_calidad.md",
+    "docs/database/06_justificacion_analisis_abstraccion_entidades.md",
+    "docs/database/INFORME_ACTIVIDAD_2_BASE_DATOS.md",
+    "docs/database/07_script_mysql_actividad2.sql",
+    "docs/database/slides/index.html",
+    "docs/database/slides/SLIDES_SPEECH_NOTES.md"
+  ]
+}

@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f4">
+  <title>InmoInsight | Prototipo de interacción</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1e2925;
+      --muted: #65736d;
+      --line: #d9e1dc;
+      --paper: #ffffff;
+      --canvas: #f2f5f2;
+      --green: #176b4b;
+      --green-dark: #10523a;
+      --green-soft: #e5f2eb;
+      --orange: #a65022;
+      --orange-soft: #fff0e6;
+      --red: #a53535;
+      --red-soft: #fceaea;
+      --blue: #285f83;
+      --blue-soft: #e9f2f8;
+      --radius: 8px;
+      font-family: "Aptos", "Segoe UI", sans-serif;
+      font-size: 15px;
+      color: var(--ink);
+      background: var(--canvas);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; min-height: 100vh; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 3px solid #da8b32; outline-offset: 2px; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 238px minmax(0, 1fr); }
+    .sidebar { background: #18392d; color: #f3f7f3; padding: 24px 14px; display: flex; flex-direction: column; gap: 28px; }
+    .brand { display: flex; gap: 11px; align-items: center; padding: 0 10px; }
+    .brand-mark { width: 35px; height: 35px; border-radius: 10px; display: grid; place-items: center; background: #d6a64a; color: #18392d; font-weight: 800; }
+    .brand strong { display: block; font-size: 15px; letter-spacing: 0; }
+    .brand span { display: block; color: #b7c9bf; font-size: 12px; margin-top: 2px; }
+    .nav-label { color: #adc2b6; font-size: 11px; text-transform: uppercase; padding: 0 11px; margin: 0 0 8px; }
+    .nav { display: grid; gap: 3px; }
+    .nav button { border: 0; text-align: left; color: #dbe8e0; background: transparent; border-radius: 6px; padding: 10px 11px; font-size: 14px; }
+    .nav button:hover, .nav button[aria-current="page"] { background: #2a5141; color: white; }
+    .nav button[aria-current="page"] { box-shadow: inset 3px 0 #e1b45f; }
+    .side-note { margin-top: auto; border-top: 1px solid #416151; padding: 16px 10px 0; color: #bed0c5; font-size: 12px; line-height: 1.5; }
+    .side-note strong { color: white; display: block; margin-bottom: 5px; }
+    .main { min-width: 0; }
+    .topbar { height: 64px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.92); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; }
+    .crumb { color: var(--muted); font-size: 13px; }
+    .crumb strong { color: var(--ink); font-weight: 600; }
+    .demo-tag { border: 1px solid #e6d3ab; color: #75551f; background: #fff8e8; border-radius: 99px; padding: 6px 10px; font-size: 12px; font-weight: 650; }
+    .content { width: min(1160px, 100%); margin: 0 auto; padding: 34px 34px 56px; }
+    .screen { display: none; animation: enter .2s ease-out; }
+    .screen.active { display: block; }
+    @keyframes enter { from { opacity: .45; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    h1 { margin: 0; font-size: 28px; line-height: 1.2; letter-spacing: 0; }
+    h2 { font-size: 18px; margin: 0; letter-spacing: 0; }
+    h3 { font-size: 15px; margin: 0; letter-spacing: 0; }
+    p { line-height: 1.55; }
+    .intro { margin: 8px 0 22px; color: var(--muted); max-width: 720px; }
+    .section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; margin-bottom: 22px; }
+    .section-head .intro { margin-bottom: 0; }
+    .eyebrow { color: var(--green); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 8px; }
+    .panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+    .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; }
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .metric { padding: 17px 18px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
+    .metric span { color: var(--muted); font-size: 13px; }
+    .metric strong { display: block; font-size: 28px; margin: 7px 0 3px; }
+    .metric em { color: var(--green); font-size: 12px; font-style: normal; }
+    .button { min-height: 40px; border: 1px solid #bac8c0; border-radius: 6px; padding: 8px 14px; color: var(--ink); background: white; font-weight: 600; }
+    .button:hover { background: #f4f7f5; }
+    .button.primary { color: white; background: var(--green); border-color: var(--green); }
+    .button.primary:hover { background: var(--green-dark); }
+    .button.danger { color: var(--red); border-color: #e3b7b7; }
+    .button:disabled { opacity: .5; cursor: not-allowed; }
+    .actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 22px; }
+    .actions-right { display: flex; gap: 9px; }
+    .link-button { background: none; border: 0; padding: 8px 0; color: var(--green); text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; background: white; }
+    th, td { text-align: left; padding: 11px 13px; border-bottom: 1px solid #e8eeea; font-size: 13px; }
+    th { background: #f4f7f4; color: #46564e; font-weight: 700; }
+    tr:last-child td { border-bottom: 0; }
+    .status { display: inline-flex; align-items: center; gap: 6px; border-radius: 99px; padding: 4px 9px; font-size: 12px; font-weight: 700; }
+    .status.good { background: var(--green-soft); color: var(--green-dark); }
+    .status.warn { background: var(--orange-soft); color: var(--orange); }
+    .status.bad { background: var(--red-soft); color: var(--red); }
+    .status.neutral { background: #edf1ef; color: #53615a; }
+    .banner { padding: 13px 15px; border-radius: 6px; line-height: 1.45; margin: 15px 0; }
+    .banner.info { background: var(--blue-soft); border-left: 4px solid var(--blue); color: #214a67; }
+    .banner.success { background: var(--green-soft); border-left: 4px solid var(--green); color: var(--green-dark); }
+    .banner.warning { background: var(--orange-soft); border-left: 4px solid var(--orange); color: #733919; }
+    .banner.error { background: var(--red-soft); border-left: 4px solid var(--red); color: #762727; }
+    .dropzone { min-height: 185px; border: 2px dashed #a8b9af; border-radius: 8px; background: #f8faf8; display: grid; place-items: center; text-align: center; padding: 24px; }
+    .dropzone.drag { border-color: var(--green); background: var(--green-soft); }
+    .dropzone strong { display: block; margin: 9px 0 4px; }
+    .drop-icon { width: 44px; height: 44px; border-radius: 50%; background: #e5eee8; color: var(--green); display: grid; place-items: center; margin: auto; font-size: 22px; }
+    input, select { min-height: 40px; border: 1px solid #aebdb4; border-radius: 5px; padding: 8px 10px; color: var(--ink); background: white; width: 100%; }
+    label { display: block; font-weight: 650; font-size: 13px; margin-bottom: 7px; }
+    .field { margin-bottom: 15px; }
+    .field-help { display: block; font-size: 12px; color: var(--muted); margin-top: 5px; }
+    .stepper { display: grid; grid-template-columns: repeat(4, 1fr); margin: 20px 0 24px; }
+    .step { position: relative; padding-top: 29px; font-size: 12px; color: var(--muted); }
+    .step:before { content: ""; position: absolute; top: 0; left: 0; width: 18px; height: 18px; border-radius: 50%; background: white; border: 2px solid #9cab9f; z-index: 1; }
+    .step:not(:last-child):after { content: ""; position: absolute; top: 8px; left: 20px; right: 0; height: 2px; background: #ccd7d0; }
+    .step.done:before { background: var(--green); border-color: var(--green); box-shadow: inset 0 0 0 4px white; }
+    .step.current { color: var(--green-dark); font-weight: 700; }
+    .step.current:before { border-color: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
+    .progress-track { height: 10px; background: #e5ece7; border-radius: 99px; overflow: hidden; }
+    .progress-bar { width: 0; height: 100%; background: #277a58; border-radius: inherit; transition: width .3s ease; }
+    .log { margin: 14px 0 0; padding: 0; list-style: none; }
+    .log li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #edf1ee; font-size: 13px; }
+    .log li:last-child { border: 0; }
+    .filter-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 15px; }
+    .diagnostic { border-left: 4px solid var(--red); padding: 18px; background: #fffafa; border-radius: 4px; }
+    .diagnostic dl { display: grid; grid-template-columns: 145px 1fr; gap: 8px 14px; font-size: 14px; }
+    .diagnostic dt { color: var(--muted); }
+    .diagnostic dd { margin: 0; font-weight: 600; }
+    .mapping-row { display: grid; grid-template-columns: 1.1fr 1.2fr 1.3fr; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid #e8eeea; }
+    .mapping-row:last-child { border: 0; }
+    .check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .check input { width: 18px; min-height: 18px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; max-width: 360px; background: #173b2e; color: white; padding: 14px 18px; border-radius: 7px; box-shadow: 0 8px 24px #142c2030; display: none; }
+    .toast.show { display: block; animation: enter .15s ease-out; }
+    .empty-state { text-align: center; padding: 42px 18px; color: var(--muted); }
+    .screen-index { color: var(--muted); font-size: 12px; margin-top: 10px; }
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 68px minmax(0, 1fr); }
+      .sidebar { padding: 18px 8px; }
+      .brand { justify-content: center; padding: 0; }
+      .brand-copy, .nav-label, .nav button span, .side-note { display: none; }
+      .nav button { text-align: center; font-size: 18px; padding: 11px 4px; }
+      .content { padding: 26px 20px 44px; }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 620px) {
+      .app { display: block; }
+      .sidebar { padding: 10px; position: sticky; top: 0; z-index: 3; flex-direction: row; align-items: center; gap: 12px; overflow-x: auto; }
+      .brand { display: none; }
+      .nav { display: flex; gap: 4px; }
+      .nav button { min-width: 42px; }
+      .nav button span { display: none; }
+      .topbar { height: 54px; padding: 0 16px; }
+      .content { padding: 22px 15px 36px; }
+      h1 { font-size: 24px; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .section-head > .button { margin-top: 14px; }
+      .filter-row { grid-template-columns: 1fr; }
+      .mapping-row { grid-template-columns: 1fr; gap: 5px; }
+      .stepper { grid-template-columns: repeat(2, 1fr); row-gap: 15px; }
+      .actions { align-items: stretch; }
+      .actions-right { flex-direction: column-reverse; }
+      .actions .button { min-width: 105px; }
+      .diagnostic dl { grid-template-columns: 1fr; gap: 4px; }
+      .diagnostic dd { margin-bottom: 9px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Navegación principal">
+      <div class="brand"><div class="brand-mark" aria-hidden="true">I</div><div class="brand-copy"><strong>InmoInsight</strong><span>Curaduría inmobiliaria</span></div></div>
+      <div>
+        <p class="nav-label">Espacio de trabajo</p>
+        <nav class="nav" id="navigation">
+          <button data-screen="1" aria-current="page" aria-label="Resumen"><span>▦ &nbsp;Resumen</span>▦</button>
+          <button data-screen="2" aria-label="Nueva carga"><span>＋ &nbsp;Nueva carga</span>＋</button>
+          <button data-screen="8" aria-label="Auditoría"><span>≡ &nbsp;Auditoría</span>≡</button>
+          <button data-screen="9" aria-label="Inventario"><span>⌕ &nbsp;Inventario</span>⌕</button>
+        </nav>
+      </div>
+      <div class="side-note"><strong>Entorno de demostración</strong>Los datos y resultados de este prototipo son ficticios. No se conecta al pipeline productivo.</div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div class="crumb">InmoInsight <span aria-hidden="true">/</span> <strong id="crumb-title">Resumen</strong></div><span class="demo-tag">Prototipo interactivo</span></header>
+      <div class="content">
+        <section class="screen active" id="screen-1" aria-labelledby="title-1">
+          <div class="section-head"><div><div class="eyebrow">Panel de control</div><h1 id="title-1">Resumen del inventario</h1><p class="intro">Consulta el estado de la curaduría y continúa con tu siguiente tarea.</p></div><button class="button primary" data-go="2">＋ Nueva carga</button></div>
+          <div class="grid grid-4">
+            <div class="metric"><span>Registros maestros</span><strong>1.284</strong><em>↑ 8,4% este mes</em></div>
+            <div class="metric"><span>Calidad del último lote</span><strong>94,2%</strong><em>Última revisión: hoy</em></div>
+            <div class="metric"><span>Registros por revisar</span><strong>23</strong><em style="color:var(--orange)">2 lotes con alertas</em></div>
+            <div class="metric"><span>Lotes procesados</span><strong>18</strong><em>En los últimos 30 días</em></div>
+          </div>
+          <div class="grid grid-2" style="margin-top:18px">
+            <div class="panel"><div class="panel-title"><h2>Actividad reciente</h2><button class="link-button" data-go="7">Ver resultados</button></div><div class="table-wrap"><table><thead><tr><th>Lote</th><th>Fecha</th><th>Estado</th></tr></thead><tbody><tr><td>Inventario septiembre</td><td>Hoy, 09:42</td><td><span class="status good">Completado</span></td></tr><tr><td>Portal zona norte</td><td>Ayer, 15:10</td><td><span class="status warn">3 por revisar</span></td></tr><tr><td>Actualización semanal</td><td>24 sep</td><td><span class="status good">Completado</span></td></tr></tbody></table></div></div>
+            <div class="panel"><div class="panel-title"><h2>Accesos rápidos</h2></div><div class="grid"><button class="button" data-go="8">Revisar registros rechazados</button><button class="button" data-go="9">Explorar inventario maestro</button><button class="button" data-go="10">Exportar datos verificados</button></div><p class="small muted" style="margin-bottom:0">Los indicadores de esta pantalla son datos de ejemplo.</p></div>
+          </div>
+          <p class="screen-index">Pantalla 1 de 10</p>
+        </section>
+
+        <section class="screen" id="screen-2" aria-labelledby="title-2">
+          <div class="eyebrow">Tarea crítica 1 · Paso 1 de 4</div><h1 id="title-2">Seleccionar archivo</h1><p class="intro">Elige un archivo de datos para comenzar. Se aceptan CSV, Excel y JSON.</p>
+          <div class="panel"><div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Selecciona o arrastra un archivo CSV, Excel o JSON">
+            <div><div class="drop-icon" aria-hidden="true">↑</div><strong>Arrastra el archivo aquí</strong><span class="small muted">o selecciona un archivo desde tu equipo</span><div style="margin-top:13px"><button class="button" id="choose-file" type="button">Seleccionar archivo</button><input id="file-input" type="file" accept=".csv,.xlsx,.xls,.json" hidden></div><div id="file-feedback" class="small" role="status" aria-live="polite" style="margin-top:10px"></div></div>
+          </div><div class="banner info" role="note">Comprobación local básica: extensión admitida y archivo no vacío. El contenido no se lee ni se envía a ningún servidor en este prototipo.</div><div class="grid grid-2"><div class="field"><label for="source-name">Nombre de la fuente</label><input id="source-name" placeholder="Ej. Inventario septiembre"><span class="field-help">Etiqueta para identificar el lote en los resultados.</span></div><div class="field"><label for="notify-email">Correo para notificación (opcional)</label><input id="notify-email" type="email" autocomplete="email" placeholder="equipo@ejemplo.com"><span class="field-help">Déjalo vacío si no necesitas recibir un resumen.</span></div></div></div>
+          <div class="actions"><button class="button" data-go="1">← Volver al resumen</button><div class="actions-right"><button class="button" data-go="1">Cancelar</button><button class="button primary" id="to-preview" disabled>Continuar</button></div></div><p class="screen-index">Pantalla 2 de 10</p>
+        </section>
+
+        <section class="screen" id="screen-3" aria-labelledby="title-3">
+          <div class="eyebrow">Tarea crítica 1 · Paso 2 de 4</div><h1 id="title-3">Revisar estructura de ejemplo</h1><p class="intro">Compara los campos esperados con este ejemplo. El contenido del archivo seleccionado no se ha leído.</p>
+          <div class="panel"><div class="panel-title"><div><h2 id="preview-file">inventario_demo.csv</h2><span class="small muted">Vista previa de ejemplo · 4 de 345 registros</span></div><span class="status neutral">Formato admitido</span></div><div class="banner info" id="preview-summary">El prototipo no ha leído el contenido. La tabla siguiente es ilustrativa y no corresponde al archivo seleccionado.</div><div class="table-wrap"><table><thead><tr><th>localidad</th><th>area</th><th>habitaciones</th><th>baños</th><th>estrato</th><th>precio</th></tr></thead><tbody><tr><td>Chapinero</td><td>76</td><td>2</td><td>1</td><td>4</td><td>420.000.000</td></tr><tr><td>Suba</td><td>61</td><td>2</td><td>1</td><td>3</td><td>295.000.000</td></tr><tr><td>Usaquén</td><td>104</td><td>3</td><td>2</td><td>5</td><td>690.000.000</td></tr><tr><td>Kennedy</td><td>48</td><td>2</td><td>1</td><td>2</td><td>185.000.000</td></tr></tbody></table></div></div>
+          <div class="actions"><button class="button" data-go="2">← Cambiar archivo</button><div class="actions-right"><button class="button" data-go="2">Cancelar</button><button class="button primary" data-go="4">Asignar columnas</button></div></div><p class="screen-index">Pantalla 3 de 10</p>
+        </section>
+
+        <section class="screen" id="screen-4" aria-labelledby="title-4">
+          <div class="eyebrow">Tarea crítica 1 · Paso 3 de 4</div><h1 id="title-4">Asignar columnas</h1><p class="intro">Relaciona cada columna del archivo con el campo que utilizará el sistema. Los campos obligatorios están identificados.</p>
+          <div class="grid grid-2"><div class="panel"><div class="panel-title"><h2>Columnas del archivo</h2><span class="small muted">5 detectadas</span></div>
+            <div class="mapping-row"><strong>localidad</strong><span class="small muted">Ej. Chapinero</span><select aria-label="Asignación para localidad"><option>Ubicación *</option><option>Sin asignar</option></select></div>
+            <div class="mapping-row"><strong>area</strong><span class="small muted">Ej. 76</span><select aria-label="Asignación para área"><option>Tamaño en m² *</option><option>Sin asignar</option></select></div>
+            <div class="mapping-row"><strong>habitaciones</strong><span class="small muted">Ej. 2</span><select aria-label="Asignación para habitaciones"><option>Habitaciones *</option><option>Sin asignar</option></select></div>
+            <div class="mapping-row"><strong>baños</strong><span class="small muted">Ej. 1</span><select aria-label="Asignación para baños"><option>Baños *</option><option>Sin asignar</option></select></div>
+            <div class="mapping-row"><strong>estrato</strong><span class="small muted">Ej. 4</span><select aria-label="Asignación para estrato"><option>Estrato *</option><option>Sin asignar</option></select></div>
+            <div class="mapping-row"><strong>precio</strong><span class="small muted">Ej. 420000000</span><select aria-label="Asignación para precio"><option>Precio en COP *</option><option>Sin asignar</option></select></div>
+          </div><aside class="panel"><div class="panel-title"><h2>Campos requeridos</h2></div><p class="small muted">El pipeline actual necesita los seis atributos para aceptar el archivo.</p><ul class="small" style="padding-left:19px;line-height:1.9"><li><strong>Ubicación:</strong> barrio o localidad; se normaliza a Bogotá</li><li><strong>Tamaño:</strong> mayor que 0 y hasta 50.000 m²</li><li><strong>Habitaciones y baños:</strong> enteros mayores que 0</li><li><strong>Estrato:</strong> entero de 1 a 6</li><li><strong>Precio:</strong> mayor que 0 y hasta 50.000 millones COP</li></ul><div class="banner info">Los nombres de origen admitidos incluyen localidad, área, habitaciones, baños, estrato y precio.</div><label class="check"><input type="checkbox" id="mapping-confirm"> He revisado las asignaciones</label></aside></div>
+          <div class="actions"><button class="button" data-go="3">← Volver a vista previa</button><div class="actions-right"><button class="button" data-go="2">Cancelar</button><button class="button primary" id="to-confirm" disabled data-go="5">Revisar ejecución</button></div></div><p class="screen-index">Pantalla 4 de 10</p>
+        </section>
+
+        <section class="screen" id="screen-5" aria-labelledby="title-5">
+          <div class="eyebrow">Tarea crítica 1 · Paso 4 de 4</div><h1 id="title-5">Confirmar procesamiento</h1><p class="intro">Revisa el resumen. Puedes volver a editar las asignaciones o cancelar antes de ejecutar.</p>
+          <div class="panel"><div class="panel-title"><h2>Resumen de la carga</h2><span class="status neutral">Pendiente de confirmación</span></div><div class="grid grid-2"><div><span class="small muted">Archivo</span><p><strong id="confirm-file">inventario_demo.csv</strong></p></div><div><span class="small muted">Fuente</span><p><strong id="confirm-source">Inventario de ejemplo</strong></p></div><div><span class="small muted">Formato</span><p><strong>CSV</strong></p></div><div><span class="small muted">Campos obligatorios</span><p><strong>4 asignados</strong></p></div></div><div class="banner warning">Al continuar, el sistema iniciaría las validaciones. En este prototipo solo se simula el recorrido: no se ejecuta el pipeline real.</div></div>
+          <div class="actions"><button class="button" data-go="4">← Editar asignaciones</button><div class="actions-right"><button class="button" data-go="1">Cancelar</button><button class="button primary" id="run-demo">Confirmar y simular</button></div></div><p class="screen-index">Pantalla 5 de 10</p>
+        </section>
+
+        <section class="screen" id="screen-6" aria-labelledby="title-6">
+          <div class="eyebrow">Procesamiento · Estado del lote</div><h1 id="title-6">Progreso de validación</h1><p class="intro">Consulta la etapa actual. El estado y los mensajes de actividad se muestran sin depender del color.</p>
+          <div class="panel"><div class="panel-title"><h2 id="run-status">Preparado para iniciar</h2><span class="status neutral" id="run-badge">En espera</span></div><div class="stepper" id="stepper"><div class="step">1. Lectura</div><div class="step">2. Validación</div><div class="step">3. Limpieza</div><div class="step">4. Calidad</div></div><div class="progress-track" role="progressbar" aria-label="Progreso de validación" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar" id="progress-bar"></div></div><p class="small muted" id="progress-caption" aria-live="polite">Aún no se ha iniciado la simulación.</p><div class="panel" style="padding:15px;background:#f8faf8;margin-top:18px"><h3>Actividad del lote</h3><ul class="log" id="run-log"><li><span>Esperando confirmación</span><span class="muted">Pendiente</span></li></ul></div></div>
+          <div class="actions"><button class="button" data-go="5">← Volver</button><div class="actions-right"><button class="button" id="cancel-run">Cancelar simulación</button><button class="button primary" id="to-results" disabled data-go="7">Ver resumen</button></div></div><p class="screen-index">Pantalla 6 de 10</p>
+        </section>
+
+        <section class="screen" id="screen-7" aria-labelledby="title-7">
+          <div class="eyebrow">Lote de demostración · Resultado</div><h1 id="title-7">Resumen del procesamiento</h1><p class="intro">El resultado de esta pantalla es ilustrativo. Los conteos no provienen del pipeline de la aplicación.</p>
+          <div class="banner success"><strong>Simulación finalizada.</strong> Revisa el resumen y abre auditoría para inspeccionar un ejemplo de registro rechazado.</div>
+          <div class="grid grid-4"><div class="metric"><span>Registros leídos</span><strong>345</strong><em>Archivo de ejemplo</em></div><div class="metric"><span>Verificados</span><strong>325</strong><em>94,2% del lote</em></div><div class="metric"><span>Por revisar</span><strong>20</strong><em style="color:var(--orange)">2 tipos de alerta</em></div><div class="metric"><span>Duración simulada</span><strong>12 s</strong><em>Solo demostración</em></div></div>
+          <div class="grid grid-2" style="margin-top:17px"><div class="panel"><div class="panel-title"><h2>Etapas completadas</h2></div><ul class="log"><li><span>1. Lectura del archivo</span><span class="status good">Completado</span></li><li><span>2. Validación de valores</span><span class="status good">Completado</span></li><li><span>3. Limpieza de datos</span><span class="status good">Completado</span></li><li><span>4. Revisión de calidad</span><span class="status warn">20 alertas</span></li></ul></div><div class="panel"><div class="panel-title"><h2>Siguiente acción</h2></div><p class="muted">Consulta los registros con alertas para entender qué dato requiere revisión.</p><button class="button primary" data-go="8">Abrir auditoría de ejemplo</button></div></div>
+          <div class="actions"><button class="button" data-go="6">← Ver progreso</button><div class="actions-right"><button class="button" data-go="2">Nueva carga</button><button class="button primary" data-go="8">Revisar alertas</button></div></div><p class="screen-index">Pantalla 7 de 10</p>
+        </section>
+
+        <section class="screen" id="screen-8" aria-labelledby="title-8">
+          <div class="eyebrow">Tarea crítica 2 · Auditoría</div><h1 id="title-8">Registros por revisar</h1><p class="intro">Filtra por etapa y abre un registro para ver la regla, el valor recibido y la sugerencia.</p>
+          <div class="panel"><div class="filter-row"><div class="field"><label for="gate-filter">Etapa de validación</label><select id="gate-filter"><option value="all">Todas las etapas</option><option value="format">Lectura del archivo</option><option value="values">Validación de valores</option><option value="location">Verificación de ubicación</option><option value="quality">Revisión de calidad</option></select></div><div class="field"><label for="rule-filter">Tipo de hallazgo</label><select id="rule-filter"><option value="all">Todos los hallazgos</option><option value="area">Área inválida</option><option value="location">Localidad no reconocida</option><option value="price">Precio faltante</option></select></div><button class="button" id="clear-filters">Limpiar filtros</button></div><div class="table-wrap"><table id="audit-table"><thead><tr><th>Registro</th><th>Etapa</th><th>Hallazgo</th><th>Valor recibido</th><th>Acción</th></tr></thead><tbody><tr data-gate="values" data-rule="area"><td>Fila 018</td><td>Validación de valores</td><td>Área inválida</td><td>-12 m²</td><td><button class="link-button" data-go="9">Ver diagnóstico</button></td></tr><tr data-gate="location" data-rule="location"><td>Fila 076</td><td>Verificación de ubicación</td><td>Localidad no reconocida</td><td>“Centro Norte”</td><td><button class="link-button" data-go="9">Ver diagnóstico</button></td></tr><tr data-gate="format" data-rule="price"><td>Fila 113</td><td>Lectura del archivo</td><td>Precio faltante</td><td>Vacío</td><td><button class="link-button" data-go="9">Ver diagnóstico</button></td></tr><tr data-gate="quality" data-rule="area"><td>Fila 241</td><td>Revisión de calidad</td><td>Área fuera de rango</td><td>1.250 m²</td><td><button class="link-button" data-go="9">Ver diagnóstico</button></td></tr></tbody></table></div><p id="filter-count" class="small muted" aria-live="polite" style="margin-bottom:0">4 registros de ejemplo</p></div>
+          <div class="actions"><button class="button" data-go="7">← Volver al resumen</button><div class="actions-right"><button class="button" id="export-audit">Exportar lista</button><button class="button primary" data-go="9">Abrir diagnóstico</button></div></div><p class="screen-index">Pantalla 8 de 10</p>
+        </section>
+
+        <section class="screen" id="screen-9" aria-labelledby="title-9">
+          <div class="eyebrow">Tarea crítica 2 · Diagnóstico</div><h1 id="title-9">Detalle del registro</h1><p class="intro">El problema se explica con el dato observado y una posible acción de revisión.</p>
+          <div class="panel"><div class="panel-title"><div><h2>Fila 018 · Área inválida</h2><span class="small muted">Etapa: Validación de valores</span></div><span class="status bad">Requiere revisión</span></div><div class="diagnostic"><h3>¿Qué encontramos?</h3><p>El área reportada es <strong>-12 m²</strong>. El sistema espera un valor numérico mayor que cero.</p><dl><dt>Regla evaluada</dt><dd>El área debe ser positiva</dd><dt>Valor recibido</dt><dd>-12 m²</dd><dt>Qué puedes hacer</dt><dd>Verifica la fila en el archivo original y corrige el área si el valor correcto está disponible.</dd></dl></div><div class="banner info">No se modificó el registro. La decisión de corregir o excluir el dato pertenece al usuario.</div><div class="actions"><button class="button" data-go="8">← Volver a la lista</button><div class="actions-right"><button class="button" id="mark-reviewed">Marcar como revisado</button><button class="button primary" data-go="8">Siguiente registro</button></div></div></div><p class="screen-index">Pantalla 9 de 10</p>
+        </section>
+
+        <section class="screen" id="screen-10" aria-labelledby="title-10">
+          <div class="eyebrow">Inventario maestro · Exportación</div><h1 id="title-10">Explorar y exportar datos</h1><p class="intro">Reduce la lista con filtros y selecciona un formato para preparar una exportación de muestra.</p>
+          <div class="panel"><div class="filter-row"><div class="field"><label for="locality-filter">Localidad</label><select id="locality-filter"><option>Todas las localidades</option><option>Chapinero</option><option>Suba</option><option>Usaquén</option><option>Kennedy</option></select></div><div class="field"><label for="stratum-filter">Estrato</label><select id="stratum-filter"><option>Todos los estratos</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div><div class="field"><label for="export-format">Formato de salida</label><select id="export-format"><option>CSV</option><option>Excel (.xlsx)</option></select></div></div><div class="table-wrap"><table><thead><tr><th>Localidad</th><th>Estrato</th><th>Área (m²)</th><th>Habitaciones</th><th>Precio (COP)</th><th>Estado</th></tr></thead><tbody><tr><td>Chapinero</td><td>4</td><td>76</td><td>2</td><td>420.000.000</td><td><span class="status good">Verificado</span></td></tr><tr><td>Suba</td><td>3</td><td>61</td><td>2</td><td>295.000.000</td><td><span class="status good">Verificado</span></td></tr><tr><td>Usaquén</td><td>5</td><td>104</td><td>3</td><td>690.000.000</td><td><span class="status good">Verificado</span></td></tr><tr><td>Kennedy</td><td>2</td><td>48</td><td>2</td><td>185.000.000</td><td><span class="status good">Verificado</span></td></tr></tbody></table></div><div class="actions"><span class="small muted">4 registros mostrados · datos ficticios</span><div class="actions-right"><button class="button" id="reset-explorer">Restablecer filtros</button><button class="button primary" id="export-data">Preparar exportación</button></div></div></div><div class="actions"><button class="button" data-go="1">← Volver al resumen</button><span class="small muted">Pantalla 10 de 10</span></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    const titles = {1:"Resumen",2:"Nueva carga",3:"Vista previa",4:"Asignar columnas",5:"Confirmación",6:"Progreso",7:"Resultados",8:"Auditoría",9:"Diagnóstico",10:"Inventario"};
+    let currentScreen = 1;
+    let selectedFileName = "inventario_demo.csv";
+    let runTimer = null;
+    const nav = document.getElementById("navigation");
+    const toast = document.getElementById("toast");
+
+    function showScreen(screenNumber) {
+      const target = Number(screenNumber);
+      if (!titles[target]) return;
+      currentScreen = target;
+      document.querySelectorAll(".screen").forEach((screen) => screen.classList.toggle("active", screen.id === `screen-${target}`));
+      document.querySelectorAll("#navigation button").forEach((button) => {
+        if (Number(button.dataset.screen) === target) button.setAttribute("aria-current", "page");
+        else button.removeAttribute("aria-current");
+      });
+      document.getElementById("crumb-title").textContent = titles[target];
+      window.scrollTo(0, 0);
+      document.getElementById(`title-${target}`).focus({preventScroll:true});
+    }
+
+    function notify(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(notify.timeout);
+      notify.timeout = window.setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    document.addEventListener("click", (event) => {
+      const target = event.target.closest("[data-go]");
+      if (target) showScreen(target.dataset.go);
+      const navButton = event.target.closest("[data-screen]");
+      if (navButton) showScreen(navButton.dataset.screen);
+    });
+
+    const fileInput = document.getElementById("file-input");
+    const dropzone = document.getElementById("dropzone");
+    document.getElementById("choose-file").addEventListener("click", () => fileInput.click());
+    dropzone.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInput.click(); } });
+    fileInput.addEventListener("change", () => validateFile(fileInput.files[0]));
+    ["dragenter","dragover"].forEach((name) => dropzone.addEventListener(name, (event) => { event.preventDefault(); dropzone.classList.add("drag"); }));
+    ["dragleave","drop"].forEach((name) => dropzone.addEventListener(name, (event) => { event.preventDefault(); dropzone.classList.remove("drag"); }));
+    dropzone.addEventListener("drop", (event) => validateFile(event.dataTransfer.files[0]));
+
+    function validateFile(file) {
+      const feedback = document.getElementById("file-feedback");
+      const continueButton = document.getElementById("to-preview");
+      if (!file) return;
+      const allowed = /\.(csv|xlsx?|json)$/i.test(file.name);
+      if (!allowed) {
+        feedback.textContent = "Formato no compatible. Selecciona un archivo CSV, Excel o JSON.";
+        feedback.style.color = "var(--red)";
+        continueButton.disabled = true;
+        return;
+      }
+      if (file.size === 0) {
+        feedback.textContent = "El archivo está vacío. Selecciona otro archivo.";
+        feedback.style.color = "var(--red)";
+        continueButton.disabled = true;
+        return;
+      }
+      selectedFileName = file.name;
+      feedback.textContent = `${file.name} · ${(file.size / 1024).toFixed(1)} KB · extensión admitida · archivo no vacío`;
+      feedback.style.color = "var(--green-dark)";
+      continueButton.disabled = false;
+      document.getElementById("preview-file").textContent = file.name;
+      document.getElementById("confirm-file").textContent = file.name;
+    }
+
+    document.getElementById("to-preview").addEventListener("click", () => {
+      document.getElementById("confirm-source").textContent = document.getElementById("source-name").value.trim() || "Fuente sin nombre";
+      showScreen(3);
+    });
+    document.getElementById("mapping-confirm").addEventListener("change", (event) => { document.getElementById("to-confirm").disabled = !event.target.checked; });
+
+    document.getElementById("run-demo").addEventListener("click", () => {
+      showScreen(6);
+      const steps = ["Lectura del archivo", "Validación de valores", "Limpieza de datos", "Revisión de calidad"];
+      const log = document.getElementById("run-log");
+      const bar = document.getElementById("progress-bar");
+      const progress = document.querySelector("[role=progressbar]");
+      const caption = document.getElementById("progress-caption");
+      const badge = document.getElementById("run-badge");
+      const status = document.getElementById("run-status");
+      let stepIndex = 0;
+      document.getElementById("to-results").disabled = true;
+      document.getElementById("stepper").querySelectorAll(".step").forEach((step) => step.className = "step");
+      log.innerHTML = "";
+      badge.className = "status warn";
+      badge.textContent = "En curso";
+      status.textContent = "Simulación en curso";
+      const advance = () => {
+        document.getElementById("stepper").querySelectorAll(".step").forEach((step, index) => step.className = index < stepIndex ? "step done" : index === stepIndex ? "step current" : "step");
+        const percent = Math.round((stepIndex / steps.length) * 100);
+        bar.style.width = `${percent}%`;
+        progress.setAttribute("aria-valuenow", String(percent));
+        caption.textContent = `${percent}% · ${stepIndex < steps.length ? steps[stepIndex] : "Simulación completada"}`;
+        if (stepIndex > 0) log.insertAdjacentHTML("afterbegin", `<li><span>${steps[stepIndex - 1]}</span><span class="status good">Completado</span></li>`);
+        if (stepIndex >= steps.length) {
+          badge.className = "status good";
+          badge.textContent = "Completado";
+          status.textContent = "Simulación terminada";
+          document.getElementById("to-results").disabled = false;
+          runTimer = null;
+          notify("La simulación terminó. Los conteos mostrados son ilustrativos.");
+          return;
+        }
+        stepIndex += 1;
+        runTimer = window.setTimeout(advance, 700);
+      };
+      advance();
+    });
+    document.getElementById("cancel-run").addEventListener("click", () => {
+      if (runTimer) window.clearTimeout(runTimer);
+      runTimer = null;
+      document.getElementById("run-status").textContent = "Simulación cancelada";
+      document.getElementById("run-badge").textContent = "Cancelado";
+      document.getElementById("run-badge").className = "status neutral";
+      document.getElementById("progress-caption").textContent = "Puedes volver y revisar la configuración antes de iniciar de nuevo.";
+      document.getElementById("to-results").disabled = true;
+      notify("Simulación cancelada. No se procesaron datos.");
+    });
+
+    function applyAuditFilters() {
+      const gate = document.getElementById("gate-filter").value;
+      const rule = document.getElementById("rule-filter").value;
+      let visible = 0;
+      document.querySelectorAll("#audit-table tbody tr").forEach((row) => {
+        const show = (gate === "all" || row.dataset.gate === gate) && (rule === "all" || row.dataset.rule === rule);
+        row.hidden = !show;
+        if (show) visible += 1;
+      });
+      document.getElementById("filter-count").textContent = `${visible} ${visible === 1 ? "registro" : "registros"} de ejemplo`;
+    }
+    document.getElementById("gate-filter").addEventListener("change", applyAuditFilters);
+    document.getElementById("rule-filter").addEventListener("change", applyAuditFilters);
+    document.getElementById("clear-filters").addEventListener("click", () => { document.getElementById("gate-filter").value = "all"; document.getElementById("rule-filter").value = "all"; applyAuditFilters(); });
+    document.getElementById("mark-reviewed").addEventListener("click", (event) => { event.currentTarget.textContent = "Revisado"; event.currentTarget.disabled = true; notify("Registro marcado como revisado en esta demostración."); });
+    document.getElementById("export-audit").addEventListener("click", () => notify("En el producto, esta acción exportará la lista filtrada."));
+    document.getElementById("reset-explorer").addEventListener("click", () => { document.getElementById("locality-filter").selectedIndex = 0; document.getElementById("stratum-filter").selectedIndex = 0; document.getElementById("export-format").selectedIndex = 0; notify("Filtros restablecidos."); });
+    document.getElementById("export-data").addEventListener("click", () => notify(`Exportación de ejemplo preparada en ${document.getElementById("export-format").value}. No se generó ningún archivo real.`));
+  </script>
+</body>
+</html>

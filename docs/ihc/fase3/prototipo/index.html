@@ -1,0 +1,2686 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10523A">
+  <title>InmoInsight Bogotá | Prototipo de Alta Fidelidad — Fase 3 IHC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --brand-primary: #10523A;
+      --brand-primary-light: #186B4D;
+      --brand-primary-dark: #0A3727;
+      --brand-soft: #EBF5F0;
+      --brand-accent: #D6A64A;
+      --brand-accent-light: #FFF8E8;
+      --brand-accent-dark: #8C661D;
+
+      --ink-primary: #14201A;
+      --ink-secondary: #4A5B53;
+      --ink-tertiary: #7D8F86;
+      --surface-canvas: #F4F7F5;
+      --surface-card: #FFFFFF;
+      --surface-elevated: #FFFFFF;
+      --surface-subtle: #F9FBFA;
+      --border-subtle: #E1E8E4;
+      --border-strong: #BDCBC3;
+
+      --semantic-success: #1B7A54;
+      --semantic-success-soft: #E8F7F0;
+      --semantic-warning: #B76214;
+      --semantic-warning-soft: #FFF2E6;
+      --semantic-danger: #C23636;
+      --semantic-danger-soft: #FDEEEE;
+      --semantic-info: #1D6B9E;
+      --semantic-info-soft: #EAF4FB;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(16, 82, 58, 0.05), 0 1px 2px rgba(16, 82, 58, 0.03);
+      --shadow-md: 0 4px 14px rgba(16, 82, 58, 0.07), 0 2px 6px rgba(16, 82, 58, 0.04);
+      --shadow-lg: 0 12px 28px rgba(16, 82, 58, 0.10), 0 4px 10px rgba(16, 82, 58, 0.05);
+
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      font-size: 15px;
+      color: var(--ink-primary);
+      background: var(--surface-canvas);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select, textarea { font-family: inherit; font-size: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--brand-accent); outline-offset: 2px; }
+
+    /* LAYOUT PRINCIPAL */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR NAVEGACIÓN */
+    .sidebar {
+      background: var(--brand-primary-dark);
+      color: #E8F1EC;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .sidebar-header {
+      padding: 24px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-symbol {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--brand-accent), #B88528);
+      border-radius: var(--radius-md);
+      display: grid;
+      place-items: center;
+      color: var(--brand-primary-dark);
+      font-weight: 800;
+      font-size: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #FFFFFF;
+    }
+
+    .brand-text span {
+      display: block;
+      font-size: 11px;
+      color: #A3C5B5;
+      font-weight: 500;
+    }
+
+    .nav-section {
+      padding: 16px 12px 6px;
+    }
+
+    .nav-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #7FA895;
+      font-weight: 700;
+      padding: 0 10px;
+      margin-bottom: 6px;
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .nav-item button {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      color: #D3E4DB;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-item button:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFFFFF;
+    }
+
+    .nav-item button.active {
+      background: rgba(214, 166, 74, 0.18);
+      color: #FFFFFF;
+      font-weight: 700;
+      position: relative;
+    }
+
+    .nav-item button.active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: var(--brand-accent);
+    }
+
+    .nav-item .icon {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+      opacity: 0.85;
+    }
+
+    .nav-item .badge-count {
+      margin-left: auto;
+      background: rgba(255, 255, 255, 0.15);
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px 16px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 12px;
+      color: #A3C5B5;
+    }
+
+    .phase-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-full);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #E2EDE7;
+      margin-bottom: 8px;
+    }
+
+    .phase-pill::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4ADE80;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      height: 68px;
+      background: var(--surface-card);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+      color: var(--ink-secondary);
+    }
+
+    .breadcrumb .sep {
+      color: var(--ink-tertiary);
+    }
+
+    .breadcrumb .current {
+      color: var(--ink-primary);
+      font-weight: 700;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .system-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--brand-soft);
+      border: 1px solid #C9E2D5;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 12.5px;
+      color: var(--brand-primary);
+      font-weight: 600;
+    }
+
+    .user-profile-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-left: 12px;
+      border-left: 1px solid var(--border-subtle);
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-full);
+      background: #E0ECE6;
+      color: var(--brand-primary);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 13px;
+      border: 1px solid #BDD5C9;
+    }
+
+    /* CONTENEDOR PRINCIPAL DE PANTALLAS */
+    .main-viewport {
+      min-width: 0;
+      background: var(--surface-canvas);
+    }
+
+    .content-area {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 32px 32px 64px;
+    }
+
+    /* VISTAS / PANTALLAS (SWITCH) */
+    .screen-view {
+      display: none;
+      animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .screen-view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ENCABEZADOS DE PANTALLA */
+    .screen-header {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .screen-header-main h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .screen-header-main p {
+      margin: 6px 0 0;
+      color: var(--ink-secondary);
+      font-size: 14.5px;
+      max-width: 720px;
+    }
+
+    .screen-eyebrow {
+      display: inline-block;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--brand-primary);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    /* TARJETAS Y PANELES */
+    .card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .card-header h3 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    /* GRILLAS */
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+
+    /* BOTONES */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 14px;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+    }
+
+    .btn-primary {
+      background: var(--brand-primary);
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(16, 82, 58, 0.25);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--brand-primary-light);
+      box-shadow: 0 4px 10px rgba(16, 82, 58, 0.35);
+    }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      color: var(--ink-primary);
+      border-color: var(--border-strong);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--surface-canvas);
+      border-color: var(--ink-secondary);
+    }
+
+    .btn-outline-primary {
+      background: transparent;
+      color: var(--brand-primary);
+      border-color: var(--brand-primary);
+    }
+
+    .btn-outline-primary:hover:not(:disabled) {
+      background: var(--brand-soft);
+    }
+
+    .btn-danger {
+      background: var(--semantic-danger);
+      color: #FFFFFF;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #A92626;
+    }
+
+    .btn-text {
+      background: transparent;
+      color: var(--brand-primary);
+      padding: 6px 10px;
+    }
+
+    .btn-text:hover {
+      background: var(--brand-soft);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+
+    /* BARRAS DE PROGRESO Y STEPPERS */
+    .stepper-nav {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .stepper-step {
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+
+    .stepper-step.completed {
+      border-color: #B2D8C5;
+      background: #F4FAF7;
+    }
+
+    .stepper-step.active {
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 2px rgba(16, 82, 58, 0.15);
+      background: #FFFFFF;
+    }
+
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #E3EBE6;
+      color: var(--ink-secondary);
+      font-weight: 700;
+      font-size: 13px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .stepper-step.completed .step-number {
+      background: var(--semantic-success);
+      color: #FFFFFF;
+    }
+
+    .stepper-step.active .step-number {
+      background: var(--brand-primary);
+      color: #FFFFFF;
+    }
+
+    .step-info span {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--ink-tertiary);
+    }
+
+    .step-info strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    /* BADGES Y ESTADOS */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .badge-success { background: var(--semantic-success-soft); color: var(--semantic-success); }
+    .badge-warning { background: var(--semantic-warning-soft); color: var(--semantic-warning); }
+    .badge-danger { background: var(--semantic-danger-soft); color: var(--semantic-danger); }
+    .badge-info { background: var(--semantic-info-soft); color: var(--semantic-info); }
+    .badge-neutral { background: #E8EEEB; color: var(--ink-secondary); }
+
+    /* TABLAS ESTILIZADAS */
+    .table-container {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      overflow-x: auto;
+      background: #FFFFFF;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+
+    table.data-table th {
+      background: #F4F8F6;
+      padding: 12px 16px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+    }
+
+    table.data-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #EDF3F0;
+      color: var(--ink-secondary);
+      vertical-align: middle;
+    }
+
+    table.data-table tbody tr:hover {
+      background: #F9FCFB;
+    }
+
+    table.data-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    /* ALERTAS / BANNERS */
+    .alert-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 20px;
+      border-left: 4px solid;
+    }
+
+    .alert-banner.info {
+      background: var(--semantic-info-soft);
+      border-color: var(--semantic-info);
+      color: #154D72;
+    }
+
+    .alert-banner.success {
+      background: var(--semantic-success-soft);
+      border-color: var(--semantic-success);
+      color: #0F5236;
+    }
+
+    .alert-banner.warning {
+      background: var(--semantic-warning-soft);
+      border-color: var(--semantic-warning);
+      color: #8C4707;
+    }
+
+    .alert-banner.danger {
+      background: var(--semantic-danger-soft);
+      border-color: var(--semantic-danger);
+      color: #8E2020;
+    }
+
+    .alert-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .alert-content strong { display: block; font-size: 14px; margin-bottom: 2px; }
+    .alert-content p { margin: 0; font-size: 13.5px; line-height: 1.45; }
+
+    /* FORMULARIOS Y CONTROLES */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      margin-bottom: 6px;
+    }
+
+    .form-label .required {
+      color: var(--semantic-danger);
+      margin-left: 3px;
+    }
+
+    .form-control {
+      width: 100%;
+      height: 42px;
+      padding: 8px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      background: #FFFFFF;
+      color: var(--ink-primary);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px rgba(16, 82, 58, 0.15);
+    }
+
+    .form-help {
+      font-size: 12px;
+      color: var(--ink-tertiary);
+      margin-top: 5px;
+    }
+
+    /* DROPZONE DE CARGA */
+    .dropzone-box {
+      border: 2px dashed #9EBEAD;
+      border-radius: var(--radius-md);
+      background: #F8FAF9;
+      padding: 36px 24px;
+      text-align: center;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .dropzone-box:hover, .dropzone-box.dragover {
+      border-color: var(--brand-primary);
+      background: var(--brand-soft);
+    }
+
+    .dropzone-icon-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #E1EFE7;
+      color: var(--brand-primary);
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      margin: 0 auto 14px;
+    }
+
+    /* ARCHIVO SELECCIONADO ITEM */
+    .file-preview-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: #FFFFFF;
+      border: 1px solid #B8DAC8;
+      border-radius: var(--radius-sm);
+      margin-top: 18px;
+    }
+
+    .file-info-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .file-type-badge {
+      padding: 6px 10px;
+      background: var(--brand-soft);
+      color: var(--brand-primary);
+      border-radius: var(--radius-sm);
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    /* MAPEADOR DE COLUMNAS (MEJORA IMPLEMENTADA EN FASE 3) */
+    .mapping-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .mapping-item {
+      display: grid;
+      grid-template-columns: 240px 1fr 140px;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 18px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: #FFFFFF;
+    }
+
+    .mapping-item.valid {
+      border-left: 4px solid var(--semantic-success);
+    }
+
+    .mapping-item.invalid {
+      border-left: 4px solid var(--semantic-danger);
+      background: #FFFDFC;
+    }
+
+    .target-col strong {
+      display: block;
+      font-size: 13.5px;
+      color: var(--ink-primary);
+    }
+
+    .target-col span {
+      font-size: 11.5px;
+      color: var(--ink-tertiary);
+    }
+
+    /* PROGRESS TRACKER DE EJECUCIÓN */
+    .pipeline-run-box {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .meter-bar-container {
+      height: 12px;
+      background: #E5EDE8;
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin: 16px 0 24px;
+    }
+
+    .meter-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--brand-primary), #2CB07A);
+      width: 0%;
+      border-radius: var(--radius-full);
+      transition: width 0.35s ease-in-out;
+    }
+
+    .pipeline-stages-list {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .stage-card {
+      padding: 16px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: #F9FBFA;
+      text-align: center;
+    }
+
+    .stage-card.running {
+      border-color: var(--brand-accent);
+      background: #FFFDF7;
+      box-shadow: 0 0 0 2px rgba(214, 166, 74, 0.2);
+    }
+
+    .stage-card.done {
+      border-color: #B5DBC7;
+      background: #F3FAF6;
+    }
+
+    .stage-card .stage-name {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--ink-primary);
+      margin-top: 6px;
+      display: block;
+    }
+
+    .stage-card .stage-status {
+      font-size: 11.5px;
+      color: var(--ink-tertiary);
+      margin-top: 4px;
+      display: block;
+    }
+
+    .terminal-console {
+      background: #121C17;
+      color: #A7C5B5;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      padding: 18px;
+      border-radius: var(--radius-sm);
+      height: 180px;
+      overflow-y: auto;
+      border: 1px solid #23372E;
+    }
+
+    .terminal-console p {
+      margin: 4px 0;
+      line-height: 1.4;
+    }
+
+    .terminal-console .log-success { color: #58D68D; }
+    .terminal-console .log-warn { color: #F5B041; }
+    .terminal-console .log-time { color: #5B7B6C; margin-right: 8px; }
+
+    /* FILTROS FACETADOS CON CHIPS (MEJORA DE FASE 3) */
+    .filter-bar-facet {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+
+    .filter-inputs-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr auto;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .active-chips-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border-subtle);
+    }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--brand-soft);
+      border: 1px solid #BFD9CC;
+      color: var(--brand-primary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+    }
+
+    .filter-chip button {
+      background: none;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+      color: var(--brand-primary);
+      font-weight: 800;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    /* MODAL FLOTANTE */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(14, 28, 22, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      place-items: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: grid;
+    }
+
+    .modal-window {
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      width: min(600px, 100%);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+      animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 { margin: 0; font-size: 18px; font-weight: 700; }
+    .modal-body { padding: 24px; }
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: var(--surface-subtle);
+    }
+
+    /* TOAST DE RETROALIMENTACIÓN */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast-message {
+      background: #142E23;
+      color: #FFFFFF;
+      padding: 14px 20px;
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13.5px;
+      font-weight: 500;
+      border-left: 4px solid var(--brand-accent);
+      min-width: 320px;
+      animation: toastIn 0.25s ease-out;
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* FOOTER INFORMATIVO */
+    .prototype-bar-note {
+      margin-top: 40px;
+      padding: 14px 20px;
+      background: #FFF9ED;
+      border: 1px solid #F0DEB4;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      color: #7A5310;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* RESPONSIVIDAD */
+    @media (max-width: 1024px) {
+      .app-layout { grid-template-columns: 220px 1fr; }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .stepper-nav { grid-template-columns: repeat(2, 1fr); }
+      .pipeline-stages-list { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .app-layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .topbar { padding: 0 16px; }
+      .content-area { padding: 20px 16px 40px; }
+      .mapping-item { grid-template-columns: 1fr; gap: 8px; }
+      .filter-inputs-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    
+    <!-- BARRA LATERAL (SIDEBAR DE NAVEGACIÓN) -->
+    <aside class="sidebar" aria-label="Navegación del Sistema">
+      <div class="sidebar-header">
+        <div class="brand-symbol" aria-hidden="true">II</div>
+        <div class="brand-text">
+          <h1>InmoInsight</h1>
+          <span>Curaduría Bogotá · IHC F3</span>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">General</div>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <button type="button" class="nav-link active" data-target="pantalla-dashboard">
+              <span class="icon" aria-hidden="true">📊</span>
+              <span>Dashboard General</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Recorrido Crítico 1</div>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-carga">
+              <span class="icon" aria-hidden="true">📁</span>
+              <span>1. Ingesta de Lote</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-previa">
+              <span class="icon" aria-hidden="true">👁️</span>
+              <span>2. Muestra y Estructura</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-mapeo">
+              <span class="icon" aria-hidden="true">🔄</span>
+              <span>3. Mapeo de Columnas</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-confirmacion">
+              <span class="icon" aria-hidden="true">⚙️</span>
+              <span>4. Parámetros de Ingesta</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-progreso">
+              <span class="icon" aria-hidden="true">⚡</span>
+              <span>5. Monitor de Pipeline</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-resultado">
+              <span class="icon" aria-hidden="true">✅</span>
+              <span>6. Cierre y Métricas</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Recorrido Crítico 2</div>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-auditoria">
+              <span class="icon" aria-hidden="true">🔍</span>
+              <span>Bandeja de Auditoría</span>
+              <span class="badge-count" id="nav-audit-count">12</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-diagnostico">
+              <span class="icon" aria-hidden="true">📋</span>
+              <span>Diagnóstico de Fila</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-recuperacion">
+              <span class="icon" aria-hidden="true">🛡️</span>
+              <span>Acción de Recuperación</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Consultas & Salida</div>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-inventario">
+              <span class="icon" aria-hidden="true">🏢</span>
+              <span>Inventario Maestro</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-ficha-inmueble">
+              <span class="icon" aria-hidden="true">📑</span>
+              <span>Ficha Técnica Detalle</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-target="pantalla-exportacion">
+              <span class="icon" aria-hidden="true">📥</span>
+              <span>Centro de Exportación</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="phase-pill">Fase 3: Alta Fidelidad</div>
+        <div>Equipo: Adán Sánchez & Sara Crespo</div>
+        <div style="font-size: 11px; margin-top: 4px; opacity: 0.8;">WCAG 2.1 AA · ISO 9241-210</div>
+      </div>
+    </aside>
+
+    <!-- ÁREA DE CONTENIDO -->
+    <div class="main-viewport">
+      
+      <!-- TOPBAR SUPERIOR -->
+      <header class="topbar">
+        <nav class="breadcrumb" aria-label="Ruta de navegación">
+          <span>InmoInsight</span>
+          <span class="sep" aria-hidden="true">/</span>
+          <span id="crumb-module">Módulo Principal</span>
+          <span class="sep" aria-hidden="true">/</span>
+          <span class="current" id="crumb-screen">Dashboard General</span>
+        </nav>
+
+        <div class="topbar-actions">
+          <div class="system-status-indicator">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#1B7A54;" aria-hidden="true"></span>
+            <span>Pipeline: Listo</span>
+          </div>
+          <div class="user-profile-badge">
+            <div class="avatar" title="Usuario activo">OP</div>
+            <div style="font-size: 13px; line-height: 1.2;">
+              <strong style="display:block;">Adán Sánchez</strong>
+              <span style="font-size: 11.5px; color: var(--ink-secondary);">Analista Curaduría</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- VISTAS / PANTALLAS (13 PANTALLAS SIGNIFICATIVAS DE ALTA FIDELIDAD) -->
+      <main class="content-area">
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 1: DASHBOARD GENERAL -->
+        <!-- ========================================== -->
+        <section id="pantalla-dashboard" class="screen-view active" aria-labelledby="title-p1">
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Vista Panorámica</span>
+              <h2 id="title-p1">Centro de Control de Curaduría Inmobiliaria</h2>
+              <p>Supervise la salud de los datos residenciales en Bogotá, el rendimiento de las cuatro compuertas del pipeline y acceda a los flujos críticos de ingesta y auditoría.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-secondary" onclick="navegarA('pantalla-auditoria')">Revisar Auditoría</button>
+              <button class="btn btn-primary" onclick="navegarA('pantalla-carga')">Cargar Nuevo Lote</button>
+            </div>
+          </div>
+
+          <!-- Métricas Resumen -->
+          <div class="grid-4" style="margin-bottom: 24px;">
+            <div class="card" style="padding: 18px;">
+              <span style="font-size: 13px; color: var(--ink-secondary); font-weight: 600;">Inventario Maestro Certificado</span>
+              <div style="font-size: 30px; font-weight: 800; color: var(--brand-primary); margin: 6px 0 2px;">14,820</div>
+              <span class="badge badge-success" style="font-size: 11px;">✓ 98.4% Confiabilidad</span>
+            </div>
+            <div class="card" style="padding: 18px;">
+              <span style="font-size: 13px; color: var(--ink-secondary); font-weight: 600;">Lotes Ingeridos (Mes Actual)</span>
+              <div style="font-size: 30px; font-weight: 800; color: var(--ink-primary); margin: 6px 0 2px;">48</div>
+              <span style="font-size: 12px; color: var(--ink-tertiary);">+12 vs. mes anterior</span>
+            </div>
+            <div class="card" style="padding: 18px;">
+              <span style="font-size: 13px; color: var(--ink-secondary); font-weight: 600;">Registros en Cuarentena</span>
+              <div style="font-size: 30px; font-weight: 800; color: var(--semantic-warning); margin: 6px 0 2px;">124</div>
+              <span class="badge badge-warning" style="font-size: 11px;">⚠ 12 Requieren revisión</span>
+            </div>
+            <div class="card" style="padding: 18px;">
+              <span style="font-size: 13px; color: var(--ink-secondary); font-weight: 600;">Factor Ajuste Promedio</span>
+              <div style="font-size: 30px; font-weight: 800; color: var(--ink-primary); margin: 6px 0 2px;">1.042</div>
+              <span style="font-size: 12px; color: var(--ink-tertiary);">IPC Bogotá 2026</span>
+            </div>
+          </div>
+
+          <!-- Acciones Rápidas de los 2 Recorridos Críticos -->
+          <div class="grid-2">
+            <div class="card" style="border-top: 4px solid var(--brand-primary);">
+              <div class="card-header">
+                <div>
+                  <span class="badge badge-info" style="margin-bottom: 6px;">Recorrido Crítico 1</span>
+                  <h3>Ingesta y Validación de Nuevo Lote</h3>
+                </div>
+              </div>
+              <p style="font-size: 14px; color: var(--ink-secondary); margin-bottom: 18px;">Procese archivos CSV, Excel o JSON procedentes de portales inmobiliarios. Asigne las 6 columnas mandatorias, aplique el factor de normalización y ejecute la validación.</p>
+              <button class="btn btn-primary" onclick="navegarA('pantalla-carga')">Comenzar Flujo de Ingesta →</button>
+            </div>
+
+            <div class="card" style="border-top: 4px solid var(--semantic-warning);">
+              <div class="card-header">
+                <div>
+                  <span class="badge badge-warning" style="margin-bottom: 6px;">Recorrido Crítico 2</span>
+                  <h3>Auditoría y Gestión de Discrepancias</h3>
+                </div>
+              </div>
+              <p style="font-size: 14px; color: var(--ink-secondary); margin-bottom: 18px;">Diagnostique registros rechazados por compuertas G1 a G4. Analice causas (precio/m² atípico, valores nulos, estrato inválido) y active acciones seguras de recuperación.</p>
+              <button class="btn btn-secondary" onclick="navegarA('pantalla-auditoria')">Explorar Bandeja de Incidentes →</button>
+            </div>
+          </div>
+
+          <!-- Estado de las 4 Compuertas del Pipeline -->
+          <div class="card" style="margin-top: 10px;">
+            <div class="card-header">
+              <h3>Salud Operativa del Pipeline de Curaduría (Bogotá)</h3>
+              <span class="badge badge-neutral">Actualizado hace 15 min</span>
+            </div>
+            <div class="grid-4">
+              <div style="padding: 12px; background: #FAFDFB; border: 1px solid #DDF0E6; border-radius: 8px;">
+                <strong style="display:block; font-size:13.5px; color:var(--brand-primary);">G1. Lectura de Esquema</strong>
+                <span style="font-size:12px; color:var(--ink-secondary);">Admite CSV, JSON, XLSX</span>
+                <div style="margin-top: 8px; font-weight:700; color:var(--semantic-success); font-size:13px;">✓ 100% Operativo</div>
+              </div>
+              <div style="padding: 12px; background: #FAFDFB; border: 1px solid #DDF0E6; border-radius: 8px;">
+                <strong style="display:block; font-size:13.5px; color:var(--brand-primary);">G2. Validación de Tipos</strong>
+                <span style="font-size:12px; color:var(--ink-secondary);">6 campos mandatorios</span>
+                <div style="margin-top: 8px; font-weight:700; color:var(--semantic-success); font-size:13px;">✓ 99.2% Efectividad</div>
+              </div>
+              <div style="padding: 12px; background: #FAFDFB; border: 1px solid #DDF0E6; border-radius: 8px;">
+                <strong style="display:block; font-size:13.5px; color:var(--brand-primary);">G3. Limpieza y Rangos</strong>
+                <span style="font-size:12px; color:var(--ink-secondary);">Filtros Bogotá (Estratos 1-6)</span>
+                <div style="margin-top: 8px; font-weight:700; color:var(--semantic-success); font-size:13px;">✓ 96.8% Aprobación</div>
+              </div>
+              <div style="padding: 12px; background: #FAFDFB; border: 1px solid #DDF0E6; border-radius: 8px;">
+                <strong style="display:block; font-size:13.5px; color:var(--brand-primary);">G4. Calidad y Certificación</strong>
+                <span style="font-size:12px; color:var(--ink-secondary);">Outliers IQR y Duplicados</span>
+                <div style="margin-top: 8px; font-weight:700; color:var(--semantic-warning); font-size:13px;">⚠ 3.2% Cuarentena</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 2: SELECCIÓN Y CARGA DE ARCHIVOS (RC-1: Paso 1) -->
+        <!-- ========================================== -->
+        <section id="pantalla-carga" class="screen-view" aria-labelledby="title-p2">
+          <!-- Stepper de Navegación del Flujo 1 -->
+          <nav class="stepper-nav" aria-label="Progreso del asistente de carga">
+            <div class="stepper-step active">
+              <div class="step-number">1</div>
+              <div class="step-info"><span>Paso 1</span><strong>Seleccionar Archivo</strong></div>
+            </div>
+            <div class="stepper-step">
+              <div class="step-number">2</div>
+              <div class="step-info"><span>Paso 2</span><strong>Estructura & Columnas</strong></div>
+            </div>
+            <div class="stepper-step">
+              <div class="step-number">3</div>
+              <div class="step-info"><span>Paso 3</span><strong>Parámetros</strong></div>
+            </div>
+            <div class="stepper-step">
+              <div class="step-number">4</div>
+              <div class="step-info"><span>Paso 4</span><strong>Procesamiento</strong></div>
+            </div>
+          </nav>
+
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Recorrido Crítico 1 · Paso 1</span>
+              <h2 id="title-p2">Selección del Archivo Fuente</h2>
+              <p>Arrastre o elija el archivo con datos residenciales de Bogotá. El cargador admite formatos estructurados <strong>CSV</strong>, <strong>Excel (.xlsx)</strong> y <strong>JSON</strong> de hasta 100 MB.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <!-- Dropzone -->
+            <div class="dropzone-box" id="dropzone-main" tabindex="0" role="button" aria-label="Área de carga de archivo. Presione Enter o arrastre un archivo aquí." onclick="simularSeleccionArchivo()">
+              <div class="dropzone-icon-circle">📂</div>
+              <strong style="font-size: 16px; color: var(--ink-primary); display: block; margin-bottom: 4px;">Arrastre su archivo aquí o haga clic para examinar</strong>
+              <span style="font-size: 13px; color: var(--ink-secondary);">Archivos compatibles: .csv, .xlsx, .json · Codificación UTF-8 recomendada</span>
+            </div>
+
+            <!-- Archivo Seleccionado (Visualización reactiva) -->
+            <div id="file-selected-box" class="file-preview-card" style="display: none;">
+              <div class="file-info-group">
+                <span class="file-type-badge">CSV</span>
+                <div>
+                  <strong style="display: block; font-size: 14.5px; color: var(--ink-primary);" id="file-name-label">lote_bogota_residencial_2026_q1.csv</strong>
+                  <span style="font-size: 12.5px; color: var(--ink-secondary);" id="file-meta-label">4.8 MB · 1,250 registros detectados · Formato admitido</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <span class="badge badge-success">✓ Listo para inspeccionar</span>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="eliminarArchivoCargado()">Quitar</button>
+              </div>
+            </div>
+
+            <!-- Alerta Informativa de Accesibilidad -->
+            <div class="alert-banner info" style="margin-top: 24px;">
+              <div class="alert-icon" aria-hidden="true">ℹ️</div>
+              <div class="alert-content">
+                <strong>Verificación de estructura previa</strong>
+                <p>En el siguiente paso podrá previsualizar las primeras filas y emparejar las columnas con los 6 atributos obligatorios del pipeline: <em>ubicación, tamaño (m²), habitaciones, baños, estrato</em> y <em>precio</em>.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-subtle);">
+              <button class="btn btn-secondary" onclick="navegarA('pantalla-dashboard')">← Cancelar y Volver</button>
+              <button class="btn btn-primary" id="btn-next-to-preview" disabled onclick="navegarA('pantalla-previa')">Continuar a Previsualización →</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 3: PREVISUALIZACIÓN DE DATOS CRUDOS (RC-1: Paso 2a) -->
+        <!-- ========================================== -->
+        <section id="pantalla-previa" class="screen-view" aria-labelledby="title-p3">
+          <nav class="stepper-nav">
+            <div class="stepper-step completed">
+              <div class="step-number">✓</div>
+              <div class="step-info"><span>Paso 1</span><strong>Archivo Cargado</strong></div>
+            </div>
+            <div class="stepper-step active">
+              <div class="step-number">2</div>
+              <div class="step-info"><span>Paso 2</span><strong>Estructura & Columnas</strong></div>
+            </div>
+            <div class="stepper-step">
+              <div class="step-number">3</div>
+              <div class="step-info"><span>Paso 3</span><strong>Parámetros</strong></div>
+            </div>
+            <div class="stepper-step">
+              <div class="step-number">4</div>
+              <div class="step-info"><span>Paso 4</span><strong>Procesamiento</strong></div>
+            </div>
+          </nav>
+
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Recorrido Crítico 1 · Paso 2A</span>
+              <h2 id="title-p3">Previsualización de Filas Crudas</h2>
+              <p>Compruebe que los delimitadores, caracteres especiales y valores numéricos del archivo <code>lote_bogota_residencial_2026_q1.csv</code> fueron interpretados correctamente.</p>
+            </div>
+            <div>
+              <span class="badge badge-info">Codificación: UTF-8 · Separador: Coma (,)</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="table-container">
+              <table class="data-table" aria-label="Primeras 5 filas del archivo crudo">
+                <thead>
+                  <tr>
+                    <th># Fila</th>
+                    <th>localidad_origen</th>
+                    <th>area_construida</th>
+                    <th>num_alcobas</th>
+                    <th>servicios_sanitarios</th>
+                    <th>nivel_socioeconomico</th>
+                    <th>valor_comercial_cop</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>1</strong></td>
+                    <td>Usaquén - Santa Bárbara</td>
+                    <td>85.50</td>
+                    <td>3</td>
+                    <td>2</td>
+                    <td>5</td>
+                    <td>$ 520,000,000</td>
+                  </tr>
+                  <tr>
+                    <td><strong>2</strong></td>
+                    <td>Chapinero Alto</td>
+                    <td>62.00</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td>4</td>
+                    <td>$ 380,000,000</td>
+                  </tr>
+                  <tr>
+                    <td><strong>3</strong></td>
+                    <td>Suba - La Colina</td>
+                    <td>110.00</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>5</td>
+                    <td>$ 640,000,000</td>
+                  </tr>
+                  <tr>
+                    <td><strong>4</strong></td>
+                    <td>Teusaquillo - Galerías</td>
+                    <td>74.20</td>
+                    <td>2</td>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>$ 310,000,000</td>
+                  </tr>
+                  <tr>
+                    <td><strong>5</strong></td>
+                    <td>Engativá - Álamos</td>
+                    <td>54.00</td>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>3</td>
+                    <td>$ 195,000,000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-subtle);">
+              <button class="btn btn-secondary" onclick="navegarA('pantalla-carga')">← Cambiar Archivo</button>
+              <button class="btn btn-primary" onclick="navegarA('pantalla-mapeo')">Validar Mapeo de Columnas →</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 4: MAPEO Y VALIDACIÓN ESTRICTA (RC-1: Paso 2b - MEJORA F3) -->
+        <!-- ========================================== -->
+        <section id="pantalla-mapeo" class="screen-view" aria-labelledby="title-p4">
+          <nav class="stepper-nav">
+            <div class="stepper-step completed">
+              <div class="step-number">✓</div>
+              <div class="step-info"><span>Paso 1</span><strong>Archivo Cargado</strong></div>
+            </div>
+            <div class="stepper-step active">
+              <div class="step-number">2</div>
+              <div class="step-info"><span>Paso 2</span><strong>Estructura & Columnas</strong></div>
+            </div>
+            <div class="stepper-step">
+              <div class="step-number">3</div>
+              <div class="step-info"><span>Paso 3</span><strong>Parámetros</strong></div>
+            </div>
+            <div class="stepper-step">
+              <div class="step-number">4</div>
+              <div class="step-info"><span>Paso 4</span><strong>Procesamiento</strong></div>
+            </div>
+          </nav>
+
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Recorrido Crítico 1 · Paso 2B (Mejora Implementada)</span>
+              <h2 id="title-p4">Asignación y Verificación de Columnas Obligatorias</h2>
+              <p>El sistema requiere vincular con exactitud los 6 atributos estandarizados. Se incluye <strong>auto-detección heurística</strong> y validación visual inmediata para evitar rechazos en el pipeline.</p>
+            </div>
+            <div id="mapping-summary-badge">
+              <span class="badge badge-success" id="badge-all-mapped">✓ 6 de 6 columnas asignadas</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <!-- Grid de Mapeo Interactivo -->
+            <div class="mapping-grid" id="mapping-items-container">
+              
+              <!-- Campo 1: Ubicación -->
+              <div class="mapping-item valid">
+                <div class="target-col">
+                  <strong>ubicacion <span style="color:var(--semantic-danger);">*</span></strong>
+                  <span>Localidad o barrio en Bogotá</span>
+                </div>
+                <div>
+                  <select class="form-control mapping-select" onchange="verificarMapeo()">
+                    <option value="localidad_origen" selected>localidad_origen (Coincidencia 98%)</option>
+                    <option value="none">-- Sin asignar --</option>
+                  </select>
+                </div>
+                <div><span class="badge badge-success">✓ Asignada</span></div>
+              </div>
+
+              <!-- Campo 2: Tamaño m2 -->
+              <div class="mapping-item valid">
+                <div class="target-col">
+                  <strong>tamano_m2 <span style="color:var(--semantic-danger);">*</span></strong>
+                  <span>Área privada o construida (m²)</span>
+                </div>
+                <div>
+                  <select class="form-control mapping-select" onchange="verificarMapeo()">
+                    <option value="area_construida" selected>area_construida (Coincidencia 95%)</option>
+                    <option value="none">-- Sin asignar --</option>
+                  </select>
+                </div>
+                <div><span class="badge badge-success">✓ Asignada</span></div>
+              </div>
+
+              <!-- Campo 3: Habitaciones -->
+              <div class="mapping-item valid">
+                <div class="target-col">
+                  <strong>habitaciones <span style="color:var(--semantic-danger);">*</span></strong>
+                  <span>Número de alcobas (Entero > 0)</span>
+                </div>
+                <div>
+                  <select class="form-control mapping-select" onchange="verificarMapeo()">
+                    <option value="num_alcobas" selected>num_alcobas (Coincidencia 92%)</option>
+                    <option value="none">-- Sin asignar --</option>
+                  </select>
+                </div>
+                <div><span class="badge badge-success">✓ Asignada</span></div>
+              </div>
+
+              <!-- Campo 4: Baños -->
+              <div class="mapping-item valid">
+                <div class="target-col">
+                  <strong>banos <span style="color:var(--semantic-danger);">*</span></strong>
+                  <span>Servicios sanitarios (Entero > 0)</span>
+                </div>
+                <div>
+                  <select class="form-control mapping-select" onchange="verificarMapeo()">
+                    <option value="servicios_sanitarios" selected>servicios_sanitarios (Coincidencia 94%)</option>
+                    <option value="none">-- Sin asignar --</option>
+                  </select>
+                </div>
+                <div><span class="badge badge-success">✓ Asignada</span></div>
+              </div>
+
+              <!-- Campo 5: Estrato -->
+              <div class="mapping-item valid">
+                <div class="target-col">
+                  <strong>estrato <span style="color:var(--semantic-danger);">*</span></strong>
+                  <span>Nivel socioeconómico Bogotá (1 a 6)</span>
+                </div>
+                <div>
+                  <select class="form-control mapping-select" onchange="verificarMapeo()">
+                    <option value="nivel_socioeconomico" selected>nivel_socioeconomico (Coincidencia 90%)</option>
+                    <option value="none">-- Sin asignar --</option>
+                  </select>
+                </div>
+                <div><span class="badge badge-success">✓ Asignada</span></div>
+              </div>
+
+              <!-- Campo 6: Precio -->
+              <div class="mapping-item valid">
+                <div class="target-col">
+                  <strong>precio <span style="color:var(--semantic-danger);">*</span></strong>
+                  <span>Valor comercial en pesos COP</span>
+                </div>
+                <div>
+                  <select class="form-control mapping-select" onchange="verificarMapeo()">
+                    <option value="valor_comercial_cop" selected>valor_comercial_cop (Coincidencia 96%)</option>
+                    <option value="none">-- Sin asignar --</option>
+                  </select>
+                </div>
+                <div><span class="badge badge-success">✓ Asignada</span></div>
+              </div>
+
+            </div>
+
+            <!-- Botones de Acción -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-subtle);">
+              <button class="btn btn-secondary" onclick="navegarA('pantalla-previa')">← Volver a Previa</button>
+              <button class="btn btn-primary" id="btn-to-config" onclick="navegarA('pantalla-confirmacion')">Confirmar Asignación y Continuar →</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 5: PARÁMETROS Y CONFIRMACIÓN DE INGESTA (RC-1: Paso 3) -->
+        <!-- ========================================== -->
+        <section id="pantalla-confirmacion" class="screen-view" aria-labelledby="title-p5">
+          <nav class="stepper-nav">
+            <div class="stepper-step completed">
+              <div class="step-number">✓</div>
+              <div class="step-info"><span>Paso 1</span><strong>Archivo Cargado</strong></div>
+            </div>
+            <div class="stepper-step completed">
+              <div class="step-number">✓</div>
+              <div class="step-info"><span>Paso 2</span><strong>Estructura & Columnas</strong></div>
+            </div>
+            <div class="stepper-step active">
+              <div class="step-number">3</div>
+              <div class="step-info"><span>Paso 3</span><strong>Parámetros</strong></div>
+            </div>
+            <div class="stepper-step">
+              <div class="step-number">4</div>
+              <div class="step-info"><span>Paso 4</span><strong>Procesamiento</strong></div>
+            </div>
+          </nav>
+
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Recorrido Crítico 1 · Paso 3</span>
+              <h2 id="title-p5">Configuración de Parámetros de Ingesta</h2>
+              <p>Defina los parámetros operativos de normalización y el canal de notificación antes de ejecutar el pipeline de procesamiento.</p>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <!-- Formulario de Parámetros -->
+            <div class="card">
+              <div class="card-header">
+                <h3>Parámetros del Pipeline</h3>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="input-factor-precio">
+                  Factor de Ajuste de Precio (Normalización IPC) <span class="required">*</span>
+                </label>
+                <input type="number" id="input-factor-precio" class="form-control" value="1.000" step="0.001" min="0.5" max="3.0">
+                <div class="form-help">Multiplicador positivo aplicado al valor COP (ej. 1.042 para indexación de inflación).</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="input-email-notif">
+                  Correo Electrónico para Reporte de Auditoría (Opcional)
+                </label>
+                <input type="email" id="input-email-notif" class="form-control" placeholder="analista@inmoinsight.com.co" value="adan.sanchez@inmoinsight.com.co">
+                <div class="form-help">Se enviará el resumen ejecutivo con el hash del lote y discrepancias detectadas.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Política ante Inconsistencias Leves</label>
+                <select class="form-control" id="select-politica-inconsistencias">
+                  <option value="quarantine" selected>Enviar filas a Cuarentena y continuar lote (Recomendado)</option>
+                  <option value="strict">Abortar lote ante cualquier discrepancia crítica</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Resumen de Auditoría Previo -->
+            <div class="card" style="background: #FAFDFB; border-color: #C3E0D0;">
+              <div class="card-header">
+                <h3>Resumen Pre-Ejecución</h3>
+                <span class="badge badge-success">Validación Aprobada</span>
+              </div>
+              
+              <dl style="display: grid; grid-template-columns: 140px 1fr; gap: 10px 14px; font-size: 13.5px; margin: 0 0 20px;">
+                <dt style="color: var(--ink-secondary);">Archivo origen:</dt>
+                <dd style="margin: 0; font-weight: 700; color: var(--brand-primary);">lote_bogota_residencial_2026_q1.csv</dd>
+
+                <dt style="color: var(--ink-secondary);">Volumen estimado:</dt>
+                <dd style="margin: 0; font-weight: 600;">1,250 filas · 6 campos mandatorios</dd>
+
+                <dt style="color: var(--ink-secondary);">Compuertas activas:</dt>
+                <dd style="margin: 0; font-weight: 600;">G1 (Esquema), G2 (Tipos), G3 (Rangos), G4 (Calidad)</dd>
+
+                <dt style="color: var(--ink-secondary);">Destino final:</dt>
+                <dd style="margin: 0; font-weight: 600;">Inventario Maestro (MDM Bogotá)</dd>
+              </dl>
+
+              <div class="alert-banner warning" style="margin: 0 0 16px;">
+                <div class="alert-icon" aria-hidden="true">⚠️</div>
+                <div class="alert-content">
+                  <strong>Acción Asíncrona</strong>
+                  <p>Al confirmar, el pipeline procesará el lote por etapas. Podrá seguir el avance en tiempo real con opción de cancelación segura.</p>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" style="width: 100%;" onclick="abrirModalConfirmacionLote()">
+                🚀 Disparar Procesamiento del Lote
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 6: MONITOR DEL PIPELINE EN TIEMPO REAL (RC-1: Paso 4) -->
+        <!-- ========================================== -->
+        <section id="pantalla-progreso" class="screen-view" aria-labelledby="title-p6">
+          <nav class="stepper-nav">
+            <div class="stepper-step completed">
+              <div class="step-number">✓</div>
+              <div class="step-info"><span>Paso 1</span><strong>Archivo Cargado</strong></div>
+            </div>
+            <div class="stepper-step completed">
+              <div class="step-number">✓</div>
+              <div class="step-info"><span>Paso 2</span><strong>Estructura & Columnas</strong></div>
+            </div>
+            <div class="stepper-step completed">
+              <div class="step-number">✓</div>
+              <div class="step-info"><span>Paso 3</span><strong>Parámetros</strong></div>
+            </div>
+            <div class="stepper-step active">
+              <div class="step-number">4</div>
+              <div class="step-info"><span>Paso 4</span><strong>Procesamiento</strong></div>
+            </div>
+          </nav>
+
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Recorrido Crítico 1 · Paso 4</span>
+              <h2 id="title-p6">Ejecución del Pipeline en Tiempo Real</h2>
+              <p>Observando el avance secuencial de las 4 compuertas de calidad sobre el lote <code>lote_bogota_residencial_2026_q1.csv</code>.</p>
+            </div>
+            <div>
+              <span class="badge badge-warning" id="live-run-badge">⚡ En Ejecución</span>
+            </div>
+          </div>
+
+          <div class="pipeline-run-box">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="font-size: 17px; color: var(--ink-primary);" id="progress-percent-label">0% Completado</strong>
+                <span style="font-size: 13px; color: var(--ink-secondary); display: block;" id="progress-status-desc">Iniciando lectura de buffer...</span>
+              </div>
+              <div style="font-size: 13px; color: var(--ink-tertiary);" id="progress-timer-label">Tiempo transcurrido: 00:03s</div>
+            </div>
+
+            <!-- Barra de Progreso -->
+            <div class="meter-bar-container" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="live-meter-bar">
+              <div class="meter-bar-fill" id="live-meter-fill"></div>
+            </div>
+
+            <!-- Las 4 Etapas Visuales -->
+            <div class="pipeline-stages-list">
+              <div class="stage-card" id="stage-g1">
+                <span style="font-size: 20px;">📄</span>
+                <span class="stage-name">G1. Lectura Esquema</span>
+                <span class="stage-status" id="stage-g1-status">Pendiente</span>
+              </div>
+              <div class="stage-card" id="stage-g2">
+                <span style="font-size: 20px;">🔍</span>
+                <span class="stage-name">G2. Validación Tipos</span>
+                <span class="stage-status" id="stage-g2-status">Pendiente</span>
+              </div>
+              <div class="stage-card" id="stage-g3">
+                <span style="font-size: 20px;">🧹</span>
+                <span class="stage-name">G3. Limpieza Rangos</span>
+                <span class="stage-status" id="stage-g3-status">Pendiente</span>
+              </div>
+              <div class="stage-card" id="stage-g4">
+                <span style="font-size: 20px;">🏆</span>
+                <span class="stage-name">G4. Calidad & MDM</span>
+                <span class="stage-status" id="stage-g4-status">Pendiente</span>
+              </div>
+            </div>
+
+            <!-- Consola de Eventos -->
+            <label class="form-label" style="margin-top: 12px;">Registro de Eventos del Pipeline (Trazabilidad SWEBOK)</label>
+            <div class="terminal-console" id="terminal-log-output" aria-live="polite">
+              <p><span class="log-time">[14:28:01]</span> <span class="log-success">INFO:</span> Inicializando PipelineFacade v2.4...</p>
+              <p><span class="log-time">[14:28:02]</span> <span class="log-success">INFO:</span> Asignación de 6 columnas obligatorias confirmada.</p>
+            </div>
+
+            <!-- Botones de Control del Monitor -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-subtle);">
+              <button class="btn btn-secondary btn-danger" id="btn-cancel-pipeline" onclick="cancelarSimulacionPipeline()">✕ Cancelar Proceso</button>
+              <button class="btn btn-primary" id="btn-to-results" disabled onclick="navegarA('pantalla-resultado')">Ver Reporte Consolidado →</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 7: RESULTADO Y MÉTRICAS DEL LOTE (RC-1: Cierre) -->
+        <!-- ========================================== -->
+        <section id="pantalla-resultado" class="screen-view" aria-labelledby="title-p7">
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Recorrido Crítico 1 · Resultado Final</span>
+              <h2 id="title-p7">Lote Procesado con Éxito</h2>
+              <p>El lote <code>lote_bogota_residencial_2026_q1.csv</code> finalizó su ciclo. Los registros certificados ya se integraron en el inventario maestro.</p>
+            </div>
+            <div>
+              <span class="badge badge-success" style="font-size: 13px; padding: 6px 14px;">✓ Lote Certificado #L-8942</span>
+            </div>
+          </div>
+
+          <!-- Métricas del Lote -->
+          <div class="grid-3" style="margin-bottom: 24px;">
+            <div class="card" style="border-left: 5px solid var(--semantic-success);">
+              <span style="font-size: 13px; color: var(--ink-secondary); font-weight: 600;">Registros Aceptados e Integrados</span>
+              <div style="font-size: 32px; font-weight: 800; color: var(--semantic-success); margin: 6px 0;">1,238</div>
+              <span style="font-size: 12.5px; color: var(--ink-tertiary);">99.04% de aprobación del lote</span>
+            </div>
+            <div class="card" style="border-left: 5px solid var(--semantic-warning);">
+              <span style="font-size: 13px; color: var(--ink-secondary); font-weight: 600;">Registros en Cuarentena / Rechazo</span>
+              <div style="font-size: 32px; font-weight: 800; color: var(--semantic-warning); margin: 6px 0;">12</div>
+              <span style="font-size: 12.5px; color: var(--semantic-warning); font-weight: 600;">Discrepancias registradas en auditoría</span>
+            </div>
+            <div class="card" style="border-left: 5px solid var(--brand-primary);">
+              <span style="font-size: 13px; color: var(--ink-secondary); font-weight: 600;">Tiempo Total de Ingesta</span>
+              <div style="font-size: 32px; font-weight: 800; color: var(--brand-primary); margin: 6px 0;">4.2 s</div>
+              <span style="font-size: 12.5px; color: var(--ink-tertiary);">Rendimiento: 298 registros/seg</span>
+            </div>
+          </div>
+
+          <!-- Acciones Post-Procesamiento -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Acciones Siguientes Recomendadas</h3>
+            </div>
+            <div class="grid-2">
+              <div style="padding: 16px; border: 1px solid var(--border-subtle); border-radius: 8px;">
+                <h4 style="margin: 0 0 6px; font-size: 15px; color: var(--brand-primary);">Explorar los 12 Registros Rechazados</h4>
+                <p style="font-size: 13px; color: var(--ink-secondary); margin-bottom: 14px;">Consulte el diagnóstico de discrepancias (precios fuera de rango, áreas anómalas) para tomar medidas de remediación.</p>
+                <button class="btn btn-secondary" onclick="navegarA('pantalla-auditoria')">Ir a Bandeja de Auditoría (12) →</button>
+              </div>
+              <div style="padding: 16px; border: 1px solid var(--border-subtle); border-radius: 8px;">
+                <h4 style="margin: 0 0 6px; font-size: 15px; color: var(--brand-primary);">Consultar el Inventario Maestro Actualizado</h4>
+                <p style="font-size: 13px; color: var(--ink-secondary); margin-bottom: 14px;">Vea los 1,238 inmuebles limpios incorporados con filtros por estrato, localidad y precio por metro cuadrado.</p>
+                <button class="btn btn-primary" onclick="navegarA('pantalla-inventario')">Ver Inventario Maestro →</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 8: BANDEJA DE AUDITORÍA Y FILTROS (RC-2: Inicio - MEJORA F3) -->
+        <!-- ========================================== -->
+        <section id="pantalla-auditoria" class="screen-view" aria-labelledby="title-p8">
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Recorrido Crítico 2 · Inicio</span>
+              <h2 id="title-p8">Bandeja de Auditoría y Control de Discrepancias</h2>
+              <p>Inspeccione y filtre los registros en cuarentena. Se han incorporado <strong>chips dinámicos de filtrado</strong> y búsqueda instantánea para localizar incidencias por localidad o compuerta.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-secondary" onclick="exportarListaAuditoria()">📥 Exportar Incidentes (CSV)</button>
+            </div>
+          </div>
+
+          <!-- Barra de Filtros Facetados con Chips (Mejora Fase 3) -->
+          <div class="filter-bar-facet">
+            <div class="filter-inputs-row">
+              <div>
+                <label class="form-label" for="search-audit-input" style="font-size:12px;">Búsqueda por Localidad / ID</label>
+                <input type="text" id="search-audit-input" class="form-control" placeholder="Ej. Suba, Chapinero, REG-8942-04..." oninput="filtrarAuditoria()">
+              </div>
+              <div>
+                <label class="form-label" for="filter-gate-select" style="font-size:12px;">Compuerta de Calidad</label>
+                <select id="filter-gate-select" class="form-control" onchange="filtrarAuditoria()">
+                  <option value="all">Todas las compuertas</option>
+                  <option value="G3">G3: Limpieza y Rangos</option>
+                  <option value="G4">G4: Outliers y Duplicados</option>
+                  <option value="G2">G2: Tipos y Esquema</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" for="filter-stratum-select" style="font-size:12px;">Estrato</label>
+                <select id="filter-stratum-select" class="form-control" onchange="filtrarAuditoria()">
+                  <option value="all">Todos los estratos</option>
+                  <option value="1">Estrato 1</option>
+                  <option value="2">Estrato 2</option>
+                  <option value="3">Estrato 3</option>
+                  <option value="4">Estrato 4</option>
+                  <option value="5">Estrato 5</option>
+                  <option value="6">Estrato 6</option>
+                </select>
+              </div>
+              <div>
+                <button class="btn btn-secondary btn-sm" style="margin-top:22px;" onclick="limpiarFiltrosAuditoria()">Limpiar Filtros</button>
+              </div>
+            </div>
+
+            <!-- Chips Activos -->
+            <div class="active-chips-area" id="active-chips-container">
+              <span style="font-size:12px; color:var(--ink-tertiary);">Filtros activos:</span>
+              <span class="filter-chip" id="chip-lote">Lote: L-8942 <button onclick="removerChip('lote')">×</button></span>
+              <span class="filter-chip" id="chip-estado">Estado: En Cuarentena <button onclick="removerChip('estado')">×</button></span>
+              <span style="margin-left: auto; font-size:12.5px; font-weight:700; color:var(--brand-primary);" id="label-audit-matches">12 discrepancias encontradas</span>
+            </div>
+          </div>
+
+          <!-- Tabla de Discrepancias -->
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-container" style="border: 0;">
+              <table class="data-table" id="tabla-auditoria" aria-label="Lista de registros observados en auditoría">
+                <thead>
+                  <tr>
+                    <th>ID Registro</th>
+                    <th>Localidad</th>
+                    <th>Compuerta</th>
+                    <th>Regla Infringida</th>
+                    <th>Valor Recibido</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-auditoria">
+                  <!-- Fila 1 (Caso Crítico de Estudio) -->
+                  <tr data-gate="G3" data-stratum="4" data-loc="Chapinero">
+                    <td><strong style="color:var(--brand-primary);">REG-8942-04</strong></td>
+                    <td>Chapinero - Chicó</td>
+                    <td><span class="badge badge-warning">G3: Rangos</span></td>
+                    <td>Precio/m² superior al percentil 99 Bogotá</td>
+                    <td>$ 38,500,000 / m²</td>
+                    <td><span class="badge badge-danger">Rechazado</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" onclick="abrirDiagnosticoFila('REG-8942-04')">Diagnosticar →</button>
+                    </td>
+                  </tr>
+
+                  <!-- Fila 2 -->
+                  <tr data-gate="G4" data-stratum="5" data-loc="Usaquén">
+                    <td><strong style="color:var(--brand-primary);">REG-8942-18</strong></td>
+                    <td>Usaquén - Cedritos</td>
+                    <td><span class="badge badge-info">G4: Duplicado</span></td>
+                    <td>Doble publicación detectada por dirección normalizada</td>
+                    <td>Hash coincidente con L-8720</td>
+                    <td><span class="badge badge-warning">Cuarentena</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" onclick="abrirDiagnosticoFila('REG-8942-18')">Diagnosticar →</button>
+                    </td>
+                  </tr>
+
+                  <!-- Fila 3 -->
+                  <tr data-gate="G3" data-stratum="2" data-loc="Bosa">
+                    <td><strong style="color:var(--brand-primary);">REG-8942-45</strong></td>
+                    <td>Bosa - Brasil</td>
+                    <td><span class="badge badge-warning">G3: Rangos</span></td>
+                    <td>Área construida inferior al mínimo habitacional</td>
+                    <td>14.0 m²</td>
+                    <td><span class="badge badge-danger">Rechazado</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" onclick="abrirDiagnosticoFila('REG-8942-45')">Diagnosticar →</button>
+                    </td>
+                  </tr>
+
+                  <!-- Fila 4 -->
+                  <tr data-gate="G2" data-stratum="3" data-loc="Suba">
+                    <td><strong style="color:var(--brand-primary);">REG-8942-89</strong></td>
+                    <td>Suba - Rincón</td>
+                    <td><span class="badge badge-danger">G2: Tipos</span></td>
+                    <td>Valor no numérico en campo baños</td>
+                    <td>"Dos y medio"</td>
+                    <td><span class="badge badge-danger">Rechazado</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" onclick="abrirDiagnosticoFila('REG-8942-89')">Diagnosticar →</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 9: DIAGNÓSTICO DETALLADO DE FILA (RC-2: Análisis) -->
+        <!-- ========================================== -->
+        <section id="pantalla-diagnostico" class="screen-view" aria-labelledby="title-p9">
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Recorrido Crítico 2 · Diagnóstico en Profundidad</span>
+              <h2 id="title-p9">Expediente de Discrepancia: REG-8942-04</h2>
+              <p>Análisis forense de la fila rechazada en la compuerta <strong>G3 (Limpieza de Rangos Inmobiliarios Bogotá)</strong>.</p>
+            </div>
+            <div>
+              <button class="btn btn-secondary" onclick="navegarA('pantalla-auditoria')">← Volver a Bandeja</button>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <!-- Ficha Técnica de la Fila -->
+            <div class="card">
+              <div class="card-header">
+                <h3>Valores Suministrados en el Archivo</h3>
+                <span class="badge badge-neutral">Fila origen #4</span>
+              </div>
+              <div class="table-container">
+                <table class="data-table" aria-label="Comparativa de atributos">
+                  <tbody>
+                    <tr><td><strong>Ubicación:</strong></td><td>Chapinero - Chicó Norte (Bogotá D.C.)</td></tr>
+                    <tr><td><strong>Estrato:</strong></td><td>Estrato 6</td></tr>
+                    <tr><td><strong>Área privada:</strong></td><td>42.0 m²</td></tr>
+                    <tr><td><strong>Habitaciones / Baños:</strong></td><td>1 alcoba / 1 baño</td></tr>
+                    <tr><td><strong>Precio Reportado:</strong></td><td><strong style="color:var(--semantic-danger);">$ 1,617,000,000 COP</strong></td></tr>
+                    <tr><td><strong>Precio / m² Calculado:</strong></td><td><strong>$ 38,500,000 COP / m²</strong></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Causa del Rechazo y Explicación de Regla -->
+            <div class="card" style="border-left: 5px solid var(--semantic-danger);">
+              <div class="card-header">
+                <h3 style="color: var(--semantic-danger);">Dictamen de la Regla de Negocio</h3>
+                <span class="badge badge-danger">Outlier Severo</span>
+              </div>
+              <p style="font-size: 14px; color: var(--ink-secondary); line-height: 1.55;">
+                La compuerta G3 evalúa el rango intercuartílico (IQR) por localidad y estrato. En Chicó Norte (Estrato 6), el rango admitido para apartamentos de 1 alcoba oscila entre <strong>$ 8,500,000</strong> y <strong>$ 17,200,000 COP / m²</strong>.
+              </p>
+              
+              <div class="alert-banner warning" style="margin: 16px 0;">
+                <div class="alert-icon" aria-hidden="true">💡</div>
+                <div class="alert-content">
+                  <strong>Hipótesis de Inconsistencia</strong>
+                  <p>Es muy probable un error de digitación en la fuente: se agregó un cero de más en el precio total ($ 161.7M vs $ 1,617M), o el área privada de 42 m² correspondía a área de terraza.</p>
+                </div>
+              </div>
+
+              <div style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="navegarA('pantalla-recuperacion')">
+                  Gestionar Acción de Recuperación →
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 10: ACCIÓN DE RECUPERACIÓN GUIADA (RC-2: Cierre - MEJORA F3) -->
+        <!-- ========================================== -->
+        <section id="pantalla-recuperacion" class="screen-view" aria-labelledby="title-p10">
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Recorrido Crítico 2 · Resolución Segura</span>
+              <h2 id="title-p10">Plan de Acción y Remediación de Discrepancias</h2>
+              <p>Seleccione el procedimiento seguro para tratar este registro sin alterar la integridad referencial del inventario maestro.</p>
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <!-- Opción 1: Reintentar Lote con Corrección (Mejora Fase 3) -->
+            <div class="card" style="border-top: 4px solid var(--brand-primary); display: flex; flex-direction: column;">
+              <div style="font-size: 24px; margin-bottom: 8px;">🔄</div>
+              <h3 style="margin: 0 0 8px; font-size: 16px;">Reintentar Lote Corregido</h3>
+              <p style="font-size: 13px; color: var(--ink-secondary); flex-grow: 1;">
+                Vuelva a la pantalla de ingesta conservando la asignación de columnas y parámetros previos para subir el CSV corregido por el proveedor.
+              </p>
+              <button class="btn btn-primary btn-sm" onclick="ejecutarReintentoLote()">Cargar Versión Corregida →</button>
+            </div>
+
+            <!-- Opción 2: Descargar Fila con Causa -->
+            <div class="card" style="border-top: 4px solid var(--semantic-info); display: flex; flex-direction: column;">
+              <div style="font-size: 24px; margin-bottom: 8px;">📥</div>
+              <h3 style="margin: 0 0 8px; font-size: 16px;">Descargar Informe de Discrepancia</h3>
+              <p style="font-size: 13px; color: var(--ink-secondary); flex-grow: 1;">
+                Genere un paquete en formato Excel/CSV con las 12 filas rechazadas y la causa exacta para remitirlo al portal inmobiliario emisor.
+              </p>
+              <button class="btn btn-secondary btn-sm" onclick="descargarReporteDiscrepancias()">Descargar Informe CSV →</button>
+            </div>
+
+            <!-- Opción 3: Descartar / Archivar Fila -->
+            <div class="card" style="border-top: 4px solid var(--ink-tertiary); display: flex; flex-direction: column;">
+              <div style="font-size: 24px; margin-bottom: 8px;">🗄️</div>
+              <h3 style="margin: 0 0 8px; font-size: 16px;">Archivar Fila Definitivamente</h3>
+              <p style="font-size: 13px; color: var(--ink-secondary); flex-grow: 1;">
+                Marcar el registro como descartado por insalvable. Quedará registrado en la bitácora histórica de exclusiones.
+              </p>
+              <button class="btn btn-secondary btn-sm" onclick="archivarFilaAuditoria()">Archivar Fila →</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 11: EXPLORADOR DEL INVENTARIO MAESTRO (MDM) -->
+        <!-- ========================================== -->
+        <section id="pantalla-inventario" class="screen-view" aria-labelledby="title-p11">
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Consulta & Explotación</span>
+              <h2 id="title-p11">Inventario Maestro de Inmuebles Certificados (MDM Bogotá)</h2>
+              <p>Explore los 14,820 registros consolidados. Filtre por zona geográfica, estrato y consulte la ficha técnica de cada predio.</p>
+            </div>
+            <div>
+              <button class="btn btn-primary" onclick="navegarA('pantalla-exportacion')">Exportar Consulta →</button>
+            </div>
+          </div>
+
+          <!-- Filtros de Inventario -->
+          <div class="filter-bar-facet">
+            <div class="filter-inputs-row">
+              <div>
+                <label class="form-label" style="font-size:12px;">Localidad de Bogotá</label>
+                <select class="form-control" id="inv-filter-loc" onchange="filtrarInventario()">
+                  <option value="all">Todas las localidades (20)</option>
+                  <option value="Usaquén" selected>Usaquén</option>
+                  <option value="Chapinero">Chapinero</option>
+                  <option value="Suba">Suba</option>
+                  <option value="Teusaquillo">Teusaquillo</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px;">Estrato</label>
+                <select class="form-control" id="inv-filter-stratum" onchange="filtrarInventario()">
+                  <option value="all">Todos</option>
+                  <option value="4">Estrato 4</option>
+                  <option value="5" selected>Estrato 5</option>
+                  <option value="6">Estrato 6</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:12px;">Rango de Precio</label>
+                <select class="form-control">
+                  <option value="all">Todos los rangos</option>
+                  <option value="300-600" selected>$ 300M a $ 700M COP</option>
+                  <option value="700+">Más de $ 700M COP</option>
+                </select>
+              </div>
+              <div>
+                <button class="btn btn-secondary btn-sm" style="margin-top:22px;" onclick="restablecerInventario()">Restablecer</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla de Inmuebles Certificados -->
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-container" style="border: 0;">
+              <table class="data-table" aria-label="Inventario de predios certificados">
+                <thead>
+                  <tr>
+                    <th>Código MDM</th>
+                    <th>Localidad / Barrio</th>
+                    <th>Área (m²)</th>
+                    <th>Hab / Baños</th>
+                    <th>Estrato</th>
+                    <th>Precio Certificado</th>
+                    <th>Certificación</th>
+                    <th>Detalle</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-inventario">
+                  <tr>
+                    <td><strong>MDM-BOG-10492</strong></td>
+                    <td>Usaquén - Santa Bárbara</td>
+                    <td>85.5 m²</td>
+                    <td>3 / 2</td>
+                    <td>5</td>
+                    <td>$ 520,000,000</td>
+                    <td><span class="badge badge-success">✓ Certificado</span></td>
+                    <td><button class="btn btn-sm btn-outline-primary" onclick="verFichaInmueble('MDM-BOG-10492')">Ver Ficha</button></td>
+                  </tr>
+                  <tr>
+                    <td><strong>MDM-BOG-10493</strong></td>
+                    <td>Usaquén - Bella Suiza</td>
+                    <td>104.0 m²</td>
+                    <td>3 / 3</td>
+                    <td>5</td>
+                    <td>$ 680,000,000</td>
+                    <td><span class="badge badge-success">✓ Certificado</span></td>
+                    <td><button class="btn btn-sm btn-outline-primary" onclick="verFichaInmueble('MDM-BOG-10493')">Ver Ficha</button></td>
+                  </tr>
+                  <tr>
+                    <td><strong>MDM-BOG-10494</strong></td>
+                    <td>Usaquén - Cedritos</td>
+                    <td>72.0 m²</td>
+                    <td>2 / 2</td>
+                    <td>4</td>
+                    <td>$ 410,000,000</td>
+                    <td><span class="badge badge-success">✓ Certificado</span></td>
+                    <td><button class="btn btn-sm btn-outline-primary" onclick="verFichaInmueble('MDM-BOG-10494')">Ver Ficha</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 12: FICHA TÉCNICA DETALLADA DE INMUEBLE -->
+        <!-- ========================================== -->
+        <section id="pantalla-ficha-inmueble" class="screen-view" aria-labelledby="title-p12">
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Ficha Maestra Individual</span>
+              <h2 id="title-p12">Predio Certificado: MDM-BOG-10492</h2>
+              <p>Historial de curaduría, atributos normalizados y trazabilidad del lote de origen.</p>
+            </div>
+            <div>
+              <button class="btn btn-secondary" onclick="navegarA('pantalla-inventario')">← Volver al Inventario</button>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <h3>Atributos Físicos y Ubicación</h3>
+                <span class="badge badge-success">Sello de Calidad G4</span>
+              </div>
+              <table class="data-table">
+                <tbody>
+                  <tr><td><strong>Localidad:</strong></td><td>Usaquén (Bogotá D.C.)</td></tr>
+                  <tr><td><strong>Barrio catastral:</strong></td><td>Santa Bárbara Central</td></tr>
+                  <tr><td><strong>Estrato socioeconómico:</strong></td><td>Estrato 5</td></tr>
+                  <tr><td><strong>Área privada:</strong></td><td>85.50 m²</td></tr>
+                  <tr><td><strong>Distribución:</strong></td><td>3 alcobas, 2 baños completos</td></tr>
+                  <tr><td><strong>Precio Normalizado:</strong></td><td><strong>$ 520,000,000 COP</strong></td></tr>
+                  <tr><td><strong>Precio por m²:</strong></td><td><strong>$ 6,081,871 COP / m²</strong> (En rango normal)</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>Trazabilidad de la Curaduría</h3>
+              </div>
+              <dl style="display: grid; grid-template-columns: 140px 1fr; gap: 10px 14px; font-size: 13.5px;">
+                <dt style="color: var(--ink-secondary);">Lote de Origen:</dt>
+                <dd style="margin: 0; font-weight: 700;">#L-8942 (lote_bogota_residencial_2026_q1.csv)</dd>
+
+                <dt style="color: var(--ink-secondary);">Fecha de Ingesta:</dt>
+                <dd style="margin: 0;">20 de Octubre de 2026 · 14:28 COT</dd>
+
+                <dt style="color: var(--ink-secondary);">Factor aplicado:</dt>
+                <dd style="margin: 0;">1.000 (Sin indexación)</dd>
+
+                <dt style="color: var(--ink-secondary);">Curador:</dt>
+                <dd style="margin: 0;">Adán Sánchez (Operador Principal)</dd>
+
+                <dt style="color: var(--ink-secondary);">Hash de Verificación:</dt>
+                <dd style="margin: 0; font-family: var(--font-mono); font-size: 12px; color: var(--brand-primary);">e4d909c290d0fb1ca068ffaddf22cbd0</dd>
+              </dl>
+              <div style="margin-top: 24px;">
+                <button class="btn btn-secondary" onclick="imprimirFichaPredio()">🖨️ Imprimir Ficha de Predio</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PANTALLA 13: CENTRO DE EXPORTACIÓN Y REPORTES -->
+        <!-- ========================================== -->
+        <section id="pantalla-exportacion" class="screen-view" aria-labelledby="title-p13">
+          <div class="screen-header">
+            <div class="screen-header-main">
+              <span class="screen-eyebrow">Salidas & Compartición</span>
+              <h2 id="title-p13">Centro de Exportación de Datos</h2>
+              <p>Genere paquetes de datos curados en formatos estándar con manifiesto de trazabilidad criptográfica.</p>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <h3>Configuración del Paquete de Salida</h3>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="export-format-select">Formato del Archivo</label>
+                <select class="form-control" id="export-format-select">
+                  <option value="csv" selected>CSV Estandarizado (UTF-8 con delimitador punto y coma)</option>
+                  <option value="xlsx">Libro de Excel (.xlsx) con metadatos de auditoría</option>
+                  <option value="json">JSON Array estructurado para consumo de APIs</option>
+                  <option value="pdf">Informe Ejecutivo PDF con gráficos de calidad</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Alcance de los Registros</label>
+                <select class="form-control" id="export-scope-select">
+                  <option value="filtered" selected>Registros seleccionados por filtros activos (1,238 inmuebles)</option>
+                  <option value="all">Totalidad del Inventario Maestro (14,820 inmuebles)</option>
+                  <option value="audit">Únicamente registros en Cuarentena para auditoría externa</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Opciones Adicionales</label>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; margin-top: 6px;">
+                  <input type="checkbox" checked style="width: 18px; height: 18px;">
+                  <span>Incluir metadatos de compuertas G1-G4 y sello de fecha</span>
+                </label>
+              </div>
+
+              <button class="btn btn-primary" style="margin-top: 10px;" onclick="dispararGeneracionArchivo()">
+                📥 Generar y Descargar Archivo
+              </button>
+            </div>
+
+            <!-- Manifiesto de Exportación -->
+            <div class="card" style="background: #FAFDFB;">
+              <div class="card-header">
+                <h3>Certificado de Salida</h3>
+                <span class="badge badge-success">Auditado</span>
+              </div>
+              <p style="font-size: 13.5px; color: var(--ink-secondary); line-height: 1.5;">
+                Cada exportación incluye una firma SHA-256 que garantiza que los datos inmobiliarios no fueron adulterados con posterioridad a la certificación en el MDM.
+              </p>
+              <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); padding: 14px; border-radius: 6px; font-size: 12.5px; font-family: var(--font-mono); color: var(--ink-secondary);">
+                STATUS: READY_FOR_DISPATCH<br>
+                RECORD_COUNT: 1238<br>
+                CITY: BOGOTA_D_C<br>
+                NORM_FACTOR: 1.000<br>
+                MD5: a9f8e43b1029c78821d3f9e9a
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Barra de Nota de Prototipo (Accesibilidad y Contexto Académico) -->
+        <div class="prototype-bar-note">
+          <div>
+            <strong>Entorno Académico Demostrativo:</strong> Prototipo navegable de alta fidelidad desarrollado para el curso de Interacción Humano-Computador.
+          </div>
+          <div>
+            <span style="font-weight: 600;">Adán Sánchez & Sara Crespo</span>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIRMACIÓN DE INGESTA (REVERSIBLE - HEURÍSTICA H5) -->
+  <div class="modal-backdrop" id="modal-confirm-lote" role="dialog" aria-modal="true" aria-labelledby="modal-confirm-title">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="modal-confirm-title">Confirmar Disparo del Pipeline</h3>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="cerrarModalConfirmacionLote()" aria-label="Cerrar modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 14.5px; color: var(--ink-secondary); margin: 0 0 16px;">
+          Está a punto de ejecutar las 4 compuertas sobre <strong>1,250 filas</strong> del archivo <code>lote_bogota_residencial_2026_q1.csv</code> con un factor de precio de <strong>1.000</strong>.
+        </p>
+        <div class="alert-banner info" style="margin: 0;">
+          <div class="alert-icon" aria-hidden="true">ℹ️</div>
+          <div class="alert-content">
+            <strong>Control y Libertad (Heurística H3)</strong>
+            <p>Podrá pausar o cancelar la ejecución en cualquier momento durante la simulación sin riesgo de corromper datos maestros.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModalConfirmacionLote()">Cancelar</button>
+        <button class="btn btn-primary" onclick="confirmarYIniciarPipeline()">Sí, Iniciar Pipeline →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENEDOR DE TOASTS -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- LÓGICA DE NAVEGACIÓN Y REACTIVIDAD DEL PROTOTIPO -->
+  <script>
+    // ESTADO GLOBAL DE LA SESIÓN DE PROTOTIPADO
+    const state = {
+      currentScreen: 'pantalla-dashboard',
+      fileLoaded: false,
+      fileName: '',
+      pipelineRunning: false,
+      pipelineProgress: 0,
+      runTimer: null,
+      mappedColumns: 6,
+      auditFilters: { search: '', gate: 'all', stratum: 'all' }
+    };
+
+    // MAPA DE TÍTULOS DE PANTALLA PARA MIGA DE PAN
+    const screenNames = {
+      'pantalla-dashboard': { mod: 'General', name: 'Dashboard General' },
+      'pantalla-carga': { mod: 'Recorrido Crítico 1', name: '1. Ingesta de Lote' },
+      'pantalla-previa': { mod: 'Recorrido Crítico 1', name: '2. Muestra y Estructura' },
+      'pantalla-mapeo': { mod: 'Recorrido Crítico 1', name: '3. Mapeo de Columnas' },
+      'pantalla-confirmacion': { mod: 'Recorrido Crítico 1', name: '4. Parámetros de Ingesta' },
+      'pantalla-progreso': { mod: 'Recorrido Crítico 1', name: '5. Monitor de Pipeline' },
+      'pantalla-resultado': { mod: 'Recorrido Crítico 1', name: '6. Cierre y Métricas' },
+      'pantalla-auditoria': { mod: 'Recorrido Crítico 2', name: 'Bandeja de Auditoría' },
+      'pantalla-diagnostico': { mod: 'Recorrido Crítico 2', name: 'Diagnóstico de Fila' },
+      'pantalla-recuperacion': { mod: 'Recorrido Crítico 2', name: 'Acción de Recuperación' },
+      'pantalla-inventario': { mod: 'Consultas', name: 'Inventario Maestro' },
+      'pantalla-ficha-inmueble': { mod: 'Consultas', name: 'Ficha Técnica Detalle' },
+      'pantalla-exportacion': { mod: 'Salidas', name: 'Centro de Exportación' }
+    };
+
+    // FUNCION DE NAVEGACIÓN ENTRE VISTAS
+    function navegarA(screenId) {
+      // Ocultar todas las pantallas
+      document.querySelectorAll('.screen-view').forEach(sc => sc.classList.remove('active'));
+      
+      // Mostrar pantalla solicitada
+      const target = document.getElementById(screenId);
+      if (target) {
+        target.classList.add('active');
+        state.currentScreen = screenId;
+      }
+
+      // Actualizar Breadcrumbs
+      const meta = screenNames[screenId] || { mod: 'Módulo', name: 'Vista' };
+      document.getElementById('crumb-module').textContent = meta.mod;
+      document.getElementById('crumb-screen').textContent = meta.name;
+
+      // Actualizar Botón Activo en Sidebar
+      document.querySelectorAll('.nav-link').forEach(btn => {
+        if (btn.getAttribute('data-target') === screenId) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // Scroll arriba suave
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // LISTENER DE BOTONES DE NAVEGACIÓN EN SIDEBAR
+    document.querySelectorAll('.nav-link').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const targetScreen = btn.getAttribute('data-target');
+        if (targetScreen) navegarA(targetScreen);
+      });
+    });
+
+    // SISTEMA DE NOTIFICACIONES TOAST (WCAG 2.1 - Retroalimentación Inmediata)
+    function notify(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast-message';
+      toast.innerHTML = `<span aria-hidden="true">✓</span> <span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // SIMULACIÓN DE CARGA DE ARCHIVO
+    function simularSeleccionArchivo() {
+      state.fileLoaded = true;
+      state.fileName = 'lote_bogota_residencial_2026_q1.csv';
+      document.getElementById('dropzone-main').style.display = 'none';
+      document.getElementById('file-selected-box').style.display = 'flex';
+      document.getElementById('btn-next-to-preview').disabled = false;
+      notify('Archivo "lote_bogota_residencial_2026_q1.csv" cargado e inspeccionado con éxito.');
+    }
+
+    function eliminarArchivoCargado() {
+      state.fileLoaded = false;
+      state.fileName = '';
+      document.getElementById('dropzone-main').style.display = 'grid';
+      document.getElementById('file-selected-box').style.display = 'none';
+      document.getElementById('btn-next-to-preview').disabled = true;
+      notify('Archivo removido. Puede seleccionar otro.');
+    }
+
+    // VALIDACIÓN ESTRICTA DEL MAPEO DE COLUMNAS (MEJORA IMPLEMENTADA EN F3)
+    function verificarMapeo() {
+      const selects = document.querySelectorAll('.mapping-select');
+      let mapped = 0;
+      selects.forEach(sel => {
+        const row = sel.closest('.mapping-item');
+        const badge = row.querySelector('.badge');
+        if (sel.value !== 'none') {
+          mapped++;
+          row.classList.remove('invalid');
+          row.classList.add('valid');
+          badge.className = 'badge badge-success';
+          badge.textContent = '✓ Asignada';
+        } else {
+          row.classList.remove('valid');
+          row.classList.add('invalid');
+          badge.className = 'badge badge-danger';
+          badge.textContent = '✕ Faltante';
+        }
+      });
+
+      const btnToConfig = document.getElementById('btn-to-config');
+      const badgeSummary = document.getElementById('badge-all-mapped');
+      
+      if (mapped === 6) {
+        btnToConfig.disabled = false;
+        badgeSummary.className = 'badge badge-success';
+        badgeSummary.textContent = '✓ 6 de 6 columnas asignadas';
+      } else {
+        btnToConfig.disabled = true;
+        badgeSummary.className = 'badge badge-danger';
+        badgeSummary.textContent = `⚠ ${mapped} de 6 asignadas (Faltan obligatorias)`;
+      }
+    }
+
+    // MODAL DE CONFIRMACIÓN
+    function abrirModalConfirmacionLote() {
+      document.getElementById('modal-confirm-lote').classList.add('open');
+    }
+
+    function cerrarModalConfirmacionLote() {
+      document.getElementById('modal-confirm-lote').classList.remove('open');
+    }
+
+    function confirmarYIniciarPipeline() {
+      cerrarModalConfirmacionLote();
+      navegarA('pantalla-progreso');
+      iniciarSimulacionPipeline();
+    }
+
+    // SIMULADOR GRANULAR DEL PIPELINE EN TIEMPO REAL
+    function iniciarSimulacionPipeline() {
+      state.pipelineRunning = true;
+      state.pipelineProgress = 0;
+      
+      const fill = document.getElementById('live-meter-fill');
+      const label = document.getElementById('progress-percent-label');
+      const statusDesc = document.getElementById('progress-status-desc');
+      const btnResults = document.getElementById('btn-to-results');
+      const logBox = document.getElementById('terminal-log-output');
+
+      btnResults.disabled = true;
+      
+      const stages = [
+        { id: 'stage-g1', name: 'G1: Esquema', start: 5, end: 25, log: 'G1 Aprobado: CSV interpretado sin errores de cabecera.' },
+        { id: 'stage-g2', name: 'G2: Tipos', start: 26, end: 55, log: 'G2 Aprobado: 6 campos convertidos a tipos nativos (int, float, str).' },
+        { id: 'stage-g3', name: 'G3: Rangos', start: 56, end: 80, log: 'G3 Alerta: 8 registros con precio/m2 atípico enviados a cuarentena.' },
+        { id: 'stage-g4', name: 'G4: Calidad', start: 81, end: 100, log: 'G4 Completado: 1,238 inmuebles certificados guardados en MDM.' }
+      ];
+
+      function resetStageCards() {
+        stages.forEach(st => {
+          const card = document.getElementById(st.id);
+          card.className = 'stage-card';
+          document.getElementById(st.id + '-status').textContent = 'Pendiente';
+        });
+      }
+      resetStageCards();
+
+      let currentPct = 0;
+      if (state.runTimer) clearInterval(state.runTimer);
+
+      state.runTimer = setInterval(() => {
+        if (!state.pipelineRunning) {
+          clearInterval(state.runTimer);
+          return;
+        }
+
+        currentPct += 2;
+        fill.style.width = currentPct + '%';
+        label.textContent = currentPct + '% Completado';
+
+        // Actualizar estados de tarjetas
+        if (currentPct >= 5 && currentPct <= 25) {
+          document.getElementById('stage-g1').className = 'stage-card running';
+          document.getElementById('stage-g1-status').textContent = 'En curso...';
+          statusDesc.textContent = 'G1: Validando formato y cabeceras...';
+        } else if (currentPct > 25 && currentPct <= 55) {
+          document.getElementById('stage-g1').className = 'stage-card done';
+          document.getElementById('stage-g1-status').textContent = '✓ Aprobado';
+          document.getElementById('stage-g2').className = 'stage-card running';
+          document.getElementById('stage-g2-status').textContent = 'En curso...';
+          statusDesc.textContent = 'G2: Verificando tipos de datos y nulos...';
+        } else if (currentPct > 55 && currentPct <= 80) {
+          document.getElementById('stage-g2').className = 'stage-card done';
+          document.getElementById('stage-g2-status').textContent = '✓ Aprobado';
+          document.getElementById('stage-g3').className = 'stage-card running';
+          document.getElementById('stage-g3-status').textContent = 'En curso...';
+          statusDesc.textContent = 'G3: Aplicando reglas IQR de Bogotá...';
+        } else if (currentPct > 80 && currentPct < 100) {
+          document.getElementById('stage-g3').className = 'stage-card done';
+          document.getElementById('stage-g3-status').textContent = '⚠ 8 Hallazgos';
+          document.getElementById('stage-g4').className = 'stage-card running';
+          document.getElementById('stage-g4-status').textContent = 'En curso...';
+          statusDesc.textContent = 'G4: Certificando predios y deduplicando...';
+        }
+
+        // Agregar logs
+        stages.forEach(st => {
+          if (currentPct === st.end) {
+            const p = document.createElement('p');
+            p.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> <span class="log-success">SUCCESS:</span> ${st.log}`;
+            logBox.appendChild(p);
+            logBox.scrollTop = logBox.scrollHeight;
+          }
+        });
+
+        if (currentPct >= 100) {
+          clearInterval(state.runTimer);
+          document.getElementById('stage-g4').className = 'stage-card done';
+          document.getElementById('stage-g4-status').textContent = '✓ Finalizado';
+          document.getElementById('live-run-badge').className = 'badge badge-success';
+          document.getElementById('live-run-badge').textContent = '✓ Lote Completado';
+          statusDesc.textContent = 'Procesamiento finalizado exitosamente.';
+          btnResults.disabled = false;
+          notify('Lote procesado exitosamente. Puede consultar el reporte consolidado.');
+        }
+      }, 70);
+    }
+
+    function cancelarSimulacionPipeline() {
+      if (state.runTimer) clearInterval(state.runTimer);
+      state.pipelineRunning = false;
+      document.getElementById('live-run-badge').className = 'badge badge-neutral';
+      document.getElementById('live-run-badge').textContent = '✕ Cancelado';
+      document.getElementById('progress-status-desc').textContent = 'Procesamiento cancelado por el operador. No se alteró el inventario.';
+      notify('Procesamiento cancelado de forma segura.');
+    }
+
+    // FILTRADO DINÁMICO DE AUDITORÍA CON CHIPS (MEJORA FASE 3)
+    function filtrarAuditoria() {
+      const search = document.getElementById('search-audit-input').value.toLowerCase();
+      const gate = document.getElementById('filter-gate-select').value;
+      const stratum = document.getElementById('filter-stratum-select').value;
+
+      let visible = 0;
+      document.querySelectorAll('#tbody-auditoria tr').forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowGate = row.getAttribute('data-gate');
+        const rowStratum = row.getAttribute('data-stratum');
+
+        const matchSearch = !search || text.includes(search);
+        const matchGate = (gate === 'all') || (rowGate === gate);
+        const matchStratum = (stratum === 'all') || (rowStratum === stratum);
+
+        if (matchSearch && matchGate && matchStratum) {
+          row.style.display = '';
+          visible++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      document.getElementById('label-audit-matches').textContent = `${visible} discrepancias encontradas`;
+    }
+
+    function limpiarFiltrosAuditoria() {
+      document.getElementById('search-audit-input').value = '';
+      document.getElementById('filter-gate-select').value = 'all';
+      document.getElementById('filter-stratum-select').value = 'all';
+      filtrarAuditoria();
+      notify('Filtros de auditoría restablecidos.');
+    }
+
+    function removerChip(tipo) {
+      if (tipo === 'lote') document.getElementById('chip-lote').style.display = 'none';
+      if (tipo === 'estado') document.getElementById('chip-estado').style.display = 'none';
+      notify('Filtro removido.');
+    }
+
+    // ACCIONES DE AUDITORÍA Y DIAGNÓSTICO
+    function abrirDiagnosticoFila(idRegistro) {
+      navegarA('pantalla-diagnostico');
+    }
+
+    function ejecutarReintentoLote() {
+      notify('Preparando nuevo intento. Conservando mapeo y parámetros de lote...');
+      navegarA('pantalla-carga');
+    }
+
+    function descargarReporteDiscrepancias() {
+      notify('Descargando archivo "discrepancias_lote_8942.csv" con 12 registros observados.');
+    }
+
+    function archivarFilaAuditoria() {
+      notify('Registro REG-8942-04 archivado y registrado en la bitácora de exclusiones.');
+      navegarA('pantalla-auditoria');
+    }
+
+    function exportarListaAuditoria() {
+      notify('Generando exportación de incidentes de auditoría en formato CSV...');
+    }
+
+    // INVENTARIO Y EXPORTACIÓN
+    function filtrarInventario() {
+      notify('Filtros del Inventario Maestro actualizados.');
+    }
+
+    function restablecerInventario() {
+      document.getElementById('inv-filter-loc').value = 'all';
+      document.getElementById('inv-filter-stratum').value = 'all';
+      notify('Filtros del inventario restablecidos.');
+    }
+
+    function verFichaInmueble(codigo) {
+      navegarA('pantalla-ficha-inmueble');
+    }
+
+    function imprimirFichaPredio() {
+      window.print();
+    }
+
+    function dispararGeneracionArchivo() {
+      const formato = document.getElementById('export-format-select').value.toUpperCase();
+      notify(`Preparando paquete de exportación en formato ${formato}. Hash de integridad generado.`);
+    }
+  </script>
+</body>
+</html>

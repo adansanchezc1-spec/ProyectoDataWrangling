@@ -1,0 +1,14 @@
+{
+  "id": "703e6520",
+  "dataset_id": "unknown",
+  "motivo": "Missing required columns: ['estrato']",
+  "gateway_bpmn": 2,
+  "regla_negocio": "RF-002",
+  "fecha": "2026-06-04T18:37:22.341096",
+  "detalles": {
+    "missing": [
+      "estrato"
+    ]
+  },
+  "row_index": null
+}

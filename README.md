@@ -1,9 +1,14 @@
 # Sistema Data Wrangling — Predicción de Precios de Vivienda en Bogotá
 
+[![Demo en Vivo (GitHub Pages)](https://img.shields.io/badge/Demo%20en%20Vivo-Prototipo%20Web%20IHC-10523A?style=for-the-badge&logo=githubpages&logoColor=white)](https://adansanchezc1-spec.github.io/ProyectoDataWrangling/)
 ![Python](https://img.shields.io/badge/python-3.13-blue?logo=python)
 ![Tests](https://img.shields.io/badge/tests-46%20passed-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-%3E80%25-brightgreen)
+![WCAG](https://img.shields.io/badge/WCAG%202.1-Nivel%20AA-1B7A54)
 ![License](https://img.shields.io/badge/license-MIT-blue)
+
+> 🚀 **Prototipo Interactivo en Vivo:** Ya puedes explorar y evaluar el prototipo de alta fidelidad de 13 pantallas desplegado en producción en:  
+> 👉 **[https://adansanchezc1-spec.github.io/ProyectoDataWrangling/](https://adansanchezc1-spec.github.io/ProyectoDataWrangling/)**
 
 Pipeline ETL automatizado que transforma datasets inmobiliarios heterogéneos en una tabla maestra limpia y unificada, lista para análisis y modelos de predicción de precios.
 
@@ -13,11 +18,13 @@ Pipeline ETL automatizado que transforma datasets inmobiliarios heterogéneos en
 
 El sistema resuelve el problema de calidad de datos en el sector inmobiliario de Bogotá. Toma datasets de múltiples fuentes (CSV, Excel, JSON) con esquemas inconsistentes, valores nulos, duplicados y ubicaciones fuera del dominio, y ejecuta un pipeline ETL con 4 gateways de validación BPMN 2.0 para producir un Master Data Management (MDM) unificado.
 
-```mermaid
+---
 
+## Arquitectura MVC
 
-## Arquitectura
-`
+El sistema sigue el patrón **Model-View-Controller (MVC)**. La Vista (interfaz Tkinter) captura la interacción del usuario y delega en el Controlador, que orquesta los Servicios de Aplicación y las Entidades de Dominio (Modelo). La Infraestructura provee implementaciones concretas desacopladas mediante interfaces.
+
+```
 ┌───────────────────────────────────────────────────────────────┐
 │                         VIEW (Tkinter)                         │
 │              VistaCargaDataset  VistaEstadoPipeline            │
@@ -47,6 +54,7 @@ El sistema resuelve el problema de calidad de datos en el sector inmobiliario de
 
 | Patrón | Tipo | Componente |
 |--------|------|------------|
+| **MVC** | Arquitectónico | `Views` + `Controllers` + `Domain/Application/Infrastructure` |
 | **Facade** | Estructural GoF | `PipelineFacade` |
 | **Repository** | GRASP | `JsonRepository`, `IDataRepository` |
 | **Strategy** | Comportamiento GoF | `NullCleaner`, `FormatCleaner`, `DuplicateCleaner` |
