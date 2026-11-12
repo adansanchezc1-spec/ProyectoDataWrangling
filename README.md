@@ -1,9 +1,14 @@
 # Sistema Data Wrangling — Predicción de Precios de Vivienda en Bogotá
 
+[![Demo en Vivo (GitHub Pages)](https://img.shields.io/badge/Demo%20en%20Vivo-Prototipo%20Web%20IHC-10523A?style=for-the-badge&logo=githubpages&logoColor=white)](https://adansanchezc1-spec.github.io/ProyectoDataWrangling/)
 ![Python](https://img.shields.io/badge/python-3.13-blue?logo=python)
 ![Tests](https://img.shields.io/badge/tests-46%20passed-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-%3E80%25-brightgreen)
+![WCAG](https://img.shields.io/badge/WCAG%202.1-Nivel%20AA-1B7A54)
 ![License](https://img.shields.io/badge/license-MIT-blue)
+
+> 🚀 **Prototipo Interactivo en Vivo:** Ya puedes explorar y evaluar el prototipo de alta fidelidad de 13 pantallas desplegado en producción en:  
+> 👉 **[https://adansanchezc1-spec.github.io/ProyectoDataWrangling/](https://adansanchezc1-spec.github.io/ProyectoDataWrangling/)**
 
 Pipeline ETL automatizado que transforma datasets inmobiliarios heterogéneos en una tabla maestra limpia y unificada, lista para análisis y modelos de predicción de precios.
 
