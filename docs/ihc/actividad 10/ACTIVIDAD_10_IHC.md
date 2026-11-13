@@ -50,18 +50,18 @@ Como aprendizaje fundamental, este curso me demostró que la excelencia en ingen
 
 ## MOMENTO 2: Interacción con los Compañeros
 
-### 💬 Respuesta a Compañero 1 (Enfoque: Aplicación Móvil / Reducción de Carga Cognitiva)
+### 💬 Respuesta a Compañera (Proyecto Dotafora — Control de Inventario Móvil en Yopal)
 
 **Texto para publicar en el foro:**
 
-Coincido plenamente con tu énfasis en cómo la simplificación del flujo mediante patrones de navegación reduce la sobrecarga cognitiva en entornos móviles, especialmente al sustituir menús densos por barras de acción contextuales accesibles al pulgar. Este enfoque se alinea de forma directa con la Ley de Fitts y el principio de visibilidad del estado del sistema propuesto por Jakob Nielsen, pues minimiza la distancia motriz y el esfuerzo atencional del usuario en pantallas reducidas.
+Me pareció muy acertado cómo aterrizaron el diseño de Dotafora a la realidad del mostrador en Yopal, sobre todo al tomarse en serio la restricción de los 30 segundos y el uso a una sola mano. La solución de anticipar el stock restante ('Hay 5 / Quedarán 3') es un ejemplo impecable de prevención de errores y visibilidad del estado que ahorra reprocesos sin entorpecer la atención al cliente.
 
-A partir de tu experiencia, ¿de qué manera gestionaron en la interfaz móvil la presentación de tablas o listas de datos con múltiples atributos sin saturar el espacio visual ni forzar desplazamientos horizontales excesivos?
+Teniendo en cuenta ese ritmo acelerado y las constantes interrupciones del local, ¿cómo resolvieron o tienen previsto manejar el caso en que el vendedor seleccione por error una talla vecina y confirme la venta antes de percatarse?
 
-Como recomendación complementaria, sugiero considerar la implementación de divulgación progresiva (*progressive disclosure*) combinada con microinteracciones hápticas o auditivas para confirmar transacciones críticas. En nuestro proyecto de analítica inmobiliaria, comprobamos que fragmentar procesos complejos en un asistente tipo wizard previene errores severos y fortalece la sensación de control y confianza del operador durante tareas de alta exigencia.
+Como sugerencia ligada a la heurística de control y libertad del usuario de Nielsen, les vendría muy bien complementar esa confirmación con una notificación efímera tipo snackbar con botón de 'Deshacer' durante unos segundos. En nuestro proyecto de analítica inmobiliaria vimos que ofrecer salidas de emergencia inmediatas le quita presión al usuario y evita descuadres posteriores en el inventario.
 
 > **Métrica de Control:**  
-> • Palabras de la Respuesta 1: **164 palabras** (Cumple con el rango solicitado: 120 – 180 palabras).
+> • Palabras de la Respuesta: **165 palabras** (Cumple estrictamente con el rango solicitado: 120 – 180 palabras).
 
 ---
 
